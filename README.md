@@ -17,28 +17,31 @@ npm i
 
 ## Generate Marker Type Map
 
-Generate the marker type map by running `npm run generate-markers-map`.
+Generate the marker type map by placing the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version>`.
 
-This script reads the USX RelaxNG Schema file [`usx.rng` ](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `markers.json` that contains the marker type for each USFM marker. `markers.json` will contain an object whose keys are the markers and whose values are objects containing the marker type:
+This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `markers.json` that contains the marker type for each USFM marker. `markers.json` will contain an object with information about the generated file and a `markers` property whose value is a map object whose keys are the markers and whose values are objects containing the marker type:
 
 ```json
 {
-  "v": {
-      "type": "verse"
-  },
-  "c": {
-      "type": "chapter"
-  },
-  "p": {
-      "type": "para"
-  },
-  "f": {
-      "type": "note"
-  },
-  "qt3-s": {
-      "type": "ms"
-  },
-  ...
+  "version": "3.2",
+  "markers": {
+      "v": {
+          "type": "verse"
+      },
+      "c": {
+          "type": "chapter"
+      },
+      "p": {
+          "type": "para"
+      },
+      "f": {
+          "type": "note"
+      },
+      "qt3-s": {
+          "type": "ms"
+      },
+      ...
+  }
 }
 ```
 
