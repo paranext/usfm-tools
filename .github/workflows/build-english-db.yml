@@ -1,0 +1,59 @@
+name: Build English Database
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout marble-tools
+        uses: actions/checkout@v4
+
+      - name: Clone private repositories
+        run: |
+          git clone https://${{ secrets.MARBLE_REPO_TOKEN }}@github.com/ubsicap/marble-lexicon.git ../marble-lexicon
+          git clone https://${{ secrets.MARBLE_REPO_TOKEN }}@github.com/ubsicap/marble-indexes.git ../marble-indexes
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Convert SDBG lexicon
+        run: npm run convert-sdbg
+
+      - name: Convert SDBH lexicon
+        run: npm run convert-sdbh
+
+      - name: Create English directory and copy files
+        run: |
+          mkdir -p english
+          cp output-sdbg/lexicon_en.xml english/sdbg_en.xml
+          cp output-sdbh/lexicon_en.xml english/sdbh_en.xml
+
+      - name: Import to SQLite
+        run: npm run import-english-to-sqlite
+
+      - name: Upload English database
+        uses: actions/upload-artifact@v4
+        with:
+          name: english-database
+          path: english.db
+          retention-days: 90
+
+      - name: Upload XML files
+        uses: actions/upload-artifact@v4
+        with:
+          name: xml-files
+          path: |
+            output-sdbg/*.xml
+            output-sdbh/*.xml
+          retention-days: 90
