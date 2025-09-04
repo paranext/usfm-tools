@@ -5,6 +5,7 @@ import path from 'path';
 
 interface MarkerInfo {
   type: string;
+  defaultAttribute?: string;
 }
 
 interface MarkersMap {
@@ -50,6 +51,12 @@ function processDefineElement(defineElement: Element) {
   const defineName = defineElement.getAttribute('name');
   if (!defineName) return;
 
+  // Skip table-related definitions
+  if (defineName.includes('Table') || defineName === 'cell.align.enum') {
+    skippedDefinitions.add(defineName);
+    return;
+  }
+
   // Find all element nodes that contain style markers
   const elements = defineElement.getElementsByTagName('element');
   for (let i = 0; i < elements.length; i++) {
@@ -57,13 +64,8 @@ function processDefineElement(defineElement: Element) {
     const nameElements = element.getElementsByTagName('name');
     if (nameElements.length === 0) continue;
 
-          const markerType = getTextContent(nameElements[0]).trim();
-          if (!markerType) continue;
-
-          // Skip table elements
-          if (defineName.includes('Table') || defineName === 'cell.align.enum') {
-            continue;
-          }    // Look for style attribute values either directly or in referenced enums
+    const markerType = getTextContent(nameElements[0]).trim();
+    if (!markerType) continue;
     const attributes = element.getElementsByTagName('attribute');
     for (let j = 0; j < attributes.length; j++) {
       const attribute = attributes[j];
@@ -73,16 +75,35 @@ function processDefineElement(defineElement: Element) {
       // Check for direct value
       const valueElements = attribute.getElementsByTagName('value');
       for (let k = 0; k < valueElements.length; k++) {
-        const markerName = getTextContent(valueElements[k]).trim();
+        const valueElement = valueElements[k];
+        const markerName = getTextContent(valueElement).trim();
         if (markerName) {
-          if (markersMap.markers[markerName] && markersMap.markers[markerName].type !== markerType) {
-            console.error(`Error: Marker name "${markerName}" has conflicting types:`);
-            console.error(`  Existing type: "${markersMap.markers[markerName].type}"`);
-            console.error(`  Conflicting type: "${markerType}"`);
-            console.error(`  In definition: "${defineName}"`);
-            process.exit(1);
+          const defaultAttribute = valueElement.getAttribute('usfm:propval');
+          const markerInfo: MarkerInfo = { type: markerType };
+          if (defaultAttribute) {
+            markerInfo.defaultAttribute = defaultAttribute;
           }
-          markersMap.markers[markerName] = { type: markerType };
+
+          // If marker exists, check for conflicts, preferring definitions that have default attributes
+          if (markersMap.markers[markerName]) {
+            // If types don't match, that's always an error
+            if (markersMap.markers[markerName].type !== markerType) {
+              console.error(`Error: Marker name "${markerName}" has conflicting types:`);
+              console.error(`  Existing type: "${markersMap.markers[markerName].type}"`);
+              console.error(`  Conflicting type: "${markerType}"`);
+              console.error(`  In definition: "${defineName}"`);
+              process.exit(1);
+            }
+            
+            // If either the existing or new marker has a default attribute and they're different, use the one with the attribute
+            if (defaultAttribute || markersMap.markers[markerName].defaultAttribute) {
+              if (defaultAttribute) {
+                markersMap.markers[markerName] = markerInfo;
+              }
+            }
+          } else {
+            markersMap.markers[markerName] = markerInfo;
+          }
         }
       }
 
@@ -101,16 +122,35 @@ function processDefineElement(defineElement: Element) {
                 const choice = choiceElements[m];
                 const refValueElements = choice.getElementsByTagName('value');
                 for (let n = 0; n < refValueElements.length; n++) {
-                  const markerName = getTextContent(refValueElements[n]).trim();
+                  const valueElement = refValueElements[n];
+                  const markerName = getTextContent(valueElement).trim();
                   if (markerName) {
-                    if (markersMap.markers[markerName] && markersMap.markers[markerName].type !== markerType) {
-                      console.error(`Error: Marker name "${markerName}" has conflicting types:`);
-                      console.error(`  Existing type: "${markersMap.markers[markerName].type}"`);
-                      console.error(`  Conflicting type: "${markerType}"`);
-                      console.error(`  In definition: "${defineName}"`);
-                      process.exit(1);
+                    const defaultAttribute = valueElement.getAttribute('usfm:propval');
+                    const markerInfo: MarkerInfo = { type: markerType };
+                    if (defaultAttribute) {
+                      markerInfo.defaultAttribute = defaultAttribute;
                     }
-                    markersMap.markers[markerName] = { type: markerType };
+
+                    // If marker exists, check for conflicts, preferring definitions that have default attributes
+                    if (markersMap.markers[markerName]) {
+                      // If types don't match, that's always an error
+                      if (markersMap.markers[markerName].type !== markerType) {
+                        console.error(`Error: Marker name "${markerName}" has conflicting types:`);
+                        console.error(`  Existing type: "${markersMap.markers[markerName].type}"`);
+                        console.error(`  Conflicting type: "${markerType}"`);
+                        console.error(`  In definition: "${defineName}"`);
+                        process.exit(1);
+                      }
+                      
+                      // If either the existing or new marker has a default attribute and they're different, use the one with the attribute
+                      if (defaultAttribute || markersMap.markers[markerName].defaultAttribute) {
+                        if (defaultAttribute) {
+                          markersMap.markers[markerName] = markerInfo;
+                        }
+                      }
+                    } else {
+                      markersMap.markers[markerName] = markerInfo;
+                    }
                   }
                 }
               }
