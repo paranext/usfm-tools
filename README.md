@@ -48,8 +48,28 @@ This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usf
 
 The marker names and information about those markers are derived from the `usx.rng` file. This schema file contains information about each valid USFM marker:
 - The element's `name` is the marker type
-- The `style` attribute contains either the single marker name or contains a `ref` pointing to an enumeration of all the marker names associated with that marker type.
-    - If the marker has a default attribute, it will be the value of the `usfm:propval` attribute on the `value` tag in the `style` attribute or in the enumeration.
+- The marker name comes from one of a number of places:
+    - The `style` attribute may contain the single marker name for that marker type
+    - The `style` attribute may contain a `choice` of all the marker names associated with that marker type
+    - The `style` attribute may contain a `ref` pointing to a `choice` of all the marker names associated with that marker type
+    - If there is not a `style` attribute, the element's `name` is the marker type and the marker name
+- If the marker has a default attribute, it may come from one of two places
+    - The default attribute will be the value of the `usfm:propval` attribute on the `value` tag in the `style` attribute or in the enumeration.
+    - If there is no `usfm:propval` attribute on the `value` tag in the `style` attribute or there is no `style` attribute, the default attribute for a marker will be the first non-optional `attribute` `name` listed in the element other than the list below of attributes to skip or the first optional non-skipped `attribute` `name` if there are no non-optional non-skipped `attribute`s. There is only a default attribute if there are zero or one non-optional non-skipped `attribute`s.
+        - The following attributes should be skipped when determining which attribute is the default attribute:
+            - all attributes on `usx` marker type
+            - `code` on `book` marker type
+            - all attributes on `periph` marker type
+            - `style` on any marker type
+            - `vid` on `para` and `table` marker types
+            - all attributes on `chapter` marker type
+            - all attributes on `verse` marker type
+            - `caller` and `category` on `note` marker type
+            - `category` on `sidebar` marker type
+        - Exception: For `ms` marker types, `who` takes priority over other attributes if it is present.
+
+There is also a marker named `cat` with marker type `cat` that is not listed in `usx.rng` that needs to be present in `markers.json`.
+
 
 Following is a snippet from the schema that is an example of one marker name and marker type:
 
@@ -234,6 +254,57 @@ Generating the marker map from only this snippet would result in the following:
         "qt2-e": {
             "type": "ms",
             "defaultAttribute": "eid"
+        }
+    }
+}
+```
+
+Following is a partial snippet from the schema that is an example of a marker that has the same type and name with no style attribute and with a default attribute:
+
+```xml
+  <define name="Reference">
+    <element>
+      <usfm:tag match="&#x27;ref&#x27;" dump="true"/>
+      <name ns="">ref</name>
+      <optional>
+        <text>
+          <usfm:text match="TEXTNOTATTRIB" after="ATTRIBTEXTEND"/>
+        </text>
+      </optional>
+      <optional>
+        <attribute>
+          <usfm:match match="PIPE" matchout="&#x27;|&#x27;" dump="true"/>
+          <usfm:match match="TEXTNOTATTRIB"/>
+          <name ns="">loc</name>
+          <data type="string">
+            <usfm:pattern name="VERSE"/>
+            <param name="pattern">[A-Z1-4]{3}(-[A-Z1-4]{3})? ?[a-z0-9\-:]*</param>
+          </data>
+        </attribute>
+      </optional>
+      <optional>
+        <attribute>
+          <usfm:match match="TEXTNOTATTRIB" noout="true"/>
+          <name ns="">gen</name>
+          <choice>
+            <value>true</value>
+            <value>false</value>
+          </choice>
+        </attribute>
+      </optional>
+    </element>
+    <usfm:endtag match="&#x27;ref&#x27;" matchref=""/>
+  </define>
+```
+
+Generating the marker map from only this snippet would result in the following:
+
+```json
+{
+    "markers": {
+        "ref": {
+            "type": "ref",
+            "defaultAttribute": "loc"
         }
     }
 }
