@@ -68,7 +68,7 @@ The marker names and information about those markers are derived from the `usx.r
             - `category` on `sidebar` marker type
         - Exception: For `ms` marker types, `who` takes priority over other attributes if it is present.
 
-There is also a marker named `cat` with marker type `cat` that is not listed in `usx.rng` that needs to be present in `markers.json`.
+There is also a marker named `cat` with marker type `cat` and no default attribute that is not listed in `usx.rng` that needs to be present in `markers.json`.
 
 
 Following is a snippet from the schema that is an example of one marker name and marker type:
