@@ -162,23 +162,56 @@ function processDefineElement(defineElement: Element) {
     }
   }
 
-  // Track skipped definitions that have values but no style attributes
+  // Track skipped definitions that either:
+  // 1. Have values but no style attributes
+  // 2. Have no elements or no style attributes in their elements
   const hasValues = defineElement.getElementsByTagName('value').length > 0;
   const hasStyleAttr = Array.from(defineElement.getElementsByTagName('attribute')).some(attr => {
     const nameElements = attr.getElementsByTagName('name');
     return nameElements.length > 0 && getTextContent(nameElements[0]).trim() === 'style';
   });
 
-  if (hasValues && !hasStyleAttr && !defineName.includes('.style.enum')) {
+  // Add to skipped if:
+  // - Has values but no style attribute (excluding style enums)
+  // - Has no elements
+  // - Has no marker values in the elements' style attributes
+  if ((hasValues && !hasStyleAttr && !defineName.includes('.style.enum')) ||
+      elements.length === 0 ||
+      !hasStyleAttr) {
     skippedDefinitions.add(defineName);
   }
 }
 
-// Process all define elements
+// Process all define elements and track what was processed
 const defineElements = doc.getElementsByTagName('define');
+const allDefinitions = new Set<string>();
+
 for (let i = 0; i < defineElements.length; i++) {
+  const defineName = defineElements[i].getAttribute('name');
+  if (defineName) {
+    allDefinitions.add(defineName);
+  }
   processDefineElement(defineElements[i]);
 }
+
+// Add any definitions that weren't explicitly skipped but also didn't generate any markers
+const processedDefinitions = new Set<string>();
+Object.keys(markersMap.markers).forEach((markerName) => {
+  // Mark the definition that produced this marker as processed
+  for (let i = 0; i < defineElements.length; i++) {
+    const defineName = defineElements[i].getAttribute('name');
+    if (defineName && defineElements[i].textContent?.includes(markerName)) {
+      processedDefinitions.add(defineName);
+    }
+  }
+});
+
+// Add any unprocessed definitions to skipped
+allDefinitions.forEach((defineName) => {
+  if (!processedDefinitions.has(defineName) && !defineName.includes('.style.enum')) {
+    skippedDefinitions.add(defineName);
+  }
+});
 
 // Write the output file
 fs.writeFileSync(
