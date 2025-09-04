@@ -19,7 +19,7 @@ npm i
 
 Generate the marker type map by placing the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version>`.
 
-This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `markers.json` that contains the marker type for each USFM marker name. `markers.json` will contain an object with information about the generated file and a `markers` property whose value is a map object whose keys are the marker names and whose values are objects containing the marker type:
+This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `markers.json` that contains various information for each USFM marker name. `markers.json` will contain an object with information about the generated file and a `markers` property whose value is a map object whose keys are the marker names and whose values are objects containing information about the marker such as the marker type and the marker's default attribute (where applicable):
 
 ```json
 {
@@ -38,14 +38,18 @@ This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usf
           "type": "note"
       },
       "qt3-s": {
-          "type": "ms"
+          "type": "ms",
+          "defaultAttribute": "who"
       },
       ...
   }
 }
 ```
 
-The marker names and marker types are derived from the `usx.rng` file. This schema file contains information about each valid USFM marker. The element's `name` is the marker type, and the `style` attribute contains either the single marker name or contains a `ref` pointing to an enumeration of all the marker names associated with that marker type.
+The marker names and information about those markers are derived from the `usx.rng` file. This schema file contains information about each valid USFM marker:
+- The element's `name` is the marker type
+- The `style` attribute contains either the single marker name or contains a `ref` pointing to an enumeration of all the marker names associated with that marker type.
+    - If the marker has a default attribute, it will be the value of the `usfm:propval` attribute on the `value` tag in the `style` attribute or in the enumeration.
 
 Following is a snippet from the schema that is an example of one marker name and marker type:
 
@@ -151,7 +155,86 @@ Generating the marker map from only this snippet would result in the following:
         },
         "rem": {
             "type": "para"
+        }
+    }
+}
+```
+
+Following is a partial snippet from the schema that is an example of many marker names, some with default attributes, that share a marker type:
+
+```xml
+  <define name="Milestone">
+    <group>
+      <element>
+        <name ns="">ms</name>
+        <attribute>
+          <usfm:tag after="Hs" afterout=""/>
+          <name ns="">style</name>
+          <ref name="Milestone.style.enum"/>
+        </attribute>
+        <optional>
+          <ref name="Attributes"/>
+        </optional>
+        <empty/>
+      </element>
+      <usfm:endtag matchref="&#x27;&#x27;"/>
+    </group>
+  </define>
+  <define name="Milestone.style.enum">
+    <choice>
+      <value usfm:propval="sid" usfm:propattribs="sid?" usfm:propended="ts-e">ts-s</value>
+      <value usfm:propval="eid" usfm:propattribs="eid?" usfm:propends="ts-s">ts-e</value>
+      <value>ts</value>
+      <value usfm:propval="sid" usfm:propattribs="sid?" usfm:propended="t-e">t-s</value>
+      <value usfm:propval="eid" usfm:propattribs="eid?" usfm:propends="t-s">t-e</value>
+      <value usfm:propval="who" usfm:propattribs="who? sid?" usfm:propended="qt1-e">qt1-s</value>
+      <value usfm:propval="eid" usfm:propattribs="eid?" usfm:propends="qt1-s">qt1-e</value>
+      <value usfm:propval="who" usfm:propattribs="who? sid?" usfm:propended="qt2-e">qt2-s</value>
+      <value usfm:propval="eid" usfm:propattribs="eid?" usfm:propends="qt2-s">qt2-e</value>
+    </choice>
+  </define>
+```
+
+Generating the marker map from only this snippet would result in the following:
+
+```json
+{
+    "markers": {
+        "ts-s": {
+            "type": "ms",
+            "defaultAttribute": "sid"
         },
+        "ts-e": {
+            "type": "ms",
+            "defaultAttribute": "eid"
+        },
+        "ts": {
+            "type": "ms"
+        },
+        "t-s": {
+            "type": "ms",
+            "defaultAttribute": "sid"
+        },
+        "t-e": {
+            "type": "ms",
+            "defaultAttribute": "eid"
+        },
+        "qt1-s": {
+            "type": "ms",
+            "defaultAttribute": "who"
+        },
+        "qt1-e": {
+            "type": "ms",
+            "defaultAttribute": "eid"
+        },
+        "qt2-s": {
+            "type": "ms",
+            "defaultAttribute": "who"
+        },
+        "qt2-e": {
+            "type": "ms",
+            "defaultAttribute": "eid"
+        }
     }
 }
 ```
