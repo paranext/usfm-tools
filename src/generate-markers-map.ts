@@ -51,14 +51,26 @@ function processDefineElement(defineElement: Element) {
   const defineName = defineElement.getAttribute('name');
   if (!defineName) return;
 
-  // Skip table-related definitions
-  if (defineName.includes('Table') || defineName === 'cell.align.enum') {
+  // Skip table-related definitions and explicitly skipped definitions
+  if (defineName.includes('Table') || 
+      defineName === 'cell.align.enum' || 
+      defineName === 'ChapterEnd' || 
+      defineName === 'VerseEnd') {
     skippedDefinitions.add(defineName);
     return;
   }
 
-  // Find all element nodes that contain style markers
+  // Skip definitions that only contain attributes and no elements
   const elements = defineElement.getElementsByTagName('element');
+  if (elements.length === 0) {
+    // Check if there are any attribute definitions
+    if (defineElement.getElementsByTagName('attribute').length > 0) {
+      skippedDefinitions.add(defineName);
+      return;
+    }
+  }
+
+  // Process all elements in this definition
   for (let i = 0; i < elements.length; i++) {
     const element = elements[i];
     const nameElements = element.getElementsByTagName('name');
@@ -162,22 +174,107 @@ function processDefineElement(defineElement: Element) {
     }
   }
 
-  // Track skipped definitions that either:
-  // 1. Have values but no style attributes
-  // 2. Have no elements or no style attributes in their elements
-  const hasValues = defineElement.getElementsByTagName('value').length > 0;
+  // If there are no style attributes, use the element name as the marker name
   const hasStyleAttr = Array.from(defineElement.getElementsByTagName('attribute')).some(attr => {
     const nameElements = attr.getElementsByTagName('name');
     return nameElements.length > 0 && getTextContent(nameElements[0]).trim() === 'style';
   });
 
-  // Add to skipped if:
-  // - Has values but no style attribute (excluding style enums)
-  // - Has no elements
-  // - Has no marker values in the elements' style attributes
-  if ((hasValues && !hasStyleAttr && !defineName.includes('.style.enum')) ||
-      elements.length === 0 ||
-      !hasStyleAttr) {
+  if (!hasStyleAttr) {
+    // Get the element name
+    const nameElements = defineElement.getElementsByTagName('name');
+    if (nameElements.length > 0) {
+      const elementName = getTextContent(nameElements[0]).trim();
+      const markerType = elementName;
+      const markerName = elementName;
+      if (markerName) {
+        // Find potential default attribute
+        const attributes = defineElement.getElementsByTagName('attribute');
+        let defaultAttribute: string | undefined;
+        
+        // Skip all attributes for certain marker types
+        if (['usx', 'periph', 'chapter', 'verse'].includes(markerType)) {
+          defaultAttribute = undefined;
+        } else {
+          // Skip specific attributes by marker type and attribute name
+          const skipAttributes = new Set([
+            'style', // on any marker type
+          ]);
+
+          // Add marker-type-specific skips
+          if (markerType === 'book') skipAttributes.add('code');
+          if (markerType === 'para' || markerType === 'table') skipAttributes.add('vid');
+          if (markerType === 'note') {
+            skipAttributes.add('caller');
+            skipAttributes.add('category');
+          }
+          if (markerType === 'sidebar') skipAttributes.add('category');
+
+          // First try to find non-optional, non-skipped attributes
+          let nonOptionalCount = 0;
+          let firstNonSkippedAttr: string | undefined;
+          let firstOptionalNonSkippedAttr: string | undefined;
+          
+          for (let j = 0; j < attributes.length; j++) {
+            const attr = attributes[j];
+            const attrNameElements = attr.getElementsByTagName('name');
+            if (attrNameElements.length === 0) continue;
+            
+            const attrName = getTextContent(attrNameElements[0]).trim();
+            if (!skipAttributes.has(attrName)) {
+              // Check if attribute is inside an optional element
+              let isOptional = false;
+              let parent = attr.parentNode;
+              while (parent && parent !== defineElement) {
+                if (parent.nodeName === 'optional') {
+                  isOptional = true;
+                  break;
+                }
+                parent = parent.parentNode;
+              }
+              
+              if (!isOptional) {
+                nonOptionalCount++;
+                if (!firstNonSkippedAttr) {
+                  firstNonSkippedAttr = attrName;
+                }
+              } else if (!firstOptionalNonSkippedAttr) {
+                firstOptionalNonSkippedAttr = attrName;
+              }
+            }
+          }
+
+          // If there's exactly one non-optional attribute, use it as the default
+          if (nonOptionalCount === 1) {
+            defaultAttribute = firstNonSkippedAttr;
+          } else if (nonOptionalCount === 0 && firstOptionalNonSkippedAttr) {
+            defaultAttribute = firstOptionalNonSkippedAttr;
+          }
+        }
+
+        // For ms marker types, 'who' takes priority if present
+        if (markerType === 'ms') {
+          for (let j = 0; j < attributes.length; j++) {
+            const attr = attributes[j];
+            const attrNameElements = attr.getElementsByTagName('name');
+            if (attrNameElements.length > 0 && getTextContent(attrNameElements[0]).trim() === 'who') {
+              defaultAttribute = 'who';
+              break;
+            }
+          }
+        }
+
+        const markerInfo: MarkerInfo = { type: markerType };
+        if (defaultAttribute) {
+          markerInfo.defaultAttribute = defaultAttribute;
+        }
+        markersMap.markers[markerName] = markerInfo;
+      }
+    }
+  }
+
+  // Add to skipped if it's a non-enum definition that didn't produce any markers
+  if (!defineName.includes('.style.enum')) {
     skippedDefinitions.add(defineName);
   }
 }
@@ -212,6 +309,9 @@ allDefinitions.forEach((defineName) => {
     skippedDefinitions.add(defineName);
   }
 });
+
+// Add the required cat marker that might not be in the schema
+markersMap.markers['cat'] = { type: 'char' };
 
 // Write the output file
 fs.writeFileSync(

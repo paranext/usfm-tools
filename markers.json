@@ -1,0 +1,707 @@
+{
+  "version": "3.2",
+  "markers": {
+    "id": {
+      "type": "book"
+    },
+    "ide": {
+      "type": "para"
+    },
+    "h1": {
+      "type": "para"
+    },
+    "h2": {
+      "type": "para"
+    },
+    "h3": {
+      "type": "para"
+    },
+    "h": {
+      "type": "para"
+    },
+    "toc1": {
+      "type": "para"
+    },
+    "toc2": {
+      "type": "para"
+    },
+    "toc3": {
+      "type": "para"
+    },
+    "toca1": {
+      "type": "para"
+    },
+    "toca2": {
+      "type": "para"
+    },
+    "toca3": {
+      "type": "para"
+    },
+    "sts": {
+      "type": "para"
+    },
+    "rem": {
+      "type": "para"
+    },
+    "mt1": {
+      "type": "para"
+    },
+    "mt2": {
+      "type": "para"
+    },
+    "mt3": {
+      "type": "para"
+    },
+    "mt4": {
+      "type": "para"
+    },
+    "mt": {
+      "type": "para"
+    },
+    "imt1": {
+      "type": "para"
+    },
+    "imt2": {
+      "type": "para"
+    },
+    "imt3": {
+      "type": "para"
+    },
+    "imt4": {
+      "type": "para"
+    },
+    "imte1": {
+      "type": "para"
+    },
+    "imte2": {
+      "type": "para"
+    },
+    "imte": {
+      "type": "para"
+    },
+    "imt": {
+      "type": "para"
+    },
+    "ib": {
+      "type": "para"
+    },
+    "ie": {
+      "type": "para"
+    },
+    "imi": {
+      "type": "para"
+    },
+    "imq": {
+      "type": "para"
+    },
+    "im": {
+      "type": "para"
+    },
+    "io1": {
+      "type": "para"
+    },
+    "io2": {
+      "type": "para"
+    },
+    "io3": {
+      "type": "para"
+    },
+    "io4": {
+      "type": "para"
+    },
+    "iot": {
+      "type": "para"
+    },
+    "io": {
+      "type": "para"
+    },
+    "ipc": {
+      "type": "para"
+    },
+    "ipi": {
+      "type": "para"
+    },
+    "ipq": {
+      "type": "para"
+    },
+    "ipr": {
+      "type": "para"
+    },
+    "ip": {
+      "type": "para"
+    },
+    "iq1": {
+      "type": "para"
+    },
+    "iq2": {
+      "type": "para"
+    },
+    "iq3": {
+      "type": "para"
+    },
+    "iq": {
+      "type": "para"
+    },
+    "is1": {
+      "type": "para"
+    },
+    "is2": {
+      "type": "para"
+    },
+    "is": {
+      "type": "para"
+    },
+    "iex": {
+      "type": "para"
+    },
+    "lit": {
+      "type": "para"
+    },
+    "ili1": {
+      "type": "para"
+    },
+    "ili2": {
+      "type": "para"
+    },
+    "ili": {
+      "type": "para"
+    },
+    "restore": {
+      "type": "para"
+    },
+    "ms1": {
+      "type": "para"
+    },
+    "ms2": {
+      "type": "para"
+    },
+    "ms3": {
+      "type": "para"
+    },
+    "ms": {
+      "type": "para"
+    },
+    "mr": {
+      "type": "para"
+    },
+    "mte1": {
+      "type": "para"
+    },
+    "mte2": {
+      "type": "para"
+    },
+    "mte": {
+      "type": "para"
+    },
+    "r": {
+      "type": "para"
+    },
+    "s1": {
+      "type": "para"
+    },
+    "s2": {
+      "type": "para"
+    },
+    "s3": {
+      "type": "para"
+    },
+    "s4": {
+      "type": "para"
+    },
+    "sr": {
+      "type": "para"
+    },
+    "sp": {
+      "type": "para"
+    },
+    "sd1": {
+      "type": "para"
+    },
+    "sd2": {
+      "type": "para"
+    },
+    "sd3": {
+      "type": "para"
+    },
+    "sd4": {
+      "type": "para"
+    },
+    "sd": {
+      "type": "para"
+    },
+    "s": {
+      "type": "para"
+    },
+    "cl": {
+      "type": "para"
+    },
+    "cd": {
+      "type": "para"
+    },
+    "p1": {
+      "type": "para"
+    },
+    "p2": {
+      "type": "para"
+    },
+    "cp": {
+      "type": "para"
+    },
+    "pb": {
+      "type": "para"
+    },
+    "qa": {
+      "type": "para"
+    },
+    "k1": {
+      "type": "para"
+    },
+    "k2": {
+      "type": "para"
+    },
+    "cls": {
+      "type": "para"
+    },
+    "nb": {
+      "type": "para"
+    },
+    "pc": {
+      "type": "para"
+    },
+    "pi1": {
+      "type": "para"
+    },
+    "pi2": {
+      "type": "para"
+    },
+    "pi3": {
+      "type": "para"
+    },
+    "pi": {
+      "type": "para"
+    },
+    "po": {
+      "type": "para"
+    },
+    "pr": {
+      "type": "para"
+    },
+    "pmo": {
+      "type": "para"
+    },
+    "pmc": {
+      "type": "para"
+    },
+    "pmr": {
+      "type": "para"
+    },
+    "pm": {
+      "type": "para"
+    },
+    "ph1": {
+      "type": "para"
+    },
+    "ph2": {
+      "type": "para"
+    },
+    "ph3": {
+      "type": "para"
+    },
+    "ph": {
+      "type": "para"
+    },
+    "p": {
+      "type": "para"
+    },
+    "q1": {
+      "type": "para"
+    },
+    "q2": {
+      "type": "para"
+    },
+    "q3": {
+      "type": "para"
+    },
+    "q4": {
+      "type": "para"
+    },
+    "qc": {
+      "type": "para"
+    },
+    "qr": {
+      "type": "para"
+    },
+    "qm1": {
+      "type": "para"
+    },
+    "qm2": {
+      "type": "para"
+    },
+    "qm3": {
+      "type": "para"
+    },
+    "qm": {
+      "type": "para"
+    },
+    "qd": {
+      "type": "para"
+    },
+    "q": {
+      "type": "para"
+    },
+    "b": {
+      "type": "para"
+    },
+    "d": {
+      "type": "para"
+    },
+    "mi1": {
+      "type": "para"
+    },
+    "mi2": {
+      "type": "para"
+    },
+    "mi3": {
+      "type": "para"
+    },
+    "mi4": {
+      "type": "para"
+    },
+    "mi": {
+      "type": "para"
+    },
+    "m": {
+      "type": "para"
+    },
+    "lh": {
+      "type": "para"
+    },
+    "li1": {
+      "type": "para"
+    },
+    "li2": {
+      "type": "para"
+    },
+    "li3": {
+      "type": "para"
+    },
+    "li4": {
+      "type": "para"
+    },
+    "lim1": {
+      "type": "para"
+    },
+    "lim2": {
+      "type": "para"
+    },
+    "lim3": {
+      "type": "para"
+    },
+    "lim4": {
+      "type": "para"
+    },
+    "lim": {
+      "type": "para"
+    },
+    "li": {
+      "type": "para"
+    },
+    "lf": {
+      "type": "para"
+    },
+    "ior": {
+      "type": "char"
+    },
+    "iqt": {
+      "type": "char"
+    },
+    "vp": {
+      "type": "char"
+    },
+    "qac": {
+      "type": "char"
+    },
+    "qs": {
+      "type": "char"
+    },
+    "add": {
+      "type": "char"
+    },
+    "addpn": {
+      "type": "char"
+    },
+    "bk": {
+      "type": "char"
+    },
+    "dc": {
+      "type": "char"
+    },
+    "efm": {
+      "type": "char"
+    },
+    "fm": {
+      "type": "char"
+    },
+    "fv": {
+      "type": "char"
+    },
+    "k": {
+      "type": "char",
+      "defaultAttribute": "key"
+    },
+    "nd": {
+      "type": "char"
+    },
+    "ndx": {
+      "type": "char"
+    },
+    "ord": {
+      "type": "char"
+    },
+    "png": {
+      "type": "char"
+    },
+    "pn": {
+      "type": "char"
+    },
+    "pro": {
+      "type": "char"
+    },
+    "qt": {
+      "type": "char"
+    },
+    "rq": {
+      "type": "char"
+    },
+    "sig": {
+      "type": "char"
+    },
+    "sls": {
+      "type": "char"
+    },
+    "tl": {
+      "type": "char"
+    },
+    "wg": {
+      "type": "char"
+    },
+    "wh": {
+      "type": "char"
+    },
+    "wa": {
+      "type": "char"
+    },
+    "wj": {
+      "type": "char"
+    },
+    "jmp": {
+      "type": "char",
+      "defaultAttribute": "href"
+    },
+    "no": {
+      "type": "char"
+    },
+    "it": {
+      "type": "char"
+    },
+    "bdit": {
+      "type": "char"
+    },
+    "bd": {
+      "type": "char"
+    },
+    "em": {
+      "type": "char"
+    },
+    "sc": {
+      "type": "char"
+    },
+    "sup": {
+      "type": "char"
+    },
+    "xt": {
+      "type": "char",
+      "defaultAttribute": "href"
+    },
+    "w": {
+      "type": "char",
+      "defaultAttribute": "lemma"
+    },
+    "rb": {
+      "type": "char",
+      "defaultAttribute": "gloss"
+    },
+    "litl": {
+      "type": "char"
+    },
+    "lik": {
+      "type": "char"
+    },
+    "liv1": {
+      "type": "char"
+    },
+    "liv2": {
+      "type": "char"
+    },
+    "liv3": {
+      "type": "char"
+    },
+    "liv4": {
+      "type": "char"
+    },
+    "liv5": {
+      "type": "char"
+    },
+    "liv": {
+      "type": "char"
+    },
+    "fig": {
+      "type": "figure"
+    },
+    "ts-s": {
+      "type": "ms",
+      "defaultAttribute": "sid"
+    },
+    "ts-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "ts": {
+      "type": "ms"
+    },
+    "t-s": {
+      "type": "ms",
+      "defaultAttribute": "sid"
+    },
+    "t-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt1-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt1-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt2-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt2-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt3-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt3-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt4-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt4-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt5-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt5-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "c": {
+      "type": "chapter"
+    },
+    "v": {
+      "type": "verse"
+    },
+    "fe": {
+      "type": "note"
+    },
+    "f": {
+      "type": "note"
+    },
+    "efe": {
+      "type": "note"
+    },
+    "ef": {
+      "type": "note"
+    },
+    "fr": {
+      "type": "char"
+    },
+    "ft": {
+      "type": "char"
+    },
+    "fk": {
+      "type": "char"
+    },
+    "fqa": {
+      "type": "char"
+    },
+    "fq": {
+      "type": "char"
+    },
+    "fl": {
+      "type": "char"
+    },
+    "fw": {
+      "type": "char"
+    },
+    "fdc": {
+      "type": "char"
+    },
+    "fp": {
+      "type": "char"
+    },
+    "ex": {
+      "type": "note"
+    },
+    "x": {
+      "type": "note"
+    },
+    "xop": {
+      "type": "char"
+    },
+    "xo": {
+      "type": "char"
+    },
+    "xta": {
+      "type": "char"
+    },
+    "xk": {
+      "type": "char"
+    },
+    "xq": {
+      "type": "char"
+    },
+    "xot": {
+      "type": "char"
+    },
+    "xnt": {
+      "type": "char"
+    },
+    "xdc": {
+      "type": "char"
+    },
+    "esb": {
+      "type": "sidebar"
+    }
+  }
+}
