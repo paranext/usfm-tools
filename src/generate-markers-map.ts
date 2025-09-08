@@ -39,286 +39,317 @@ const markersMap: MarkersMap = {
   markers: {},
 };
 
-const skippedDefinitions: Set<string> = new Set();
+// Track which definitions are skipped
+const skippedDefinitions = new Set<string>();
 
-// Helper function to get text content of an element
+/** Helper function to get text content of an element */
 function getTextContent(element: Element): string {
-  return element.textContent || '';
+  return (element.textContent || '').trim();
 }
 
-// Process a define element to extract marker information
-function processDefineElement(defineElement: Element) {
+/** Helper function to get child elements by tag name (not deep search) */
+function getChildElementsByTagName(parent: Element, tagName: string): Element[] {
+  const elements: Element[] = [];
+  for (let i = 0; i < parent.childNodes.length; i++) {
+    // Child is not an element node, so skip
+    if (parent.childNodes[i].nodeType !== 1 /* Node.ELEMENT_NODE - not defined in Node.js */)
+      continue;
+
+    const child = parent.childNodes[i] as Element;
+    if (child.nodeType === 1 && child.tagName.toLowerCase() === tagName.toLowerCase()) {
+      elements.push(child);
+    }
+  }
+  return elements;
+}
+
+/**
+ * Verify that two markers with the same name are similar enough that they can merge, then merge them
+ * @param markerA Existing marker info
+ * @param markerB New marker info
+ * @param markerName Name of marker being compared (for error messages)
+ * @param defineName Name of definition adding the new marker (for error messages)
+ * @returns merged marker info with markerA properties overridden by markerB properties
+ */
+function mergeMarkers(
+  markerA: MarkerInfo | undefined,
+  markerB: MarkerInfo,
+  markerName: string,
+  defineName: string
+) {
+  // If only one exists, nothing to verify
+  if (!markerA) return markerB;
+
+  // Both exist, so verify they are compatible
+  // If types don't match, that's always an error
+  if (markerA.type !== markerB.type) {
+    console.error(`Error: Marker name "${markerName}" has conflicting types:`);
+    console.error(`  Existing type: "${markerA.type}"`);
+    console.error(`  Conflicting type: "${markerB.type}"`);
+    console.error(`  In definition: "${defineName}"`);
+    process.exit(1);
+  }
+
+  // If both default attributes are defined but don't match, that's an error
+  if (markerA.defaultAttribute !== markerB.defaultAttribute) {
+    if (markerA.defaultAttribute && markerB.defaultAttribute) {
+      console.error(`Error: Marker name "${markerName}" has conflicting default attribute:`);
+      console.error(`  Existing default attribute: "${markerA.defaultAttribute}"`);
+      console.error(`  Conflicting default attribute: "${markerB.defaultAttribute}"`);
+      console.error(`  In definition: "${defineName}"`);
+      process.exit(1);
+    } else {
+      console.warn(
+        `Warning: Marker name "${markerName}" has one definition with a default attribute and one without. Using the one with the default attribute.`
+      );
+    }
+  }
+
+  return { ...markerA, ...markerB };
+}
+
+/**
+ * Process a define element to extract marker information
+ *
+ * @param defineElement The define element to process
+ * @param defineElements The collection of all define elements (for reference lookups)
+ */
+function processDefineElement(defineElement: Element, defineElements: HTMLCollectionOf<Element>) {
   const defineName = defineElement.getAttribute('name');
-  if (!defineName) return;
+  if (!defineName) {
+    console.warn('Warning: Found define element without a name attribute. Skipping');
+    return;
+  }
 
   // Skip table-related definitions and explicitly skipped definitions
-  if (defineName.includes('Table') || 
-      defineName === 'cell.align.enum' || 
-      defineName === 'ChapterEnd' || 
-      defineName === 'VerseEnd') {
+  if (
+    defineName.includes('Table') ||
+    defineName === 'cell.align.enum' ||
+    defineName === 'ChapterEnd' ||
+    defineName === 'VerseEnd'
+  ) {
     skippedDefinitions.add(defineName);
     return;
   }
 
-  // Skip definitions that only contain attributes and no elements
   const elements = defineElement.getElementsByTagName('element');
-  if (elements.length === 0) {
-    // Check if there are any attribute definitions
-    if (defineElement.getElementsByTagName('attribute').length > 0) {
-      skippedDefinitions.add(defineName);
-      return;
-    }
-  }
+  let createdMarker = false;
 
   // Process all elements in this definition
   for (let i = 0; i < elements.length; i++) {
     const element = elements[i];
-    const nameElements = element.getElementsByTagName('name');
+    const nameElements = getChildElementsByTagName(element, 'name');
     if (nameElements.length === 0) continue;
+    if (nameElements.length > 1) {
+      console.warn(
+        `Warning: Element in definition "${defineName}" has multiple name elements. Using the first one.`
+      );
+    }
 
-    const markerType = getTextContent(nameElements[0]).trim();
-    if (!markerType) continue;
+    const markerType = getTextContent(nameElements[0]);
+    if (!markerType) {
+      console.warn(`Warning: Element in definition "${defineName}" has an empty name. Skipping.`);
+      continue;
+    }
+
+    // Compile a map of markers to add for this element so we can set the default attribute if we find an
+    // element-wide default attribute before adding the markers to the main map
+    const markersToAdd: Record<string, MarkerInfo> = {};
+
+    // Look for style attribute to get marker names
+    let hasStyle = false;
     const attributes = element.getElementsByTagName('attribute');
     for (let j = 0; j < attributes.length; j++) {
       const attribute = attributes[j];
-      const attrNameElements = attribute.getElementsByTagName('name');
-      if (attrNameElements.length === 0 || getTextContent(attrNameElements[0]).trim() !== 'style') continue;
+      const attributeNameElements = getChildElementsByTagName(attribute, 'name');
+      if (attributeNameElements.length === 0) continue;
+      if (attributeNameElements.length > 1) {
+        console.warn(
+          `Warning: Attribute in definition "${defineName}" has multiple name elements. Using the first one for checking for "style".`
+        );
+      }
+      // This attribute is not the style attribute
+      if (getTextContent(attributeNameElements[0]) !== 'style') continue;
 
-      // Check for direct value
-      const valueElements = attribute.getElementsByTagName('value');
-      for (let k = 0; k < valueElements.length; k++) {
-        const valueElement = valueElements[k];
-        const markerName = getTextContent(valueElement).trim();
+      const styleAttribute = attribute;
+      hasStyle = true;
+
+      // Collect all value elements under style and under the referenced enums
+      // Start with value elements under style
+      const styleValueElements = Array.from(styleAttribute.getElementsByTagName('value'));
+
+      // Add in the value elements under referenced enums
+      const styleRefElements = styleAttribute.getElementsByTagName('ref');
+      for (let k = 0; k < styleRefElements.length; k++) {
+        const refName = styleRefElements[k].getAttribute('name');
+        if (!refName) {
+          console.warn(
+            `Warning: Found ref element without a name attribute in definition "${defineName}". Skipping.`
+          );
+          continue;
+        }
+
+        // Find the referenced definition
+        let foundRef = false;
+        for (let l = 0; l < defineElements.length; l++) {
+          const refDefine = defineElements[l];
+          if (refDefine.getAttribute('name') !== refName) continue;
+
+          // Found the ref! Get its values and be done
+          styleValueElements.push(...Array.from(refDefine.getElementsByTagName('value')));
+          foundRef = true;
+          break;
+        }
+        if (!foundRef) {
+          console.warn(
+            `Warning: Could not find referenced definition "${refName}" in definition "${defineName}". Skipping.`
+          );
+        }
+      }
+
+      // Get marker names from value elements in the style attribute
+      for (let k = 0; k < styleValueElements.length; k++) {
+        const styleValueElement = styleValueElements[k];
+        const markerName = getTextContent(styleValueElement);
         if (markerName) {
-          const defaultAttribute = valueElement.getAttribute('usfm:propval');
           const markerInfo: MarkerInfo = { type: markerType };
+
+          // Sometimes, defaultAttribute is specified on the style value element
+          const defaultAttribute = styleValueElement.getAttribute('usfm:propval');
           if (defaultAttribute) {
             markerInfo.defaultAttribute = defaultAttribute;
           }
 
-          // If marker exists, check for conflicts, preferring definitions that have default attributes
-          if (markersMap.markers[markerName]) {
-            // If types don't match, that's always an error
-            if (markersMap.markers[markerName].type !== markerType) {
-              console.error(`Error: Marker name "${markerName}" has conflicting types:`);
-              console.error(`  Existing type: "${markersMap.markers[markerName].type}"`);
-              console.error(`  Conflicting type: "${markerType}"`);
-              console.error(`  In definition: "${defineName}"`);
-              process.exit(1);
-            }
-            
-            // If either the existing or new marker has a default attribute and they're different, use the one with the attribute
-            if (defaultAttribute || markersMap.markers[markerName].defaultAttribute) {
-              if (defaultAttribute) {
-                markersMap.markers[markerName] = markerInfo;
-              }
-            }
-          } else {
-            markersMap.markers[markerName] = markerInfo;
+          markersToAdd[markerName] = mergeMarkers(
+            markersToAdd[markerName],
+            markerInfo,
+            markerName,
+            defineName
+          );
+        }
+      }
+    }
+
+    // If the element doesn't have a style attribute, its element name (markerType) represents a marker
+    if (!hasStyle) {
+      // Find the first non-optional non-skipped attribute or, if there are no non-optional attributes,
+      // the first non-skipped attribute to consider to be the default attribute
+      // Find potential default attribute
+      const attributes = element.getElementsByTagName('attribute');
+      let defaultAttribute: string | undefined;
+
+      // First try to find non-optional non-skipped attributes
+      let nonOptionalCount = 0;
+      let firstRequiredNonSkippedAttribute: string | undefined;
+      let firstOptionalNonSkippedAttribute: string | undefined;
+
+      for (let j = 0; j < attributes.length; j++) {
+        const attribute = attributes[j];
+        const attributeNameElements = getChildElementsByTagName(attribute, 'name');
+        if (attributeNameElements.length === 0) continue;
+        if (attributeNameElements.length > 1) {
+          console.warn(
+            `Warning: Attribute in definition "${defineName}" has multiple name elements. Using the first one for checking for default attribute.`
+          );
+        }
+
+        const attributeName = getTextContent(attributeNameElements[0]);
+
+        // Determine if we should skip this attribute when looking for a default attribute
+        if (markerType === 'usx') continue; // Skip all attributes on usx marker type
+        if (markerType === 'book' && attributeName === 'code') continue; // Skip code on book marker type
+        if (markerType === 'periph') continue; // Skip all attributes on periph marker type
+        if (attributeName === 'style') continue; // Always skip style attribute
+        if ((markerType === 'para' || markerType === 'table') && attributeName === 'vid') continue; // Skip vid on para and table marker types
+        if (markerType === 'chapter') continue; // Skip all attributes on chapter marker type
+        if (markerType === 'verse') continue; // Skip all attributes on verse marker type
+        if (markerType === 'note' && (attributeName === 'caller' || attributeName === 'category'))
+          continue; // Skip caller and category on note marker type
+        if (markerType === 'sidebar' && attributeName === 'category') continue; // Skip category on sidebar marker type
+
+        // Check if attribute is inside an optional element
+        let isOptional = false;
+        let parent = attribute.parentNode;
+        while (parent && parent !== element) {
+          if (parent.nodeName === 'optional') {
+            isOptional = true;
+            break;
           }
+          parent = parent.parentNode;
+        }
+
+        if (!isOptional) {
+          nonOptionalCount++;
+          if (!firstRequiredNonSkippedAttribute) {
+            firstRequiredNonSkippedAttribute = attributeName;
+          }
+        } else if (!firstOptionalNonSkippedAttribute) {
+          firstOptionalNonSkippedAttribute = attributeName;
         }
       }
 
-      // Check for referenced enum
-      const refElements = attribute.getElementsByTagName('ref');
-      for (let k = 0; k < refElements.length; k++) {
-        const refName = refElements[k].getAttribute('name');
-        if (refName) {
-          // Find the referenced definition
-          const refDefines = doc.getElementsByTagName('define');
-          for (let l = 0; l < refDefines.length; l++) {
-            const refDefine = refDefines[l];
-            if (refDefine.getAttribute('name') === refName) {
-              const choiceElements = refDefine.getElementsByTagName('choice');
-              for (let m = 0; m < choiceElements.length; m++) {
-                const choice = choiceElements[m];
-                const refValueElements = choice.getElementsByTagName('value');
-                for (let n = 0; n < refValueElements.length; n++) {
-                  const valueElement = refValueElements[n];
-                  const markerName = getTextContent(valueElement).trim();
-                  if (markerName) {
-                    const defaultAttribute = valueElement.getAttribute('usfm:propval');
-                    const markerInfo: MarkerInfo = { type: markerType };
-                    if (defaultAttribute) {
-                      markerInfo.defaultAttribute = defaultAttribute;
-                    }
+      // If there's exactly one non-optional attribute, use it as the default
+      if (nonOptionalCount === 1) {
+        defaultAttribute = firstRequiredNonSkippedAttribute;
+      }
+      // If there are no non-optional attributes, use the first optional attribute
+      else if (nonOptionalCount === 0 && firstOptionalNonSkippedAttribute) {
+        defaultAttribute = firstOptionalNonSkippedAttribute;
+      }
 
-                    // If marker exists, check for conflicts, preferring definitions that have default attributes
-                    if (markersMap.markers[markerName]) {
-                      // If types don't match, that's always an error
-                      if (markersMap.markers[markerName].type !== markerType) {
-                        console.error(`Error: Marker name "${markerName}" has conflicting types:`);
-                        console.error(`  Existing type: "${markersMap.markers[markerName].type}"`);
-                        console.error(`  Conflicting type: "${markerType}"`);
-                        console.error(`  In definition: "${defineName}"`);
-                        process.exit(1);
-                      }
-                      
-                      // If either the existing or new marker has a default attribute and they're different, use the one with the attribute
-                      if (defaultAttribute || markersMap.markers[markerName].defaultAttribute) {
-                        if (defaultAttribute) {
-                          markersMap.markers[markerName] = markerInfo;
-                        }
-                      }
-                    } else {
-                      markersMap.markers[markerName] = markerInfo;
-                    }
-                  }
-                }
-              }
-              break;
-            }
-          }
-        }
+      
+      const markerName = markerType;
+      const markerInfo: MarkerInfo = { type: markerType };
+      if (defaultAttribute) {
+        markerInfo.defaultAttribute = defaultAttribute;
+      }
+
+      markersToAdd[markerName] = mergeMarkers(
+        markersToAdd[markerName],
+        markerInfo,
+        markerName,
+        defineName
+      );
+    }
+
+    // Add all collected markers to the main markers map
+    const markersToAddEntries = Object.entries(markersToAdd);
+    if (markersToAddEntries.length > 0) {
+      createdMarker = true;
+      for (const [markerName, markerInfo] of markersToAddEntries) {
+        markersMap.markers[markerName] = mergeMarkers(
+          markersMap.markers[markerName],
+          markerInfo,
+          markerName,
+          defineName
+        );
       }
     }
   }
 
-  // If there are no style attributes, use the element name as the marker name
-  const hasStyleAttr = Array.from(defineElement.getElementsByTagName('attribute')).some(attr => {
-    const nameElements = attr.getElementsByTagName('name');
-    return nameElements.length > 0 && getTextContent(nameElements[0]).trim() === 'style';
-  });
-
-  if (!hasStyleAttr) {
-    // Get the element name
-    const nameElements = defineElement.getElementsByTagName('name');
-    if (nameElements.length > 0) {
-      const elementName = getTextContent(nameElements[0]).trim();
-      const markerType = elementName;
-      const markerName = elementName;
-      if (markerName) {
-        // Find potential default attribute
-        const attributes = defineElement.getElementsByTagName('attribute');
-        let defaultAttribute: string | undefined;
-        
-        // Skip all attributes for certain marker types
-        if (['usx', 'periph', 'chapter', 'verse'].includes(markerType)) {
-          defaultAttribute = undefined;
-        } else {
-          // Skip specific attributes by marker type and attribute name
-          const skipAttributes = new Set([
-            'style', // on any marker type
-          ]);
-
-          // Add marker-type-specific skips
-          if (markerType === 'book') skipAttributes.add('code');
-          if (markerType === 'para' || markerType === 'table') skipAttributes.add('vid');
-          if (markerType === 'note') {
-            skipAttributes.add('caller');
-            skipAttributes.add('category');
-          }
-          if (markerType === 'sidebar') skipAttributes.add('category');
-
-          // First try to find non-optional, non-skipped attributes
-          let nonOptionalCount = 0;
-          let firstNonSkippedAttr: string | undefined;
-          let firstOptionalNonSkippedAttr: string | undefined;
-          
-          for (let j = 0; j < attributes.length; j++) {
-            const attr = attributes[j];
-            const attrNameElements = attr.getElementsByTagName('name');
-            if (attrNameElements.length === 0) continue;
-            
-            const attrName = getTextContent(attrNameElements[0]).trim();
-            if (!skipAttributes.has(attrName)) {
-              // Check if attribute is inside an optional element
-              let isOptional = false;
-              let parent = attr.parentNode;
-              while (parent && parent !== defineElement) {
-                if (parent.nodeName === 'optional') {
-                  isOptional = true;
-                  break;
-                }
-                parent = parent.parentNode;
-              }
-              
-              if (!isOptional) {
-                nonOptionalCount++;
-                if (!firstNonSkippedAttr) {
-                  firstNonSkippedAttr = attrName;
-                }
-              } else if (!firstOptionalNonSkippedAttr) {
-                firstOptionalNonSkippedAttr = attrName;
-              }
-            }
-          }
-
-          // If there's exactly one non-optional attribute, use it as the default
-          if (nonOptionalCount === 1) {
-            defaultAttribute = firstNonSkippedAttr;
-          } else if (nonOptionalCount === 0 && firstOptionalNonSkippedAttr) {
-            defaultAttribute = firstOptionalNonSkippedAttr;
-          }
-        }
-
-        // For ms marker types, 'who' takes priority if present
-        if (markerType === 'ms') {
-          for (let j = 0; j < attributes.length; j++) {
-            const attr = attributes[j];
-            const attrNameElements = attr.getElementsByTagName('name');
-            if (attrNameElements.length > 0 && getTextContent(attrNameElements[0]).trim() === 'who') {
-              defaultAttribute = 'who';
-              break;
-            }
-          }
-        }
-
-        const markerInfo: MarkerInfo = { type: markerType };
-        if (defaultAttribute) {
-          markerInfo.defaultAttribute = defaultAttribute;
-        }
-        markersMap.markers[markerName] = markerInfo;
-      }
-    }
-  }
-
-  // Add to skipped if it's a non-enum definition that didn't produce any markers
-  if (!defineName.includes('.style.enum')) {
+  // If this definition didn't create any markers, add it to skipped
+  if (!createdMarker) {
     skippedDefinitions.add(defineName);
   }
 }
 
-// Process all define elements and track what was processed
+// Process all define elements
 const defineElements = doc.getElementsByTagName('define');
-const allDefinitions = new Set<string>();
 
 for (let i = 0; i < defineElements.length; i++) {
-  const defineName = defineElements[i].getAttribute('name');
-  if (defineName) {
-    allDefinitions.add(defineName);
-  }
-  processDefineElement(defineElements[i]);
+  processDefineElement(defineElements[i], defineElements);
 }
 
-// Add any definitions that weren't explicitly skipped but also didn't generate any markers
-const processedDefinitions = new Set<string>();
-Object.keys(markersMap.markers).forEach((markerName) => {
-  // Mark the definition that produced this marker as processed
-  for (let i = 0; i < defineElements.length; i++) {
-    const defineName = defineElements[i].getAttribute('name');
-    if (defineName && defineElements[i].textContent?.includes(markerName)) {
-      processedDefinitions.add(defineName);
-    }
-  }
-});
-
-// Add any unprocessed definitions to skipped
-allDefinitions.forEach((defineName) => {
-  if (!processedDefinitions.has(defineName) && !defineName.includes('.style.enum')) {
-    skippedDefinitions.add(defineName);
-  }
-});
-
 // Add the required cat marker that might not be in the schema
-markersMap.markers['cat'] = { type: 'char' };
+markersMap.markers['cat'] = mergeMarkers(
+  markersMap.markers['cat'],
+  { type: 'char' },
+  'cat',
+  'added manually'
+);
 
 // Write the output file
-fs.writeFileSync(
-  'markers.json',
-  JSON.stringify(markersMap, null, 2),
-  'utf-8'
-);
+fs.writeFileSync('markers.json', JSON.stringify(markersMap, null, 2), 'utf-8');
 
 console.log('Generated markers.json successfully');
 console.log('\nSkipped definitions:');

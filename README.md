@@ -46,7 +46,7 @@ This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usf
 }
 ```
 
-The marker names and information about those markers are derived from the `usx.rng` file. This schema file contains information about each valid USFM marker:
+The marker names and information about those markers are derived from the `usx.rng` file. This schema file contains information about each valid USFM marker in the various `element` definitions (definition contents other than `element` likely have useful information but do not specifically contain markers):
 - The element's `name` is the marker type
 - The marker name comes from one of a number of places:
     - The `style` attribute may contain the single marker name for that marker type
@@ -114,7 +114,51 @@ Generating the marker map from only this snippet would result in the following:
 }
 ```
 
-Following is a snippet from the schema that is an example of many marker names that share a marker type:
+Following is a snippet from the schema that is an example of many marker names in a `choice` that share a marker type:
+
+```xml
+  <define name="Footnote">
+    <element name="note">
+      <attribute name="style">
+        <choice>
+          <value>f</value>
+          <value>fe</value>
+          <value>ef</value>
+        </choice>
+      </attribute>
+      <attribute name="caller"/>
+      <optional>
+        <attribute name="category"/>
+      </optional>
+      <oneOrMore>
+        <choice>
+          <ref name="FootnoteChar"/>
+          <text/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+```
+
+Generating the marker map from only this snippet would result in the following:
+
+```json
+{
+    "markers": {
+        "f": {
+            "type": "note"
+        },
+        "fe": {
+            "type": "note"
+        },
+        "ef": {
+            "type": "note"
+        }
+    }
+}
+```
+
+Following is a snippet from the schema that is an example of many marker names in a `choice` in a `ref` that share a marker type:
 
 ```xml
   <define name="BookTitles">

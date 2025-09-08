@@ -1,8 +1,14 @@
 {
   "version": "3.2",
   "markers": {
+    "usx": {
+      "type": "usx"
+    },
     "id": {
       "type": "book"
+    },
+    "periph": {
+      "type": "periph"
     },
     "ide": {
       "type": "para"
@@ -702,6 +708,16 @@
     },
     "esb": {
       "type": "sidebar"
+    },
+    "ref": {
+      "type": "ref",
+      "defaultAttribute": "loc"
+    },
+    "optbreak": {
+      "type": "optbreak"
+    },
+    "cat": {
+      "type": "char"
     }
   }
 }

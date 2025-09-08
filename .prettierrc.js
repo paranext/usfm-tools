@@ -7,7 +7,7 @@ module.exports = {
   bracketSameLine: false,
   arrowParens: 'avoid',
   proseWrap: 'preserve',
-  plugins: ['prettier-plugin-sql'],
+  plugins: [],
   overrides: [
     {
       files: '*.sql',
