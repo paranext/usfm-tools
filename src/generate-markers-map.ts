@@ -13,32 +13,6 @@ interface MarkersMap {
   markers: Record<string, MarkerInfo>;
 }
 
-// Parse command line arguments
-program
-  .option('--schema <path>', 'Path to the USX RelaxNG schema file')
-  .option('--version <version>', 'Schema version to include in output')
-  .parse(process.argv);
-
-const options = program.opts();
-
-if (!options.schema || !options.version) {
-  console.error('Error: Both --schema and --version arguments are required');
-  process.exit(1);
-}
-
-const schemaPath = path.resolve(options.schema);
-const schemaVersion = options.version;
-
-// Read and parse the schema file
-const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
-const parser = new DOMParser();
-const doc = parser.parseFromString(schemaContent, 'text/xml');
-
-const markersMap: MarkersMap = {
-  version: schemaVersion,
-  markers: {},
-};
-
 // Track which definitions are skipped
 const skippedDefinitions = new Set<string>();
 
@@ -61,6 +35,29 @@ function getChildElementsByTagName(parent: Element, tagName: string): Element[] 
     }
   }
   return elements;
+}
+
+/**
+ * Helper function to get an element's name from either its attribute or its direct child name element
+ * @param element The element to get the name from
+ * @param defineName The name of the definition containing the element (for error messages)
+ * @returns The element name or undefined if not found
+ */
+function getElementName(element: Element, defineName: string): string | undefined {
+  let name = element.getAttribute('name') ?? undefined;
+  if (!name) {
+    const nameElements = getChildElementsByTagName(element, 'name');
+    if (nameElements.length > 0) {
+      if (nameElements.length > 1) {
+        console.warn(
+          `Warning: XML Element in definition "${defineName}" has multiple name elements. Using the first one for getting the element name.`
+        );
+      }
+      name = getTextContent(nameElements[0]);
+    }
+  }
+
+  return name;
 }
 
 /**
@@ -138,15 +135,10 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
   // Process all elements in this definition
   for (let i = 0; i < elements.length; i++) {
     const element = elements[i];
-    const nameElements = getChildElementsByTagName(element, 'name');
-    if (nameElements.length === 0) continue;
-    if (nameElements.length > 1) {
-      console.warn(
-        `Warning: Element in definition "${defineName}" has multiple name elements. Using the first one.`
-      );
-    }
 
-    const markerType = getTextContent(nameElements[0]);
+    // Get the marker type from the element's name
+    const markerType = getElementName(element, defineName);
+
     if (!markerType) {
       console.warn(`Warning: Element in definition "${defineName}" has an empty name. Skipping.`);
       continue;
@@ -161,15 +153,12 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
     const attributes = element.getElementsByTagName('attribute');
     for (let j = 0; j < attributes.length; j++) {
       const attribute = attributes[j];
-      const attributeNameElements = getChildElementsByTagName(attribute, 'name');
-      if (attributeNameElements.length === 0) continue;
-      if (attributeNameElements.length > 1) {
-        console.warn(
-          `Warning: Attribute in definition "${defineName}" has multiple name elements. Using the first one for checking for "style".`
-        );
-      }
+
+      // Get the attribute name
+      const attributeName = getElementName(attribute, defineName);
+
       // This attribute is not the style attribute
-      if (getTextContent(attributeNameElements[0]) !== 'style') continue;
+      if (!attributeName || attributeName !== 'style') continue;
 
       const styleAttribute = attribute;
       hasStyle = true;
@@ -178,10 +167,16 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
       // Start with value elements under style
       const styleValueElements = Array.from(styleAttribute.getElementsByTagName('value'));
 
-      // Add in the value elements under referenced enums
-      const styleRefElements = styleAttribute.getElementsByTagName('ref');
-      for (let k = 0; k < styleRefElements.length; k++) {
-        const refName = styleRefElements[k].getAttribute('name');
+      // Add in the value elements under ref elements. Ref elements may be multiple levels deep
+
+      // List of all ref elements we are searching
+      const styleRefElements = Array.from(styleAttribute.getElementsByTagName('ref'));
+      let styleRefElementsIndex = 0;
+      // Process all ref elements, including any new ones we find in referenced definitions
+      while (styleRefElementsIndex < styleRefElements.length) {
+        const refName = styleRefElements[styleRefElementsIndex].getAttribute('name');
+        styleRefElementsIndex++;
+
         if (!refName) {
           console.warn(
             `Warning: Found ref element without a name attribute in definition "${defineName}". Skipping.`
@@ -197,6 +192,15 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
 
           // Found the ref! Get its values and be done
           styleValueElements.push(...Array.from(refDefine.getElementsByTagName('value')));
+          // Also add unique new ref elements to the list to process
+          const newRefElements = Array.from(refDefine.getElementsByTagName('ref')).filter(
+            newRefElement =>
+              !styleRefElements.some(
+                styleRefElement =>
+                  styleRefElement.getAttribute('name') === newRefElement.getAttribute('name')
+              )
+          );
+          styleRefElements.push(...newRefElements);
           foundRef = true;
           break;
         }
@@ -208,6 +212,13 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
       }
 
       // Get marker names from value elements in the style attribute
+      if (styleValueElements.length === 0) {
+        console.warn(
+          `Warning: Style attribute in definition "${defineName}" has no value elements. Skipping.`
+        );
+        continue;
+      }
+
       for (let k = 0; k < styleValueElements.length; k++) {
         const styleValueElement = styleValueElements[k];
         const markerName = getTextContent(styleValueElement);
@@ -232,6 +243,22 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
 
     // If the element doesn't have a style attribute, its element name (markerType) represents a marker
     if (!hasStyle) {
+      const markerName = markerType;
+      const markerInfo: MarkerInfo = { type: markerType };
+
+      markersToAdd[markerName] = mergeMarkers(
+        markersToAdd[markerName],
+        markerInfo,
+        markerName,
+        defineName
+      );
+    }
+
+    // Add all collected markers to the main markers map
+    const markersToAddEntries = Object.entries(markersToAdd);
+    if (markersToAddEntries.length > 0) {
+      createdMarker = true;
+
       // Find the first non-optional non-skipped attribute or, if there are no non-optional attributes,
       // the first non-skipped attribute to consider to be the default attribute
       // Find potential default attribute
@@ -245,15 +272,9 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
 
       for (let j = 0; j < attributes.length; j++) {
         const attribute = attributes[j];
-        const attributeNameElements = getChildElementsByTagName(attribute, 'name');
-        if (attributeNameElements.length === 0) continue;
-        if (attributeNameElements.length > 1) {
-          console.warn(
-            `Warning: Attribute in definition "${defineName}" has multiple name elements. Using the first one for checking for default attribute.`
-          );
-        }
 
-        const attributeName = getTextContent(attributeNameElements[0]);
+        const attributeName = getElementName(attribute, defineName);
+        if (!attributeName) continue;
 
         // Determine if we should skip this attribute when looking for a default attribute
         if (markerType === 'usx') continue; // Skip all attributes on usx marker type
@@ -297,29 +318,15 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
         defaultAttribute = firstOptionalNonSkippedAttribute;
       }
 
-      
-      const markerName = markerType;
-      const markerInfo: MarkerInfo = { type: markerType };
-      if (defaultAttribute) {
-        markerInfo.defaultAttribute = defaultAttribute;
-      }
-
-      markersToAdd[markerName] = mergeMarkers(
-        markersToAdd[markerName],
-        markerInfo,
-        markerName,
-        defineName
-      );
-    }
-
-    // Add all collected markers to the main markers map
-    const markersToAddEntries = Object.entries(markersToAdd);
-    if (markersToAddEntries.length > 0) {
-      createdMarker = true;
       for (const [markerName, markerInfo] of markersToAddEntries) {
+        // Add default attribute to each marker we found in the element
+        const updatedMarkerInfo = defaultAttribute
+          ? mergeMarkers(markerInfo, { ...markerInfo, defaultAttribute }, markerName, defineName)
+          : markerInfo;
+
         markersMap.markers[markerName] = mergeMarkers(
           markersMap.markers[markerName],
-          markerInfo,
+          updatedMarkerInfo,
           markerName,
           defineName
         );
@@ -332,6 +339,32 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
     skippedDefinitions.add(defineName);
   }
 }
+
+// Parse command line arguments
+program
+  .option('--schema <path>', 'Path to the USX RelaxNG schema file')
+  .option('--version <version>', 'Schema version to include in output')
+  .parse(process.argv);
+
+const options = program.opts();
+
+if (!options.schema || !options.version) {
+  console.error('Error: Both --schema and --version arguments are required');
+  process.exit(1);
+}
+
+const schemaPath = path.resolve(options.schema);
+const schemaVersion = options.version;
+
+// Read and parse the schema file
+const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
+const parser = new DOMParser();
+const doc = parser.parseFromString(schemaContent, 'text/xml');
+
+const markersMap: MarkersMap = {
+  version: schemaVersion,
+  markers: {},
+};
 
 // Process all define elements
 const defineElements = doc.getElementsByTagName('define');
@@ -347,6 +380,22 @@ markersMap.markers['cat'] = mergeMarkers(
   'cat',
   'added manually'
 );
+
+// In 3.0.8, `link-href` is not set default where it should be, but we need it in a couple
+// spots. Add it in there if it's missing. It should just be `href` in 3.1+, but we will
+// trust that it is properly set in 3.1+ schemas.
+if (markersMap.markers['jmp'] && !markersMap.markers['jmp'].defaultAttribute) {
+  console.warn(
+    'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
+  );
+  markersMap.markers['jmp'].defaultAttribute = 'link-href';
+}
+if (markersMap.markers['xt'] && !markersMap.markers['xt'].defaultAttribute) {
+  console.warn(
+    'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
+  );
+  markersMap.markers['xt'].defaultAttribute = 'link-href';
+}
 
 // Write the output file
 fs.writeFileSync('markers.json', JSON.stringify(markersMap, null, 2), 'utf-8');
