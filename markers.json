@@ -415,6 +415,12 @@
     "lf": {
       "type": "para"
     },
+    "table": {
+      "type": "table"
+    },
+    "tr": {
+      "type": "row"
+    },
     "ior": {
       "type": "char"
     },
@@ -718,6 +724,11 @@
     },
     "cat": {
       "type": "char"
+    }
+  },
+  "markersRegExp": {
+    "t[hc][rc]?\\d+(-\\d+)?": {
+      "type": "cell"
     }
   }
 }

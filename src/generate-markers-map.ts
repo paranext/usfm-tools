@@ -11,6 +11,7 @@ interface MarkerInfo {
 interface MarkersMap {
   version: string;
   markers: Record<string, MarkerInfo>;
+  markersRegExp: Record<string, MarkerInfo>;
 }
 
 // Track which definitions are skipped
@@ -119,12 +120,7 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
   }
 
   // Skip table-related definitions and explicitly skipped definitions
-  if (
-    defineName.includes('Table') ||
-    defineName === 'cell.align.enum' ||
-    defineName === 'ChapterEnd' ||
-    defineName === 'VerseEnd'
-  ) {
+  if (defineName === 'ChapterEnd' || defineName === 'VerseEnd') {
     skippedDefinitions.add(defineName);
     return;
   }
@@ -144,9 +140,10 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
       continue;
     }
 
-    // Compile a map of markers to add for this element so we can set the default attribute if we find an
+    // Compile maps of markers to add for this element so we can set the default attribute if we find an
     // element-wide default attribute before adding the markers to the main map
     const markersToAdd: Record<string, MarkerInfo> = {};
+    const markersRegExpToAdd: Record<string, MarkerInfo> = {};
 
     // Look for style attribute to get marker names
     let hasStyle = false;
@@ -160,12 +157,27 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
       // This attribute is not the style attribute
       if (!attributeName || attributeName !== 'style') continue;
 
+      // Make sure this style attribute is a child of this element, not of a nested element
+      let parent = attribute.parentNode;
+      while (parent && parent !== element) {
+        // Found the closest parent element, so we're done searching
+        if (parent.nodeName === 'element') break;
+
+        parent = parent.parentNode;
+      }
+      // If the closest parent element is not the element we are processing, skip this attribute
+      if (parent !== element) continue;
+
       const styleAttribute = attribute;
       hasStyle = true;
 
-      // Collect all value elements under style and under the referenced enums
+      // Collect all value elements and param pattern elements under style and under the referenced enums
       // Start with value elements under style
       const styleValueElements = Array.from(styleAttribute.getElementsByTagName('value'));
+      // Start with param pattern elements under style
+      const styleParamPatternElements = Array.from(
+        styleAttribute.getElementsByTagName('param')
+      ).filter(param => param.getAttribute('name') === 'pattern');
 
       // Add in the value elements under ref elements. Ref elements may be multiple levels deep
 
@@ -192,6 +204,11 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
 
           // Found the ref! Get its values and be done
           styleValueElements.push(...Array.from(refDefine.getElementsByTagName('value')));
+          styleParamPatternElements.push(
+            ...Array.from(refDefine.getElementsByTagName('param')).filter(
+              param => param.getAttribute('name') === 'pattern'
+            )
+          );
           // Also add unique new ref elements to the list to process
           const newRefElements = Array.from(refDefine.getElementsByTagName('ref')).filter(
             newRefElement =>
@@ -211,14 +228,14 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
         }
       }
 
-      // Get marker names from value elements in the style attribute
-      if (styleValueElements.length === 0) {
+      if (styleValueElements.length === 0 && styleParamPatternElements.length === 0) {
         console.warn(
-          `Warning: Style attribute in definition "${defineName}" has no value elements. Skipping.`
+          `Warning: Style attribute in definition "${defineName}" has no value or param pattern elements. Skipping.`
         );
         continue;
       }
 
+      // Get marker names from value elements in the style attribute
       for (let k = 0; k < styleValueElements.length; k++) {
         const styleValueElement = styleValueElements[k];
         const markerName = getTextContent(styleValueElement);
@@ -239,6 +256,28 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
           );
         }
       }
+
+      // Get marker names from param pattern elements in the style attribute
+      for (let k = 0; k < styleParamPatternElements.length; k++) {
+        const styleParamPatternElement = styleParamPatternElements[k];
+        const markerNameRegExp = getTextContent(styleParamPatternElement);
+        if (markerNameRegExp) {
+          const markerInfo: MarkerInfo = { type: markerType };
+
+          // Sometimes, defaultAttribute is specified on the param pattern element
+          const defaultAttribute = styleParamPatternElement.getAttribute('usfm:propval');
+          if (defaultAttribute) {
+            markerInfo.defaultAttribute = defaultAttribute;
+          }
+
+          markersRegExpToAdd[markerNameRegExp] = mergeMarkers(
+            markersRegExpToAdd[markerNameRegExp],
+            markerInfo,
+            markerNameRegExp,
+            defineName
+          );
+        }
+      }
     }
 
     // If the element doesn't have a style attribute, its element name (markerType) represents a marker
@@ -254,9 +293,11 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
       );
     }
 
-    // Add all collected markers to the main markers map
+    // Figure out element-level default attributes, then add all collected markers to the
+    // main markers map
     const markersToAddEntries = Object.entries(markersToAdd);
-    if (markersToAddEntries.length > 0) {
+    const markersRegExpToAddEntries = Object.entries(markersRegExpToAdd);
+    if (markersToAddEntries.length > 0 || markersRegExpToAddEntries.length > 0) {
       createdMarker = true;
 
       // Find the first non-optional non-skipped attribute or, if there are no non-optional attributes,
@@ -282,22 +323,26 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
         if (markerType === 'periph') continue; // Skip all attributes on periph marker type
         if (attributeName === 'style') continue; // Always skip style attribute
         if ((markerType === 'para' || markerType === 'table') && attributeName === 'vid') continue; // Skip vid on para and table marker types
+        if (markerType === 'cell') continue; // Skip all attributes on cell marker type
         if (markerType === 'chapter') continue; // Skip all attributes on chapter marker type
         if (markerType === 'verse') continue; // Skip all attributes on verse marker type
         if (markerType === 'note' && (attributeName === 'caller' || attributeName === 'category'))
           continue; // Skip caller and category on note marker type
         if (markerType === 'sidebar' && attributeName === 'category') continue; // Skip category on sidebar marker type
 
-        // Check if attribute is inside an optional element
+        // Make sure this style attribute is a child of this element, not of a nested element
+        // Also check if attribute is inside an optional element
         let isOptional = false;
         let parent = attribute.parentNode;
         while (parent && parent !== element) {
-          if (parent.nodeName === 'optional') {
-            isOptional = true;
-            break;
-          }
+          if (parent.nodeName === 'element') break; // Found the closest parent element, so we're done searching
+
+          if (parent.nodeName === 'optional') isOptional = true;
+
           parent = parent.parentNode;
         }
+        // If the closest parent element is not the element we are processing, skip this attribute
+        if (parent !== element) continue;
 
         if (!isOptional) {
           nonOptionalCount++;
@@ -318,6 +363,7 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
         defaultAttribute = firstOptionalNonSkippedAttribute;
       }
 
+      // Add all collected markers to the main markers map, applying the default attribute
       for (const [markerName, markerInfo] of markersToAddEntries) {
         // Add default attribute to each marker we found in the element
         const updatedMarkerInfo = defaultAttribute
@@ -326,6 +372,21 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
 
         markersMap.markers[markerName] = mergeMarkers(
           markersMap.markers[markerName],
+          updatedMarkerInfo,
+          markerName,
+          defineName
+        );
+      }
+
+      // Add all collected markers to the main markers map, applying the default attribute
+      for (const [markerName, markerInfo] of markersRegExpToAddEntries) {
+        // Add default attribute to each marker we found in the element
+        const updatedMarkerInfo = defaultAttribute
+          ? mergeMarkers(markerInfo, { ...markerInfo, defaultAttribute }, markerName, defineName)
+          : markerInfo;
+
+        markersMap.markersRegExp[markerName] = mergeMarkers(
+          markersMap.markersRegExp[markerName],
           updatedMarkerInfo,
           markerName,
           defineName
@@ -364,6 +425,7 @@ const doc = parser.parseFromString(schemaContent, 'text/xml');
 const markersMap: MarkersMap = {
   version: schemaVersion,
   markers: {},
+  markersRegExp: {},
 };
 
 // Process all define elements

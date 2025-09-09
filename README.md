@@ -19,29 +19,34 @@ npm i
 
 Generate the marker type map by placing the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version>`.
 
-This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `markers.json` that contains various information for each USFM marker name. `markers.json` will contain an object with information about the generated file and a `markers` property whose value is a map object whose keys are the marker names and whose values are objects containing information about the marker such as the marker type and the marker's default attribute (where applicable):
+This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `markers.json` that contains various information for each USFM marker name. `markers.json` will contain an object with information about the generated file and a `markers` property whose value is a map object whose keys are the marker names and whose values are objects containing information about the marker such as the marker type and the marker's default attribute (where applicable). There will also be a `markersRegExp` property whose value is the same thing but for markers whose names match the keys using RegExp:
 
 ```json
 {
   "version": "3.2",
   "markers": {
-      "v": {
-          "type": "verse"
-      },
-      "c": {
-          "type": "chapter"
-      },
-      "p": {
-          "type": "para"
-      },
-      "f": {
-          "type": "note"
-      },
-      "qt3-s": {
-          "type": "ms",
-          "defaultAttribute": "who"
-      },
-      ...
+    "v": {
+        "type": "verse"
+    },
+    "c": {
+        "type": "chapter"
+    },
+    "p": {
+        "type": "para"
+    },
+    "f": {
+        "type": "note"
+    },
+    "qt3-s": {
+        "type": "ms",
+        "defaultAttribute": "who"
+    },
+    ...
+  },
+  "markersRegExp": {
+    "t[hc][rc]?\d+(-\d+)?": {
+      "type": "cell"
+    }
   }
 }
 ```
@@ -62,6 +67,7 @@ The marker names and information about those markers are derived from the `usx.r
             - all attributes on `periph` marker type
             - `style` on any marker type
             - `vid` on `para` and `table` marker types
+            - all attributes on `cell` marker type
             - all attributes on `chapter` marker type
             - all attributes on `verse` marker type
             - `caller` and `category` on `note` marker type
@@ -352,6 +358,59 @@ Generating the marker map from only this snippet would result in the following:
             "type": "ref",
             "defaultAttribute": "loc"
         }
+    }
+}
+```
+
+Following is a snippet from the schema that is an example of a `markersRegExp` entry in which the marker name is matched with RegExp:
+
+```xml
+  <define name="TableContent">
+    <element>
+      <name ns="">cell</name>
+      <attribute>
+        <usfm:ptag/>
+        <name ns="">style</name>
+        <data type="string">
+          <param name="pattern">t[hc][rc]?\d+(-\d+)?</param>
+        </data>
+      </attribute>
+      <attribute>
+        <name ns="">align</name>
+        <ref name="cell.align.enum"/>
+      </attribute>
+      <optional>
+        <attribute>
+          <name ns="">colspan</name>
+          <data type="integer"/>
+        </attribute>
+      </optional>
+      <zeroOrMore>
+        <choice>
+          <text>
+            <usfm:text/>
+          </text>
+          <ref name="CharEmbed"/>
+          <ref name="Figure"/>
+          <ref name="Milestone"/>
+          <ref name="Verse"/>
+          <ref name="Footnote"/>
+          <ref name="CrossReference"/>
+          <ref name="Break"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+```
+
+Generating the marker map from only this snippet would result in the following:
+
+```json
+{
+    "markersRegExp": {
+      "t[hc][rc]?\d+(-\d+)?": {
+        "type": "cell"
+      }
     }
 }
 ```
