@@ -1,4 +1,4 @@
-name: Build English Database
+name: Generate Markers Map
 
 on:
   push:
