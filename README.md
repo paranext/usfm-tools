@@ -15,11 +15,11 @@ Then install dependencies:
 npm i
 ```
 
-## Generate Marker Type Map
+## Generate Markers Map
 
-Generate the marker type map by placing the USX RelaxNG Schema file `usx.rng` (download the file on a release branch - [`usx.rng` < 3.1](https://github.com/ubsicap/usx/blob/master/schema/usx.rng) or [`usx.rng` >= 3.1](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng)) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version>`.
+Generate the markers map by placing the USX RelaxNG Schema file `usx.rng` (download the file on a release branch - [`usx.rng` < 3.1](https://github.com/ubsicap/usx/blob/master/schema/usx.rng) or [`usx.rng` >= 3.1](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng)) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version>`.
 
-This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `markers.json` that contains various information for each USFM marker name. `markers.json` will contain an object with:
+This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `dist/markers.json` and a TypeScript file `dist/markers-map.model.ts` that contain various information for each USFM marker name. `markers.json` will contain an object with:
 - information about the generated file (`version`)
 - a `markers` property whose value is a map object
   - keys are the marker names
@@ -28,6 +28,8 @@ This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usf
 - a `markerTypes` property whose value is a map object
   - keys are the marker types
   - values are objects that are currently empty but may be filled with information about the marker types in the future
+
+This object is also exported from `dist/markers-map.model.ts` as `USFM_MARKERS_MAP`. `dist/markers-map.model.ts` also contains TypeScript types relevant to this object.
 
 Following is a simplified example of what you might see in a `markers.json` file:
 
