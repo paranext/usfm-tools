@@ -101,6 +101,7 @@ The marker names and information about those markers are derived from the `usx.r
 There are also some markers that are not necessarily listed in `usx.rng` but need to be present in `markers.json`:
 - [`cat`](https://docs.usfm.bible/usfm/3.1/cat/cat.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
 - [`ca`](https://docs.usfm.bible/usfm/3.1/cv/ca.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
+- [`cp`](https://docs.usfm.bible/usfm/3.1/cv/cp.html) with marker type `para` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
 - [`va`](https://docs.usfm.bible/usfm/3.1/cv/va.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
 - [`vp`](https://docs.usfm.bible/usfm/3.1/cv/vp.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
 - [`usfm`](https://docs.usfm.bible/usfm/3.1/doc/usfm.html) with marker type `para` and no default attribute. This marker is present in USFM but most of the time is translated into the `usx` marker in USX and the `USJ` marker in USJ

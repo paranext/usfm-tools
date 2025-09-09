@@ -448,6 +448,12 @@ markersMapNoTypes.markers['ca'] = mergeMarkers(
   'ca',
   'added manually'
 );
+markersMapNoTypes.markers['cp'] = mergeMarkers(
+  markersMapNoTypes.markers['cp'],
+  { type: 'para' },
+  'cp',
+  'added manually'
+);
 markersMapNoTypes.markers['va'] = mergeMarkers(
   markersMapNoTypes.markers['va'],
   { type: 'char' },
