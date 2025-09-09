@@ -3,15 +3,64 @@ import { program } from 'commander';
 import fs from 'fs';
 import path from 'path';
 
+/**
+ * Information about a USFM/USX/USJ marker that is essential for proper translation between
+ * formats
+ */
 interface MarkerInfo {
+  /**
+   * Which marker type the marker is. Determines how the marker is structured in the data such as what kind
+   * of mandatory whitespace is around the marker in USFM
+   */
   type: string;
+  /**
+   * Which attribute can be provided without specifying the attribute name in USFM.
+   *
+   * A marker can have a default attribute only if it has zero or one non-optional attributes.
+   *
+   * An attribute can be provided with default syntax in the USFM only if it is the only attribute provided
+   * for the marker.
+   *
+   * Following is an example of a marker with a default attribute:
+   *
+   * ```
+   * \w stuff|thisIsTheLemmaDefaultAttribute\w*
+   * ```
+   *
+   * Following is an example of a marker with multiple attributes (cannot use default attribute syntax):
+   *
+   * ```
+   * \w stuff|lemma="thisIsTheLemma" strong="H1234,G1234"\w*
+   * ```
+   */
   defaultAttribute?: string;
 }
 
+/** Information about a USFM/USX/USJ marker type that is essential for proper translation between formats */
+interface MarkerTypeInfo {
+  // Currently empty, but may be filled with information about the marker types in the future
+}
+
+/** A map of all USFM/USX/USJ markers and some information about them as generated from a `usx.rng` file */
 interface MarkersMap {
+  /** Which version of USFM/USX/USJ this map represents */
   version: string;
+  /**
+   * Map whose keys are the marker names and whose values are information about that marker
+   *
+   * If you find the marker name in this map, you do not need to search the `markersRegExp` map.
+   */
   markers: Record<string, MarkerInfo>;
+  /**
+   * Map whose keys are string representations of `RegExp` patterns to match against marker names (using
+   * the [test](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) function)
+   * and whose values are information about that marker
+   *
+   * You do not need to search this map if you found the marker name in the `markers` map.
+   */
   markersRegExp: Record<string, MarkerInfo>;
+  /** Map whose keys are the marker types and whose values are information about that marker type */
+  markerTypes: Record<string, MarkerTypeInfo>;
 }
 
 // Track which definitions are skipped
@@ -370,8 +419,8 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
           ? mergeMarkers(markerInfo, { ...markerInfo, defaultAttribute }, markerName, defineName)
           : markerInfo;
 
-        markersMap.markers[markerName] = mergeMarkers(
-          markersMap.markers[markerName],
+        markersMapNoTypes.markers[markerName] = mergeMarkers(
+          markersMapNoTypes.markers[markerName],
           updatedMarkerInfo,
           markerName,
           defineName
@@ -385,8 +434,8 @@ function processDefineElement(defineElement: Element, defineElements: HTMLCollec
           ? mergeMarkers(markerInfo, { ...markerInfo, defaultAttribute }, markerName, defineName)
           : markerInfo;
 
-        markersMap.markersRegExp[markerName] = mergeMarkers(
-          markersMap.markersRegExp[markerName],
+        markersMapNoTypes.markersRegExp[markerName] = mergeMarkers(
+          markersMapNoTypes.markersRegExp[markerName],
           updatedMarkerInfo,
           markerName,
           defineName
@@ -422,7 +471,7 @@ const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
 const parser = new DOMParser();
 const doc = parser.parseFromString(schemaContent, 'text/xml');
 
-const markersMap: MarkersMap = {
+const markersMapNoTypes: Omit<MarkersMap, 'markerTypes'> = {
   version: schemaVersion,
   markers: {},
   markersRegExp: {},
@@ -435,29 +484,57 @@ for (let i = 0; i < defineElements.length; i++) {
   processDefineElement(defineElements[i], defineElements);
 }
 
-// Add the required cat marker that might not be in the schema
-markersMap.markers['cat'] = mergeMarkers(
-  markersMap.markers['cat'],
+// Add the required markers that might not be in the schema
+markersMapNoTypes.markers['cat'] = mergeMarkers(
+  markersMapNoTypes.markers['cat'],
   { type: 'char' },
   'cat',
+  'added manually'
+);
+markersMapNoTypes.markers['usfm'] = mergeMarkers(
+  markersMapNoTypes.markers['usfm'],
+  { type: 'usfm' },
+  'usfm',
+  'added manually'
+);
+markersMapNoTypes.markers['USJ'] = mergeMarkers(
+  markersMapNoTypes.markers['USJ'],
+  { type: 'USJ' },
+  'USJ',
   'added manually'
 );
 
 // In 3.0.8, `link-href` is not set default where it should be, but we need it in a couple
 // spots. Add it in there if it's missing. It should just be `href` in 3.1+, but we will
 // trust that it is properly set in 3.1+ schemas.
-if (markersMap.markers['jmp'] && !markersMap.markers['jmp'].defaultAttribute) {
+if (markersMapNoTypes.markers['jmp'] && !markersMapNoTypes.markers['jmp'].defaultAttribute) {
   console.warn(
     'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
   );
-  markersMap.markers['jmp'].defaultAttribute = 'link-href';
+  markersMapNoTypes.markers['jmp'].defaultAttribute = 'link-href';
 }
-if (markersMap.markers['xt'] && !markersMap.markers['xt'].defaultAttribute) {
+if (markersMapNoTypes.markers['xt'] && !markersMapNoTypes.markers['xt'].defaultAttribute) {
   console.warn(
     'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
   );
-  markersMap.markers['xt'].defaultAttribute = 'link-href';
+  markersMapNoTypes.markers['xt'].defaultAttribute = 'link-href';
 }
+
+// Collect the markerTypes
+const markerTypesSet = new Set<string>();
+Object.values(markersMapNoTypes.markers)
+  .concat(Object.values(markersMapNoTypes.markersRegExp))
+  .forEach(markerInfo => {
+    markerTypesSet.add(markerInfo.type);
+  });
+
+const markersMap: MarkersMap = {
+  ...markersMapNoTypes,
+  markerTypes: [...markerTypesSet].reduce((acc, markerType) => {
+    acc[markerType] = {};
+    return acc;
+  }, {}),
+};
 
 // Write the output file
 fs.writeFileSync('markers.json', JSON.stringify(markersMap, null, 2), 'utf-8');

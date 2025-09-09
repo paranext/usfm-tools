@@ -724,11 +724,37 @@
     },
     "cat": {
       "type": "char"
+    },
+    "usfm": {
+      "type": "usfm"
+    },
+    "USJ": {
+      "type": "USJ"
     }
   },
   "markersRegExp": {
     "t[hc][rc]?\\d+(-\\d+)?": {
       "type": "cell"
     }
+  },
+  "markerTypes": {
+    "usx": {},
+    "book": {},
+    "periph": {},
+    "para": {},
+    "table": {},
+    "row": {},
+    "char": {},
+    "figure": {},
+    "ms": {},
+    "chapter": {},
+    "verse": {},
+    "note": {},
+    "sidebar": {},
+    "ref": {},
+    "optbreak": {},
+    "usfm": {},
+    "USJ": {},
+    "cell": {}
   }
 }

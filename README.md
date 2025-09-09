@@ -17,13 +17,23 @@ npm i
 
 ## Generate Marker Type Map
 
-Generate the marker type map by placing the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version>`.
+Generate the marker type map by placing the USX RelaxNG Schema file `usx.rng` (download the file on a release branch - [`usx.rng` < 3.1](https://github.com/ubsicap/usx/blob/master/schema/usx.rng) or [`usx.rng` >= 3.1](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng)) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version>`.
 
-This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `markers.json` that contains various information for each USFM marker name. `markers.json` will contain an object with information about the generated file and a `markers` property whose value is a map object whose keys are the marker names and whose values are objects containing information about the marker such as the marker type and the marker's default attribute (where applicable). There will also be a `markersRegExp` property whose value is the same thing but for markers whose names match the keys using RegExp:
+This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `markers.json` that contains various information for each USFM marker name. `markers.json` will contain an object with:
+- information about the generated file (`version`)
+- a `markers` property whose value is a map object
+  - keys are the marker names
+  - values are objects containing information about the marker such as the marker type and the marker's default attribute (where applicable)
+- a `markersRegExp` property whose value is the same thing as `markers` but for markers whose names match the keys using RegExp
+- a `markerTypes` property whose value is a map object
+  - keys are the marker types
+  - values are objects that are currently empty but may be filled with information about the marker types in the future
+
+Following is a simplified example of what you might see in a `markers.json` file:
 
 ```json
 {
-  "version": "3.2",
+  "version": "5.2-test.123",
   "markers": {
     "v": {
         "type": "verse"
@@ -47,9 +57,20 @@ This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usf
     "t[hc][rc]?\d+(-\d+)?": {
       "type": "cell"
     }
+  },
+  "markerTypes": {
+    "verse": {},
+    "chapter": {},
+    "para": {},
+    "note": {},
+    "ms": {},
+    "cell": {}
   }
 }
 ```
+
+<details>
+    <summary>Expand to read about how the data in `usx.rng` is transformed into `markers.json`</summary>
 
 The marker names and information about those markers are derived from the `usx.rng` file. This schema file contains information about each valid USFM marker in the various `element` definitions (definition contents other than `element` likely have useful information but do not specifically contain markers):
 - The element's `name` is the marker type
@@ -74,7 +95,10 @@ The marker names and information about those markers are derived from the `usx.r
             - `category` on `sidebar` marker type
         - Exception: For `ms` marker types, `who` takes priority over other attributes if it is present.
 
-There is also a marker named `cat` with marker type `char` and no default attribute that is not necessarily listed in `usx.rng` but needs to be present in `markers.json`.
+There are also some markers that are not necessarily listed in `usx.rng` but need to be present in `markers.json`:
+- `cat` with marker type `char` and no default attribute
+- `usfm` with marker type `usfm` and no default attribute
+- `USJ` with marker type `USJ` and no default attribute
 
 The definitions `ChapterEnd` and `VerseEnd` need to be skipped as they are not relevant to this map.
 
@@ -435,3 +459,5 @@ Here is an example of some USX data. The tag names are the marker types, and the
   <chapter eid="EXO 1" />
 </usx>
 ```
+
+</details>
