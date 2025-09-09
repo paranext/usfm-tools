@@ -1,0 +1,61 @@
+name: Build English Database
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      schemaVersion:
+        description: "Version of `usx.rng` to generate markers map from, e.g. 3.1. For testing, can specify `master` to use latest version from `ubsicap/usx` or `main` to use latest version from `usfm-bible/tcdocs`, but note that the markers map will have this exact string as its version."
+        required: true
+        default: '3.1'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout usfm-tools
+        uses: actions/checkout@v4
+
+      - name: Clone `ubsicap/usx`, checkout the right branch, and move `usx.rng` to root
+        if: ${{ github.event.inputs.schemaVersion == 'master' || github.event.inputs.schemaVersion < '3.1' }}
+        run: |
+          git clone https://github.com/ubsicap/usx.git ../usx
+          cd ../usx
+          if [ "${{ github.event.inputs.schemaVersion }}" != "master" ]; then
+            git checkout "usx${{ github.event.inputs.schemaVersion }}"
+          fi
+          mv schema/usx.rng ../usfm-tools/usx.rng
+
+      - name: Clone `usfm-bible/tcdocs` and checkout the right branch, and move `usx.rng` to root
+        if: ${{ github.event.inputs.schemaVersion != 'master' && github.event.inputs.schemaVersion >= '3.1' }}
+        run: |
+          git clone https://github.com/usfm-bible/tcdocs.git ../tcdocs
+          cd ../tcdocs
+          if [ "${{ github.event.inputs.schemaVersion }}" != "main" ]; then
+            git checkout "${{ github.event.inputs.schemaVersion }}"
+          fi
+          mv grammar/usx.rng ../usfm-tools/usx.rng
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate markers map
+        run: npm run generate-markers-map -- --schema usx.rng --version "${{ github.event.inputs.schemaVersion }}"
+
+      - name: Upload Markers Map
+        uses: actions/upload-artifact@v4
+        with:
+          name: markers-map
+          path: |
+            dist/*
+          retention-days: 90
