@@ -97,7 +97,7 @@ The marker names and information about those markers are derived from the `usx.r
 
 There are also some markers that are not necessarily listed in `usx.rng` but need to be present in `markers.json`:
 - `cat` with marker type `char` and no default attribute
-- `usfm` with marker type `usfm` and no default attribute
+- `usfm` with marker type `para` and no default attribute
 - `USJ` with marker type `USJ` and no default attribute
 
 The definitions `ChapterEnd` and `VerseEnd` need to be skipped as they are not relevant to this map.

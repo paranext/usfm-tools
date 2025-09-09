@@ -500,7 +500,7 @@ markersMapNoTypes.markers['cat'] = mergeMarkers(
 );
 markersMapNoTypes.markers['usfm'] = mergeMarkers(
   markersMapNoTypes.markers['usfm'],
-  { type: 'usfm' },
+  { type: 'para' },
   'usfm',
   'added manually'
 );
@@ -544,8 +544,8 @@ const markersMap: MarkersMap = {
 };
 
 // Sort the markers and marker types
-markersMapNoTypes.markers = Object.fromEntries(
-  Object.entries(markersMapNoTypes.markers).sort(([markerNameA], [markerNameB]) => {
+markersMap.markers = Object.fromEntries(
+  Object.entries(markersMap.markers).sort(([markerNameA], [markerNameB]) => {
     const a = markerNameA.toLowerCase();
     const b = markerNameB.toLowerCase();
 
@@ -554,8 +554,8 @@ markersMapNoTypes.markers = Object.fromEntries(
     return 0;
   })
 );
-markersMapNoTypes.markersRegExp = Object.fromEntries(
-  Object.entries(markersMapNoTypes.markersRegExp).sort(([markerNameA], [markerNameB]) => {
+markersMap.markersRegExp = Object.fromEntries(
+  Object.entries(markersMap.markersRegExp).sort(([markerNameA], [markerNameB]) => {
     const a = markerNameA.toLowerCase();
     const b = markerNameB.toLowerCase();
 
