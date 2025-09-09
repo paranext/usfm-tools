@@ -41,6 +41,11 @@ export interface MarkersMap {
   /** Which version of USFM/USX/USJ this map represents */
   version: string;
   /**
+   * Which commit this map came from. This is necessary because the schema file seems to be distributed
+   * multiple times in one release version. As such, this specifies the exact version of the schema file.
+   */
+  commit: string;
+  /**
    * Map whose keys are the marker names and whose values are information about that marker
    *
    * If you find the marker name in this map, you do not need to search the `markersRegExp` map.

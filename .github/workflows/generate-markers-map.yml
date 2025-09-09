@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       schemaVersion:
-        description: "Version of `usx.rng` to generate markers map from, e.g. 3.1. For testing, can specify `master` to use latest version from `ubsicap/usx` or `main` to use latest version from `usfm-bible/tcdocs`, but note that the markers map will have this exact string as its version."
+        description: 'Version of `usx.rng` to generate markers map from, e.g. 3.1. For testing, can specify `master` to use latest version from `ubsicap/usx` or `main` to use latest version from `usfm-bible/tcdocs`, but note that the markers map will have this exact string as its version.'
         required: true
         default: '3.1'
 
@@ -29,6 +29,7 @@ jobs:
             git checkout "usx${{ github.event.inputs.schemaVersion }}"
           fi
           mv schema/usx.rng ../usfm-tools/usx.rng
+          echo "USX_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Clone `usfm-bible/tcdocs` and checkout the right branch, and move `usx.rng` to root
         if: ${{ github.event.inputs.schemaVersion != 'master' && github.event.inputs.schemaVersion >= '3.1' }}
@@ -39,6 +40,7 @@ jobs:
             git checkout "${{ github.event.inputs.schemaVersion }}"
           fi
           mv grammar/usx.rng ../usfm-tools/usx.rng
+          echo "USX_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -50,7 +52,7 @@ jobs:
         run: npm ci
 
       - name: Generate markers map
-        run: npm run generate-markers-map -- --schema usx.rng --version "${{ github.event.inputs.schemaVersion }}"
+        run: npm run generate-markers-map -- --schema usx.rng --version "${{ github.event.inputs.schemaVersion }}" --commit "${{ env.USX_COMMIT }}"
 
       - name: Upload Markers Map
         uses: actions/upload-artifact@v4

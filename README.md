@@ -17,10 +17,10 @@ npm i
 
 ## Generate Markers Map
 
-Generate the markers map by placing the USX RelaxNG Schema file `usx.rng` (download the file on a release branch - [`usx.rng` < 3.1](https://github.com/ubsicap/usx/blob/master/schema/usx.rng) or [`usx.rng` >= 3.1](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng)) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version>`.
+Generate the markers map by placing the USX RelaxNG Schema file `usx.rng` (download the file on a release branch - [`usx.rng` < 3.1](https://github.com/ubsicap/usx/blob/master/schema/usx.rng) or [`usx.rng` >= 3.1](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng)) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version> --commit <commit-hash>`. Note that the commit hash is the commit hash for the repo where you got `usx.rng`, *not* the commit hash of this repo.
 
 This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `dist/markers.json` and a TypeScript file `dist/markers-map.model.ts` that contain various information for each USFM marker name. `markers.json` will contain an object with:
-- information about the generated file (`version`)
+- information about the generated file (`version`, `commit`)
 - a `markers` property whose value is a map object
   - keys are the marker names
   - values are objects containing information about the marker such as the marker type and the marker's default attribute (where applicable)
@@ -36,6 +36,7 @@ Following is a simplified example of what you might see in a `markers.json` file
 ```json
 {
   "version": "5.2-test.123",
+  "commit": "abc123",
   "markers": {
     "v": {
         "type": "verse"

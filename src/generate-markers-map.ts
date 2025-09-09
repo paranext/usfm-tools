@@ -399,17 +399,19 @@ function processDefineElement(
 program
   .option('--schema <path>', 'Path to the USX RelaxNG schema file')
   .option('--version <version>', 'Schema version to include in output')
+  .option('--commit <commit>', 'Commit hash the schema file is from to include in output')
   .parse(process.argv);
 
 const options = program.opts();
 
-if (!options.schema || !options.version) {
-  console.error('Error: Both --schema and --version arguments are required');
+if (!options.schema || !options.version || !options.commit) {
+  console.error('Error: --schema, --version, and --commit arguments are required');
   process.exit(1);
 }
 
 const schemaPath = path.resolve(options.schema);
 const schemaVersion = options.version;
+const commit = options.commit;
 
 // Read and parse the schema file
 const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
@@ -418,6 +420,7 @@ const doc = parser.parseFromString(schemaContent, 'text/xml');
 
 const markersMapNoTypes: Omit<MarkersMap, 'markerTypes'> = {
   version: schemaVersion,
+  commit,
   markers: {},
   markersRegExp: {},
 };
