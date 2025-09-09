@@ -17,27 +17,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Apparently GitHub doesn't set the inputs to default if you run from other than manual dispatch, so setting defaults here
+      - name: Make default inputs consistent
+        id: inputs
+        run: |
+          echo "schemaVersion=${{ github.event.inputs.schemaVersion || '3.1' }}" >> "$GITHUB_OUTPUT"
+
       - name: Checkout usfm-tools
         uses: actions/checkout@v4
 
       - name: Clone `ubsicap/usx`, checkout the right branch, and move `usx.rng` to root
-        if: ${{ github.event.inputs.schemaVersion == 'master' || github.event.inputs.schemaVersion < '3.1' }}
+        if: ${{ steps.inputs.outputs.schemaVersion == 'master' || steps.inputs.outputs.schemaVersion < '3.1' }}
         run: |
           git clone https://github.com/ubsicap/usx.git ../usx
           cd ../usx
-          if [ "${{ github.event.inputs.schemaVersion }}" != "master" ]; then
-            git checkout "usx${{ github.event.inputs.schemaVersion }}"
+          if [ "${{ steps.inputs.outputs.schemaVersion }}" != "master" ]; then
+            git checkout "usx${{ steps.inputs.outputs.schemaVersion }}"
           fi
           mv schema/usx.rng ../usfm-tools/usx.rng
           echo "USX_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Clone `usfm-bible/tcdocs` and checkout the right branch, and move `usx.rng` to root
-        if: ${{ github.event.inputs.schemaVersion != 'master' && github.event.inputs.schemaVersion >= '3.1' }}
+        if: ${{ steps.inputs.outputs.schemaVersion != 'master' && steps.inputs.outputs.schemaVersion >= '3.1' }}
         run: |
           git clone https://github.com/usfm-bible/tcdocs.git ../tcdocs
           cd ../tcdocs
-          if [ "${{ github.event.inputs.schemaVersion }}" != "main" ]; then
-            git checkout "${{ github.event.inputs.schemaVersion }}"
+          if [ "${{ steps.inputs.outputs.schemaVersion }}" != "main" ]; then
+            git checkout "${{ steps.inputs.outputs.schemaVersion }}"
           fi
           mv grammar/usx.rng ../usfm-tools/usx.rng
           echo "USX_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
@@ -52,7 +58,7 @@ jobs:
         run: npm ci
 
       - name: Generate markers map
-        run: npm run generate-markers-map -- --schema usx.rng --version "${{ github.event.inputs.schemaVersion }}" --commit "${{ env.USX_COMMIT }}"
+        run: npm run generate-markers-map -- --schema usx.rng --version "${{ steps.inputs.outputs.schemaVersion }}" --commit "${{ env.USX_COMMIT }}"
 
       - name: Upload Markers Map
         uses: actions/upload-artifact@v4

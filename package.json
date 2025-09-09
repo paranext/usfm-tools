@@ -7,7 +7,7 @@
     "format": "prettier --write .",
     "generate-markers-map": "tsx src/generate-markers-map",
     "lint": "eslint src/*.ts --cache .",
-    "test": "vitest"
+    "test": "vitest --passWithNoTests"
   },
   "dependencies": {
     "@xmldom/xmldom": "^0.8.11",
