@@ -22,6 +22,9 @@
     "c": {
       "type": "chapter"
     },
+    "ca": {
+      "type": "char"
+    },
     "cat": {
       "type": "char"
     },
@@ -680,6 +683,9 @@
     },
     "v": {
       "type": "verse"
+    },
+    "va": {
+      "type": "char"
     },
     "vp": {
       "type": "char"

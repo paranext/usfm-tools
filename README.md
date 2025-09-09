@@ -96,9 +96,13 @@ The marker names and information about those markers are derived from the `usx.r
         - Exception: For `ms` marker types, `who` takes priority over other attributes if it is present.
 
 There are also some markers that are not necessarily listed in `usx.rng` but need to be present in `markers.json`:
-- `cat` with marker type `char` and no default attribute
-- `usfm` with marker type `para` and no default attribute
-- `USJ` with marker type `USJ` and no default attribute
+- [`cat`](https://docs.usfm.bible/usfm/3.1/cat/cat.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
+- [`ca`](https://docs.usfm.bible/usfm/3.1/cv/ca.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
+- [`va`](https://docs.usfm.bible/usfm/3.1/cv/va.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
+- [`vp`](https://docs.usfm.bible/usfm/3.1/cv/vp.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
+- [`usfm`](https://docs.usfm.bible/usfm/3.1/doc/usfm.html) with marker type `para` and no default attribute. This marker is present in USFM but most of the time is translated into the `usx` marker in USX and the `USJ` marker in USJ
+  - Note that `usfm` is a special `para` in that its text is considered to be `version`, which gets translated to `usx` and `USJ` as an attribute.
+- [`USJ`](https://docs.usfm.bible/usfm/3.1/doc/usfm.html) with marker type `USJ` and no default attribute. This marker is present in USJ but is translated into the `usx` marker in USX` and the `usfm` marker in USFM.
 
 The definitions `ChapterEnd` and `VerseEnd` need to be skipped as they are not relevant to this map.
 

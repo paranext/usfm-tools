@@ -498,6 +498,24 @@ markersMapNoTypes.markers['cat'] = mergeMarkers(
   'cat',
   'added manually'
 );
+markersMapNoTypes.markers['ca'] = mergeMarkers(
+  markersMapNoTypes.markers['ca'],
+  { type: 'char' },
+  'ca',
+  'added manually'
+);
+markersMapNoTypes.markers['va'] = mergeMarkers(
+  markersMapNoTypes.markers['va'],
+  { type: 'char' },
+  'va',
+  'added manually'
+);
+markersMapNoTypes.markers['vp'] = mergeMarkers(
+  markersMapNoTypes.markers['vp'],
+  { type: 'char' },
+  'vp',
+  'added manually'
+);
 markersMapNoTypes.markers['usfm'] = mergeMarkers(
   markersMapNoTypes.markers['usfm'],
   { type: 'para' },
