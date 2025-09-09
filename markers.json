@@ -738,23 +738,23 @@
     }
   },
   "markerTypes": {
-    "usx": {},
     "book": {},
-    "periph": {},
-    "para": {},
-    "table": {},
-    "row": {},
+    "cell": {},
+    "chapter": {},
     "char": {},
     "figure": {},
     "ms": {},
-    "chapter": {},
-    "verse": {},
     "note": {},
-    "sidebar": {},
-    "ref": {},
     "optbreak": {},
+    "para": {},
+    "periph": {},
+    "ref": {},
+    "row": {},
+    "sidebar": {},
+    "table": {},
     "usfm": {},
     "USJ": {},
-    "cell": {}
+    "usx": {},
+    "verse": {}
   }
 }

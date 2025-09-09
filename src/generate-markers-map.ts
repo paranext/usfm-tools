@@ -63,9 +63,6 @@ interface MarkersMap {
   markerTypes: Record<string, MarkerTypeInfo>;
 }
 
-// Track which definitions are skipped
-const skippedDefinitions = new Set<string>();
-
 /** Helper function to get text content of an element */
 function getTextContent(element: Element): string {
   return (element.textContent || '').trim();
@@ -160,8 +157,15 @@ function mergeMarkers(
  *
  * @param defineElement The define element to process
  * @param defineElements The collection of all define elements (for reference lookups)
+ * @param markersMapNoTypes The markers map to populate (without markerTypes)
+ * @param skippedDefinitions Set to populate with names of definitions that were skipped
  */
-function processDefineElement(defineElement: Element, defineElements: HTMLCollectionOf<Element>) {
+function processDefineElement(
+  defineElement: Element,
+  defineElements: HTMLCollectionOf<Element>,
+  markersMapNoTypes: Omit<MarkersMap, 'markerTypes'>,
+  skippedDefinitions: Set<string>
+) {
   const defineName = defineElement.getAttribute('name');
   if (!defineName) {
     console.warn('Warning: Found define element without a name attribute. Skipping');
@@ -477,11 +481,14 @@ const markersMapNoTypes: Omit<MarkersMap, 'markerTypes'> = {
   markersRegExp: {},
 };
 
+// Track which definitions are skipped
+const skippedDefinitions = new Set<string>();
+
 // Process all define elements
 const defineElements = doc.getElementsByTagName('define');
 
 for (let i = 0; i < defineElements.length; i++) {
-  processDefineElement(defineElements[i], defineElements);
+  processDefineElement(defineElements[i], defineElements, markersMapNoTypes, skippedDefinitions);
 }
 
 // Add the required markers that might not be in the schema
@@ -535,6 +542,38 @@ const markersMap: MarkersMap = {
     return acc;
   }, {}),
 };
+
+// Sort the markers and marker types
+markersMapNoTypes.markers = Object.fromEntries(
+  Object.entries(markersMapNoTypes.markers).sort(([markerNameA], [markerNameB]) => {
+    const a = markerNameA.toLowerCase();
+    const b = markerNameB.toLowerCase();
+
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  })
+);
+markersMapNoTypes.markersRegExp = Object.fromEntries(
+  Object.entries(markersMapNoTypes.markersRegExp).sort(([markerNameA], [markerNameB]) => {
+    const a = markerNameA.toLowerCase();
+    const b = markerNameB.toLowerCase();
+
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  })
+);
+markersMap.markerTypes = Object.fromEntries(
+  Object.entries(markersMap.markerTypes).sort(([markerTypeA], [markerTypeB]) => {
+    const a = markerTypeA.toLowerCase();
+    const b = markerTypeB.toLowerCase();
+
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  })
+);
 
 // Write the output file
 fs.writeFileSync('markers.json', JSON.stringify(markersMap, null, 2), 'utf-8');
