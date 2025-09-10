@@ -1,0 +1,763 @@
+{
+  "version": "3.1",
+  "commit": "50f2a6ac3fc1d867d906df28bc00fcff729a7b76",
+  "markers": {
+    "add": {
+      "type": "char"
+    },
+    "addpn": {
+      "type": "char"
+    },
+    "b": {
+      "type": "para"
+    },
+    "bd": {
+      "type": "char"
+    },
+    "bdit": {
+      "type": "char"
+    },
+    "bk": {
+      "type": "char"
+    },
+    "c": {
+      "type": "chapter"
+    },
+    "ca": {
+      "type": "char"
+    },
+    "cat": {
+      "type": "char"
+    },
+    "cd": {
+      "type": "para"
+    },
+    "cl": {
+      "type": "para"
+    },
+    "cls": {
+      "type": "para"
+    },
+    "cp": {
+      "type": "para"
+    },
+    "d": {
+      "type": "para"
+    },
+    "dc": {
+      "type": "char"
+    },
+    "ef": {
+      "type": "note"
+    },
+    "efe": {
+      "type": "note"
+    },
+    "efm": {
+      "type": "char"
+    },
+    "em": {
+      "type": "char"
+    },
+    "esb": {
+      "type": "sidebar"
+    },
+    "ex": {
+      "type": "note"
+    },
+    "f": {
+      "type": "note"
+    },
+    "fdc": {
+      "type": "char"
+    },
+    "fe": {
+      "type": "note"
+    },
+    "fig": {
+      "type": "figure"
+    },
+    "fk": {
+      "type": "char"
+    },
+    "fl": {
+      "type": "char"
+    },
+    "fm": {
+      "type": "char"
+    },
+    "fp": {
+      "type": "char"
+    },
+    "fq": {
+      "type": "char"
+    },
+    "fqa": {
+      "type": "char"
+    },
+    "fr": {
+      "type": "char"
+    },
+    "ft": {
+      "type": "char"
+    },
+    "fv": {
+      "type": "char"
+    },
+    "fw": {
+      "type": "char"
+    },
+    "h": {
+      "type": "para"
+    },
+    "h1": {
+      "type": "para"
+    },
+    "h2": {
+      "type": "para"
+    },
+    "h3": {
+      "type": "para"
+    },
+    "ib": {
+      "type": "para"
+    },
+    "id": {
+      "type": "book"
+    },
+    "ide": {
+      "type": "para"
+    },
+    "ie": {
+      "type": "para"
+    },
+    "iex": {
+      "type": "para"
+    },
+    "ili": {
+      "type": "para"
+    },
+    "ili1": {
+      "type": "para"
+    },
+    "ili2": {
+      "type": "para"
+    },
+    "im": {
+      "type": "para"
+    },
+    "imi": {
+      "type": "para"
+    },
+    "imq": {
+      "type": "para"
+    },
+    "imt": {
+      "type": "para"
+    },
+    "imt1": {
+      "type": "para"
+    },
+    "imt2": {
+      "type": "para"
+    },
+    "imt3": {
+      "type": "para"
+    },
+    "imt4": {
+      "type": "para"
+    },
+    "imte": {
+      "type": "para"
+    },
+    "imte1": {
+      "type": "para"
+    },
+    "imte2": {
+      "type": "para"
+    },
+    "io": {
+      "type": "para"
+    },
+    "io1": {
+      "type": "para"
+    },
+    "io2": {
+      "type": "para"
+    },
+    "io3": {
+      "type": "para"
+    },
+    "io4": {
+      "type": "para"
+    },
+    "ior": {
+      "type": "char"
+    },
+    "iot": {
+      "type": "para"
+    },
+    "ip": {
+      "type": "para"
+    },
+    "ipi": {
+      "type": "para"
+    },
+    "ipq": {
+      "type": "para"
+    },
+    "ipr": {
+      "type": "para"
+    },
+    "iq": {
+      "type": "para"
+    },
+    "iq1": {
+      "type": "para"
+    },
+    "iq2": {
+      "type": "para"
+    },
+    "iq3": {
+      "type": "para"
+    },
+    "iqt": {
+      "type": "char"
+    },
+    "is": {
+      "type": "para"
+    },
+    "is1": {
+      "type": "para"
+    },
+    "is2": {
+      "type": "para"
+    },
+    "it": {
+      "type": "char"
+    },
+    "jmp": {
+      "type": "char",
+      "defaultAttribute": "href"
+    },
+    "k": {
+      "type": "char",
+      "defaultAttribute": "key"
+    },
+    "k1": {
+      "type": "para"
+    },
+    "k2": {
+      "type": "para"
+    },
+    "lf": {
+      "type": "para"
+    },
+    "lh": {
+      "type": "para"
+    },
+    "li": {
+      "type": "para"
+    },
+    "li1": {
+      "type": "para"
+    },
+    "li2": {
+      "type": "para"
+    },
+    "li3": {
+      "type": "para"
+    },
+    "li4": {
+      "type": "para"
+    },
+    "lik": {
+      "type": "char"
+    },
+    "lim": {
+      "type": "para"
+    },
+    "lim1": {
+      "type": "para"
+    },
+    "lim2": {
+      "type": "para"
+    },
+    "lim3": {
+      "type": "para"
+    },
+    "lim4": {
+      "type": "para"
+    },
+    "lit": {
+      "type": "para"
+    },
+    "litl": {
+      "type": "char"
+    },
+    "liv": {
+      "type": "char"
+    },
+    "liv1": {
+      "type": "char"
+    },
+    "liv2": {
+      "type": "char"
+    },
+    "liv3": {
+      "type": "char"
+    },
+    "liv4": {
+      "type": "char"
+    },
+    "liv5": {
+      "type": "char"
+    },
+    "m": {
+      "type": "para"
+    },
+    "mi": {
+      "type": "para"
+    },
+    "mi1": {
+      "type": "para"
+    },
+    "mi2": {
+      "type": "para"
+    },
+    "mi3": {
+      "type": "para"
+    },
+    "mi4": {
+      "type": "para"
+    },
+    "mr": {
+      "type": "para"
+    },
+    "ms": {
+      "type": "para"
+    },
+    "ms1": {
+      "type": "para"
+    },
+    "ms2": {
+      "type": "para"
+    },
+    "ms3": {
+      "type": "para"
+    },
+    "mt": {
+      "type": "para"
+    },
+    "mt1": {
+      "type": "para"
+    },
+    "mt2": {
+      "type": "para"
+    },
+    "mt3": {
+      "type": "para"
+    },
+    "mt4": {
+      "type": "para"
+    },
+    "mte": {
+      "type": "para"
+    },
+    "mte1": {
+      "type": "para"
+    },
+    "mte2": {
+      "type": "para"
+    },
+    "nb": {
+      "type": "para"
+    },
+    "nd": {
+      "type": "char"
+    },
+    "ndx": {
+      "type": "char"
+    },
+    "no": {
+      "type": "char"
+    },
+    "optbreak": {
+      "type": "optbreak"
+    },
+    "ord": {
+      "type": "char"
+    },
+    "p": {
+      "type": "para"
+    },
+    "p1": {
+      "type": "para"
+    },
+    "p2": {
+      "type": "para"
+    },
+    "pb": {
+      "type": "para"
+    },
+    "pc": {
+      "type": "para"
+    },
+    "periph": {
+      "type": "periph"
+    },
+    "ph": {
+      "type": "para"
+    },
+    "ph1": {
+      "type": "para"
+    },
+    "ph2": {
+      "type": "para"
+    },
+    "ph3": {
+      "type": "para"
+    },
+    "pi": {
+      "type": "para"
+    },
+    "pi1": {
+      "type": "para"
+    },
+    "pi2": {
+      "type": "para"
+    },
+    "pi3": {
+      "type": "para"
+    },
+    "pm": {
+      "type": "para"
+    },
+    "pmc": {
+      "type": "para"
+    },
+    "pmo": {
+      "type": "para"
+    },
+    "pmr": {
+      "type": "para"
+    },
+    "pn": {
+      "type": "char"
+    },
+    "png": {
+      "type": "char"
+    },
+    "po": {
+      "type": "para"
+    },
+    "pr": {
+      "type": "para"
+    },
+    "pro": {
+      "type": "char"
+    },
+    "q": {
+      "type": "para"
+    },
+    "q1": {
+      "type": "para"
+    },
+    "q2": {
+      "type": "para"
+    },
+    "q3": {
+      "type": "para"
+    },
+    "q4": {
+      "type": "para"
+    },
+    "qa": {
+      "type": "para"
+    },
+    "qac": {
+      "type": "char"
+    },
+    "qc": {
+      "type": "para"
+    },
+    "qd": {
+      "type": "para"
+    },
+    "qm": {
+      "type": "para"
+    },
+    "qm1": {
+      "type": "para"
+    },
+    "qm2": {
+      "type": "para"
+    },
+    "qm3": {
+      "type": "para"
+    },
+    "qr": {
+      "type": "para"
+    },
+    "qs": {
+      "type": "char"
+    },
+    "qt": {
+      "type": "char"
+    },
+    "qt-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt1-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt1-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt2-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt2-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt3-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt3-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt4-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt4-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt5-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt5-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "r": {
+      "type": "para"
+    },
+    "rb": {
+      "type": "char",
+      "defaultAttribute": "gloss"
+    },
+    "ref": {
+      "type": "ref",
+      "defaultAttribute": "loc"
+    },
+    "rem": {
+      "type": "para"
+    },
+    "restore": {
+      "type": "para"
+    },
+    "rq": {
+      "type": "char"
+    },
+    "s": {
+      "type": "para"
+    },
+    "s1": {
+      "type": "para"
+    },
+    "s2": {
+      "type": "para"
+    },
+    "s3": {
+      "type": "para"
+    },
+    "s4": {
+      "type": "para"
+    },
+    "sc": {
+      "type": "char"
+    },
+    "sd": {
+      "type": "para"
+    },
+    "sd1": {
+      "type": "para"
+    },
+    "sd2": {
+      "type": "para"
+    },
+    "sd3": {
+      "type": "para"
+    },
+    "sd4": {
+      "type": "para"
+    },
+    "sig": {
+      "type": "char"
+    },
+    "sls": {
+      "type": "char"
+    },
+    "sp": {
+      "type": "para"
+    },
+    "sr": {
+      "type": "para"
+    },
+    "sts": {
+      "type": "para"
+    },
+    "sup": {
+      "type": "char"
+    },
+    "t-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "t-s": {
+      "type": "ms",
+      "defaultAttribute": "sid"
+    },
+    "table": {
+      "type": "table"
+    },
+    "tl": {
+      "type": "char"
+    },
+    "toc1": {
+      "type": "para"
+    },
+    "toc2": {
+      "type": "para"
+    },
+    "toc3": {
+      "type": "para"
+    },
+    "toca1": {
+      "type": "para"
+    },
+    "toca2": {
+      "type": "para"
+    },
+    "toca3": {
+      "type": "para"
+    },
+    "tr": {
+      "type": "row"
+    },
+    "ts": {
+      "type": "ms"
+    },
+    "ts-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "ts-s": {
+      "type": "ms",
+      "defaultAttribute": "sid"
+    },
+    "usfm": {
+      "type": "para"
+    },
+    "USJ": {
+      "type": "USJ"
+    },
+    "usx": {
+      "type": "usx"
+    },
+    "v": {
+      "type": "verse"
+    },
+    "va": {
+      "type": "char"
+    },
+    "vp": {
+      "type": "char"
+    },
+    "w": {
+      "type": "char",
+      "defaultAttribute": "lemma"
+    },
+    "wa": {
+      "type": "char"
+    },
+    "wg": {
+      "type": "char"
+    },
+    "wh": {
+      "type": "char"
+    },
+    "wj": {
+      "type": "char"
+    },
+    "x": {
+      "type": "note"
+    },
+    "xdc": {
+      "type": "char"
+    },
+    "xk": {
+      "type": "char"
+    },
+    "xnt": {
+      "type": "char"
+    },
+    "xo": {
+      "type": "char"
+    },
+    "xop": {
+      "type": "char"
+    },
+    "xot": {
+      "type": "char"
+    },
+    "xq": {
+      "type": "char"
+    },
+    "xt": {
+      "type": "char",
+      "defaultAttribute": "href"
+    },
+    "xta": {
+      "type": "char"
+    }
+  },
+  "markersRegExp": {
+    "t[hc][rc]?\\d+(-\\d+)?": {
+      "type": "cell"
+    }
+  },
+  "markerTypes": {
+    "book": {},
+    "cell": {},
+    "chapter": {},
+    "char": {},
+    "figure": {},
+    "ms": {},
+    "note": {},
+    "optbreak": {},
+    "para": {},
+    "periph": {},
+    "ref": {},
+    "row": {},
+    "sidebar": {},
+    "table": {},
+    "USJ": {},
+    "usx": {},
+    "verse": {}
+  }
+}

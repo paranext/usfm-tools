@@ -1,0 +1,52 @@
+
+> usfm-tools@1.0.0 generate-markers-map
+> tsx src/generate-markers-map --schema src/test-data/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/test-data/markers-3.1.json
+
+Warning: Marker name "xt" has one definition with a default attribute and one without. Using the one with the default attribute.
+Warning: Marker name "ref" has one definition with a default attribute and one without. Using the one with the default attribute.
+Generated markers.json successfully
+
+Skipped definitions:
+Attributes
+BookIdentification.book.code.enum
+Cell.style.enum
+Chapter
+ChapterContent
+ChapterEnd
+Char.char.style.enum
+CharContent
+CrossReference.style.enum
+CrossReferenceChar.char.style.enum
+Figure
+Footnote.style.enum
+FootnoteChar.char.style.enum
+FullChar.char.style.enum
+FullCharExtra.char.style.enum
+Header.para.style.enum
+Internal.style.enum
+IntroChar.char.style.enum
+Introduction.para.style.enum
+List.para.style.enum
+ListChar.char.style.enum
+Milestone.style.enum
+NoteCharContent
+OtherPara.para.style.enum
+Peripheral.BAK.periph.id.enum
+Peripheral.FRT.periph.id.enum
+Peripheral.INT.periph.id.enum
+Peripheral.OTH.periph.id.enum
+PeripheralBook
+PeripheralBookIdentification.book.code.enum
+PeripheralContent
+PeripheralDividedBook
+PeripheralDividedBookIdentification.book.code.enum
+PeripheralOther
+SectionPara.para.style.enum
+Title.para.style.enum
+USX
+Verse
+VerseEnd
+VersePara.para.style.enum
+category
+cell.align.enum
+char.closed
