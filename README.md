@@ -97,8 +97,9 @@ The marker names and information about those markers are derived from the `usx.r
             - `style` on any marker type (TODO: do all have `usfm:tag`/`usfm:ptag`? Anything else with `usfm:tag` or `ptag`? `esbe`(has text content), `cat` (attribute), `ref`(doesn't have text content))
             - TODO: all of `fig`'s "FigureTwo" deprecated syntax attributes have `usfm:match beforeout="|" match="TEXTNOTATTRIBOPT"`, but none of them are leading attributes or text content.
             - `vid` on `para` and `table` marker types
-            - all attributes on `cell` marker type
-            ~~ STOPPED AT ChapterStart ~~ - didn't hit `para`, `table`, or `cell` yet
+              - `vid` is derived metadata in USX/USJ and is not present in USFM (no obvious indication in `usx.rng`)
+            - `align` and `colspan` on `cell` marker type
+              - These are used in determining which table marker to use in USFM, but they are not paired well enough to the specific markers to do anything with at this time
             - `number`, `altnumber`, `pubnumber`, `sid`, and `eid` on `chapter` marker type
               - `number` is a leading attribute in USFM (has `usfm:match`)
               - `altnumber` is transformed into the text content of a new `ca` marker in USFM (has `usfm:match beforeout="&#x27;\\ca &#x27;"`)
@@ -119,23 +120,53 @@ The marker names and information about those markers are derived from the `usx.r
         - Exception: For `ms` marker types, `who` takes priority over other attributes if it is present.
         - Exception: `ref` for some reason has `usfm:match` on both its attributes, `loc` and `gen`, though they are both normal attributes. `gen` has no representation in USFM, though, as it indicates the marker should be removed when transforming back to USFM. `loc` has `matchout="&#x27;|&#x27;"`, so I guess it could be differentiated from `periph`'s `id` by checking for more text after the |. `gen` has `usfm:match noout="true"`.
 
+TODO: Improve wording
+- Closed attribute is just gonna be an exception for now: you have to know not to put the closing tag if `closed="false"`
+- Derived metadata is also gonna be an exception; we aren't going to factor those in right now.
+
 TODO:
 - Figure out a way to get this to where you can work on the rest of the code
 - Transform 3.1 to 3.0 somehow?
+- [marker,markerType] note when the marker shouldn't have a `style` attribute
+- Need to look in `ref` tags in `element` and check if `define` has first child `attribute` or `optional` then `attribute` (`category`, `closed`)
+- Skip the definition if all `ref`s pointing to it are pointing to it via `usfm:alt` attribute instead of `name` (`FigureTwo`)
+- [marker] ignore when translating to USFM
+  - If all `ref`s pointing to it have `usfm:ignore="true"`, ignore the entire marker when translating to usfm if `attribute`s listed in the `markerType` are present (chapter and verse `eid`)
+  - If its `attribute` has `usfm:ignore="true"` or `noout="true"` attribute on it (`attribute` - chapter and verse `sid`, `closed`)
+  - If it is `vid` on `para` or `table` (probably should have ignore set)
+  - If it's `sid` in `chapter` (probably should have ignore set)
+  - `align` and `colspan` attributes in `cell` marker type
+    - These are used in determining which table marker to use in USFM, but they are not paired well enough to the specific markers to do anything with at this time
+- [marker] attributes
+  - Console log if there are multiple `usfm:match` tags
+  - Skip if `attribute` `name` has `ns="<not-empty>"` on it
+  - Skip if any `usfm:match` with `beforeout` containing `|<attribute-name>=`
+    - This is here to prevent `id` on `periph` from being default even though it reasonably should be
+  - Skip if name is `style` (`usfm:ptag` and `usfm:tag` are used later for attribute markers, so can't say skip if those are present)
+- [marker] text content attributes
+  - One `usfm:match` with `match="TEXTNOTATTRIB"`
+  - Special case: `usx` marker `version` is text content. Do some work to encode that the markers are different in each standard
 - [marker] Leading attributes
-  - Ignore if `attribute` `name` has `ns="<not-empty>"` on it
-- [marker] Marker attributes
-  - [markerType] Make new marker types `attributePara` and `attributeChar` or property `isMarkerAttribute` for `ca`, `cp`, `va`, `vp`, `cat` and list of `markerAttributes` on the marker. so it's clear how they can be created from `c`
-    - marker from `usfm:match` or `usfm:tag` `beforeout` `\\__ `
-    - `attributeChar` from `afterout` present and non-empty or `usfm:endtag` present
-    - `attributePara` from `afterout` not present or empty
-    - newline before marker from `beforeout` having `\n` in it
+  - One `usfm:match` is present
+    - `match` must not be `TEXTNOTATTRIB` or `TEXTNOTATTRIBOPT`
+    - `beforeout` must not contain `\\__ `
+- [marker] attribute markers - `ca`, `cp`, `va`, `vp`, `cat`
+  - One `usfm:match` or `usfm:tag` or `usfm:ptag` with  `beforeout` `\\__`
+  - get marker name from `beforeout`
+  - `para` if `usfm:ptag` or `beforeout` has `\n`; `char` otherwise
+  - needs closing tag if `usfm:endtag` is present. Closing tag is empty if `matchref="" or "&#x27;&#x27;"` and `matchout` is not empty/not provided (`category`)
+  - `isAttributeMarker` on the attribute-created marker
+  - `attributeMarkers` list on the parent marker
 - [marker] `esbe`/`sidebar` get marker from `usfm:ptag` with text content different than the name attribute directly under the element
+  - Can check element's direct children for `usfm:ptag` and create new tag if names don't match. Console log if `usfm:ptag` and `usfm:tag` on these different elements
 - [marker] comments
 - [markerType] programmatically determine if marker types need newlines before the marker
-  - `usfm:ptag`. Plus `verse` - the space you would expect between `para` and `verse` tags gets replaced with newline `usfm:tag beforeout="&#x27;\n&#x27;"`. But `cell` has `usfm:ptag` which I think is a bug
-- [markerType] programmatically determine if marker types need closing tag - `usfm:endtag`. `usfm:endtag` is outside the `element` for `milestone` because its `element` has `<empty/>` in it. Can tell its closing tag is empty by `matchref="" or "&#x27;&#x27;"` and `matchout` is not empty/not provided. Sidebar doesn't have `usfm:endtag`, so that's what allows it not to close
-  - [marker] closing tag optional if `noout="true"`
+  - `usfm:ptag` or `beforeout` has `\n` in it (`verse`). But `cell` has `usfm:ptag` which I think is a bug
+- [markerType] programmatically determine if marker types need closing tag
+ - `usfm:endtag` is present in the element
+ - `usfm:endtag` is outside the `element` for `milestone` because its `element` has `<empty/>` in it
+ - Closing tag is empty if `matchref="" or "&#x27;&#x27;"` and `matchout` is not empty/not provided (`category`)
+  - [marker] closing tag should not go in the USFM if `noout="true"`
 - Explain how the terms I am using from XML sorta map to the USFM concepts but aren't exact one-to-one equals
 - Extra work later?
   - Do we need to keep track of whether a nested marker that closes has `+` on its markers? Probably, but maybe the plus is on the style in USX
