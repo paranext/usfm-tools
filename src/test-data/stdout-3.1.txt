@@ -35,6 +35,7 @@ CharContent
 CrossReference.style.enum
 CrossReferenceChar.char.style.enum
 Figure
+FigureTwo
 Footnote.style.enum
 FootnoteChar.char.style.enum
 FullChar.char.style.enum

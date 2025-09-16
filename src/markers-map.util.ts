@@ -69,16 +69,10 @@ function getElementName(element: Element, defineName: string): string | undefine
   return name;
 }
 
-/**
- * Get the associated `define` element for a ref
- * @param refName
- * @param defineElements
- * @param defineName
- * @returns
- */
+/** Get the associated `define` element for a ref */
 function getDefineElementForRef(
   refName: string,
-  defineElements: HTMLCollectionOf<Element>,
+  defineElements: Array<Element>,
   defineName: string
 ): Element | undefined {
   // Find the referenced definition
@@ -472,7 +466,7 @@ function mergeMarkerTypes(
  */
 function processDefineElement(
   defineElement: Element,
-  defineElements: HTMLCollectionOf<Element>,
+  defineElements: Array<Element>,
   markersMap: MarkersMap,
   skippedDefinitions: Set<string>
 ) {
@@ -922,9 +916,44 @@ export function transformUsxSchemaToMarkersMap(
     markerTypes: {},
   };
 
-  // Process all define elements
-  const defineElements = doc.getElementsByTagName('define');
+  // Get all define elements
+  const defineElements = Array.from(doc.getElementsByTagName('define'));
 
+  // Determine which definitions should be skipped entirely (if all `ref`s pointing to it are
+  // only pointing via `usfm:alt`)
+  const refElements = doc.getElementsByTagName('ref');
+  // Set of define names that are referred to in `ref` `name`
+  const referredDefines = new Set<string>();
+  // Set of define names that are referred to in `ref` `usfm:alt`
+  const referredDefinesAlt = new Set<string>();
+  for (let i = 0; i < refElements.length; i++) {
+    const referredName = refElements[i].getAttribute('name');
+    const referredNameAlt = refElements[i].getAttribute('usfm:alt');
+    if (referredName) referredDefines.add(referredName);
+    if (referredNameAlt) referredDefinesAlt.add(referredNameAlt);
+  }
+  // Filter out all the `usfm:alt` referrals that are also referred to by `name`
+  const referredDefinesAltOnly = Array.from(referredDefinesAlt).filter(referredNameAlt =>
+    !referredDefines.has(referredNameAlt)
+  );
+  // Remove all `usfm:alt`-only defines from consideration
+  referredDefinesAltOnly.forEach(referredAltName => {
+    const referredDefineElementIndex = defineElements.findIndex(
+      defineElement => defineElement.getAttribute('name') === referredAltName
+    );
+    if (referredDefineElementIndex < 0) {
+      console.log(
+        `Could not find define element with name ${
+          referredAltName
+        } to remove it from the list of define elements to consider.`
+      );
+      return;
+    }
+    skippedDefinitions.add(referredAltName);
+    defineElements.splice(referredDefineElementIndex, 1);
+  });
+
+  // Process all define elements
   for (let i = 0; i < defineElements.length; i++) {
     processDefineElement(defineElements[i], defineElements, markersMap, skippedDefinitions);
   }

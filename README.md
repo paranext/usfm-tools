@@ -132,6 +132,7 @@ TODO: Improve wording/list exception cases we don't deal with right now
   - `colspan` on `cell` gets put in the marker name in USFM
 
 TODO: adjust README based on new changes
+- Skip the definition if all `ref`s pointing to it are pointing to it via `usfm:alt` attribute instead of `name` (`FigureTwo`)
 - [markerType] note when the marker shouldn't have a `style` attribute
 - Need to look in `ref` tags in `element` and check if `define` has first child `attribute` or `optional` then `attribute` (`category`, `closed`)
 - [marker] ignore when translating to USFM
@@ -146,7 +147,6 @@ TODO: adjust README based on new changes
 TODO: incorporate changes
 - Figure out a way to get this to where you can work on the rest of the code
 - Transform 3.1 to 3.0 somehow?
-- Skip the definition if all `ref`s pointing to it are pointing to it via `usfm:alt` attribute instead of `name` (`FigureTwo`)
 - [marker] ignore when translating to USFM
   - If all `ref`s pointing to it have `usfm:ignore="true"`, ignore the entire marker when translating to usfm if `attribute`s listed in the `markerType` are present (chapter and verse `eid`)
 - [marker] attributes
