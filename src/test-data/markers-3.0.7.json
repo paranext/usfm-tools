@@ -12,10 +12,12 @@
       "type": "para"
     },
     "bd": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "bdit": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "bk": {
       "type": "char"
@@ -27,7 +29,8 @@
       "type": "char"
     },
     "cat": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "cd": {
       "type": "para"
@@ -54,7 +57,8 @@
       "type": "char"
     },
     "em": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "esb": {
       "type": "sidebar"
@@ -66,40 +70,50 @@
       "type": "note"
     },
     "fdc": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "fe": {
       "type": "note"
     },
     "fk": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "fl": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "fm": {
       "type": "char"
     },
     "fp": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "fq": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "fqa": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "fr": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "ft": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "fv": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "fw": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "h": {
       "type": "para"
@@ -228,7 +242,8 @@
       "type": "para"
     },
     "it": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "jmp": {
       "type": "char",
@@ -522,7 +537,8 @@
       "type": "para"
     },
     "sc": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "sd": {
       "type": "para"
@@ -622,32 +638,40 @@
       "type": "note"
     },
     "xdc": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "xk": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "xnt": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "xo": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "xop": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "xot": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "xq": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     },
     "xt": {
       "type": "char",
       "defaultAttribute": "link-href"
     },
     "xta": {
-      "type": "char"
+      "type": "char",
+      "defaultAttribute": "link-href"
     }
   },
   "markersRegExp": {

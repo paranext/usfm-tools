@@ -7,9 +7,42 @@ Warning: Marker named "rb" has one definition with a defaultAttribute and one wi
 Warning: Marker named "ts?(\-[se])?" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: Milestone
 Warning: Marker named "[Zz].+" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: Milestone
 Warning: Marker named "qt[1-5]?(\-[se])?" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: MilestoneWithAttrib.ms.style.qt
+Warning: Marker named "fr" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "cat" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "ft" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "fk" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "fq" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "fqa" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "fl" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "fw" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "fp" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "fv" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "fdc" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "xt" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "xt" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "it" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "it" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "bd" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "bd" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "bdit" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "bdit" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "em" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "em" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "sc" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "sc" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteChar
+Warning: Marker named "fv" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: FootnoteVerse
+Warning: Marker named "xo" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
+Warning: Marker named "xop" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
+Warning: Marker named "xt" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
+Warning: Marker named "xta" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
+Warning: Marker named "xk" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
+Warning: Marker named "xq" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
+Warning: Marker named "xot" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
+Warning: Marker named "xnt" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
+Warning: Marker named "xdc" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
 Warning: Style attribute in definition "Figure" has no value or param pattern elements. Skipping.
 Warning: Marker named "ref" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: Reference
-Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set
+Warning: Marker named "cat" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: added manually
 Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set
 Generated markers.json successfully
 

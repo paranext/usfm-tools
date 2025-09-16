@@ -58,6 +58,31 @@ function getElementName(element: Element, defineName: string): string | undefine
   return name;
 }
 
+/**
+ * Get the associated `define` element for a ref
+ * @param refName
+ * @param defineElements
+ * @param defineName
+ * @returns
+ */
+function getDefineElementForRef(
+  refName: string,
+  defineElements: HTMLCollectionOf<Element>,
+  defineName: string
+): Element | undefined {
+  // Find the referenced definition
+  for (let l = 0; l < defineElements.length; l++) {
+    const refDefine = defineElements[l];
+    if (refDefine.getAttribute('name') !== refName) continue;
+
+    return refDefine;
+  }
+  console.log(
+    `Warning: Could not find referenced definition "${refName}" in definition "${defineName}". Skipping.`
+  );
+  return undefined;
+}
+
 // #endregion XML helper functions
 
 // #region object merging functions
@@ -505,11 +530,8 @@ function processDefineElement(
         }
 
         // Find the referenced definition
-        let foundRef = false;
-        for (let l = 0; l < defineElements.length; l++) {
-          const refDefine = defineElements[l];
-          if (refDefine.getAttribute('name') !== refName) continue;
-
+        const refDefine = getDefineElementForRef(refName, defineElements, defineName);
+        if (refDefine) {
           // Found the ref! Get its values and be done
           styleValueElements.push(...Array.from(refDefine.getElementsByTagName('value')));
           styleParamPatternElements.push(
@@ -526,13 +548,6 @@ function processDefineElement(
               )
           );
           styleRefElements.push(...newRefElements);
-          foundRef = true;
-          break;
-        }
-        if (!foundRef) {
-          console.log(
-            `Warning: Could not find referenced definition "${refName}" in definition "${defineName}". Skipping.`
-          );
         }
       }
 
@@ -600,45 +615,37 @@ function processDefineElement(
         defineName
       );
 
+      // Note there is no style attribute on this marker
       markerTypeToAdd.hasStyleAttribute = false;
     }
 
-    // Figure out element-level default attributes, then add all collected markers to the
+    // Figure out element-level attribute information, then add all collected markers to the
     // main markers map
     const markersToAddEntries = Object.entries(markersToAdd);
     const markersRegExpToAddEntries = Object.entries(markersRegExpToAdd);
     if (markersToAddEntries.length > 0 || markersRegExpToAddEntries.length > 0) {
       createdMarker = true;
 
-      // Find the first non-optional non-skipped attribute or, if there are no non-optional attributes,
-      // the first non-skipped attribute to consider to be the default attribute
-      // Find potential default attribute
-      const attributes = element.getElementsByTagName('attribute');
-      let defaultAttribute: string | undefined;
+      // Make a list of attribute elements to process along with some info we need to determine
+      // based on if the attribute is a child or in a ref
+      // These attributes are children of the element and attributes found in refs in the element
+      const elementAttributes: {
+        attribute: Element;
+        // We already got attribute name, so might as well include it
+        attributeName: string;
+        // ref may be inside optional, so we determine isOptional differently between the two kinds
+        isOptional?: boolean;
+        // ref may have usfm:ignore on it, so determine skipOutputToUsfm differently between the two
+        skipOutputToUsfm?: boolean;
+      }[] = [];
 
-      // First try to find non-optional non-skipped attributes
-      let nonOptionalCount = 0;
-      let firstRequiredNonSkippedAttribute: string | undefined;
-      let firstOptionalNonSkippedAttribute: string | undefined;
-
-      for (let j = 0; j < attributes.length; j++) {
-        const attribute = attributes[j];
+      // Look through child attributes of the element
+      const childAttributes = element.getElementsByTagName('attribute');
+      for (let j = 0; j < childAttributes.length; j++) {
+        const attribute = childAttributes[j];
 
         const attributeName = getElementName(attribute, defineName);
         if (!attributeName) continue;
-
-        // Determine if we should skip this attribute when looking for a default attribute
-        if (markerType === 'usx') continue; // Skip all attributes on usx marker type
-        if (markerType === 'book' && attributeName === 'code') continue; // Skip code on book marker type
-        if (markerType === 'periph') continue; // Skip all attributes on periph marker type
-        if (attributeName === 'style') continue; // Always skip style attribute
-        if ((markerType === 'para' || markerType === 'table') && attributeName === 'vid') continue; // Skip vid on para and table marker types
-        if (markerType === 'cell') continue; // Skip all attributes on cell marker type
-        if (markerType === 'chapter') continue; // Skip all attributes on chapter marker type
-        if (markerType === 'verse') continue; // Skip all attributes on verse marker type
-        if (markerType === 'note' && (attributeName === 'caller' || attributeName === 'category'))
-          continue; // Skip caller and category on note marker type
-        if (markerType === 'sidebar' && attributeName === 'category') continue; // Skip category on sidebar marker type
 
         // Make sure this style attribute is a child of this element, not of a nested element
         // Also check if attribute is inside an optional element
@@ -654,30 +661,152 @@ function processDefineElement(
         // If the closest parent element is not the element we are processing, skip this attribute
         if (parent !== element) continue;
 
-        if (!isOptional) {
-          nonOptionalCount++;
-          if (!firstRequiredNonSkippedAttribute) {
-            firstRequiredNonSkippedAttribute = attributeName;
+        elementAttributes.push({ attribute, attributeName, isOptional });
+      }
+
+      // Look through direct child refs or refs that are under `optional` tags for attributes
+      const refs = element.getElementsByTagName('ref');
+      for (let j = 0; j < refs.length; j++) {
+        const ref = refs[j];
+
+        const refName = ref.getAttribute('name');
+        if (!refName) {
+          console.log(
+            `Warning: Found ref element without a name attribute in marker type ${markerType} in definition "${defineName}". Skipping.`
+          );
+          continue;
+        }
+
+        // Check to make sure this ref is a direct child or a child of an optional of the element.
+        // If not, skip it
+        let isRefOptional = false;
+        let parent = ref.parentNode;
+        if (!parent) continue;
+        if (parent.nodeName === 'optional') {
+          isRefOptional = true;
+          parent = parent.parentNode;
+          if (!parent) continue;
+        }
+        if (parent !== element) continue;
+
+        // If the attribute pointed to by this ref should be ignored when output to usfm,
+        // indicate so
+        // ref may have `usfm:ignore="true"` directly on it
+        const skipOutputToUsfm = ref.getAttribute('usfm:ignore') === 'true';
+
+        // Get the define element linked from this ref
+        const refDefine = getDefineElementForRef(refName, defineElements, defineName);
+        if (refDefine) {
+          // Find attributes that are direct children or child of an optional of the define
+          const attributes = refDefine.getElementsByTagName('attribute');
+          for (let j = 0; j < attributes.length; j++) {
+            const attribute = attributes[j];
+
+            const attributeName = getElementName(attribute, defineName);
+            if (!attributeName) continue;
+
+            // Skip if not a direct child or child of optional of the define
+            // Should be optional if it is in an optional or if the ref was optional
+            let isOptional = isRefOptional;
+            let parent = attribute.parentNode;
+            if (!parent) continue;
+            if (parent.nodeName === 'optional') {
+              isOptional = true;
+              parent = parent.parentNode;
+              if (!parent) continue;
+            }
+            if (parent !== refDefine) continue;
+
+            elementAttributes.push({ attribute, attributeName, isOptional, skipOutputToUsfm });
           }
-        } else if (!firstOptionalNonSkippedAttribute) {
-          firstOptionalNonSkippedAttribute = attributeName;
         }
       }
 
+      // Process all found attributes and build up additional marker info
+      const extraMarkerInfo: Partial<MarkerInfo> = {};
+
+      // Track the first non-optional non-skipped attributes so we can get default attribute
+      let nonOptionalCount = 0;
+      let firstRequiredNonSkippedAttribute: string | undefined;
+      let firstOptionalNonSkippedAttribute: string | undefined;
+
+      // Loop through all attributes and determine some characteristics
+      for (let j = 0; j < elementAttributes.length; j++) {
+        const { attribute, attributeName, isOptional } = elementAttributes[j];
+        // We did some computation on skipOutputToUsfm for when the attribute is through a ref,
+        // but we need to do more to determine if we should skip outputting this attribute to USFM
+        // As such, this is just a `let` so we can modify it
+        let { skipOutputToUsfm } = elementAttributes[j];
+
+        // Determine if we should manually skip this attribute
+        // Always skip style attribute because it is not like other attributes and should not
+        // be considered in this area
+        if (attributeName === 'style') continue;
+        // Always skip closed attribute for now because it is a known exception we have to do
+        // other things with. Maybe we will handle this differently later
+        if (attributeName === 'closed') continue;
+
+        // TODO: take out all of these
+        if (markerType === 'usx') continue; // Skip all attributes on usx marker type
+        if (markerType === 'book' && attributeName === 'code') continue; // Skip code on book marker type
+        if (markerType === 'periph') continue; // Skip all attributes on periph marker type
+        if ((markerType === 'para' || markerType === 'table') && attributeName === 'vid') continue; // Skip vid on para and table marker types
+        if (markerType === 'cell') continue; // Skip all attributes on cell marker type
+        if (markerType === 'chapter') continue; // Skip all attributes on chapter marker type
+        if (markerType === 'verse') continue; // Skip all attributes on verse marker type
+        if (markerType === 'note' && (attributeName === 'caller' || attributeName === 'category'))
+          continue; // Skip caller and category on note marker type
+        if (markerType === 'sidebar' && attributeName === 'category') continue; // Skip category on sidebar marker type
+
+        // If this attribute should be ignored when output to usfm, indicate so
+        // Attribute may have `usfm:ignore="true"` directly on it
+        if (!skipOutputToUsfm) skipOutputToUsfm = attribute.getAttribute('usfm:ignore') === 'true';
+        // Attribute may have `usfm:match` with `noout="true"`
+        if (!skipOutputToUsfm) {
+          const usfmMatches = getChildElementsByTagName(attribute, 'usfm:match');
+          skipOutputToUsfm = usfmMatches.some(
+            usfmMatch => usfmMatch.getAttribute('noout') === 'true'
+          );
+        }
+        // Add this attribute to the skipped list on the marker
+        if (skipOutputToUsfm) {
+          if (!extraMarkerInfo.skipOutputAttributeToUsfm)
+            extraMarkerInfo.skipOutputAttributeToUsfm = [];
+          extraMarkerInfo.skipOutputAttributeToUsfm.push(attributeName);
+        }
+
+        // Determine first required/optional attribute to figure out default attribute
+        // Don't factor in attributes that should be skipped when outputting to usfm
+        if (!skipOutputToUsfm) {
+          if (!isOptional) {
+            nonOptionalCount++;
+            if (!firstRequiredNonSkippedAttribute) {
+              firstRequiredNonSkippedAttribute = attributeName;
+            }
+          } else if (!firstOptionalNonSkippedAttribute) {
+            firstOptionalNonSkippedAttribute = attributeName;
+          }
+        }
+      }
+
+      // Figure out default attribute
+      // Find the first non-optional non-skipped attribute or, if there are no non-optional attributes,
+      // the first non-skipped attribute to consider to be the default attribute
       // If there's exactly one non-optional attribute, use it as the default
       if (nonOptionalCount === 1) {
-        defaultAttribute = firstRequiredNonSkippedAttribute;
+        extraMarkerInfo.defaultAttribute = firstRequiredNonSkippedAttribute;
       }
       // If there are no non-optional attributes, use the first optional attribute
       else if (nonOptionalCount === 0 && firstOptionalNonSkippedAttribute) {
-        defaultAttribute = firstOptionalNonSkippedAttribute;
+        extraMarkerInfo.defaultAttribute = firstOptionalNonSkippedAttribute;
       }
 
-      // Add all collected markers to the main markers map, applying the default attribute
+      // Done collecting additional marker information from attributes. Now,
+      // Add all collected markers to the main markers map, applying the extra marker info
       for (const [markerName, markerInfo] of markersToAddEntries) {
-        // Add default attribute to each marker we found in the element
-        const updatedMarkerInfo = defaultAttribute
-          ? mergeMarkers(markerInfo, { ...markerInfo, defaultAttribute }, markerName, defineName)
+        // Add extra marker info to each marker we found in the element
+        const updatedMarkerInfo = Object.keys(extraMarkerInfo).length > 0
+          ? mergeMarkers(markerInfo, { ...markerInfo, ...extraMarkerInfo }, markerName, defineName)
           : markerInfo;
 
         markersMap.markers[markerName] = mergeMarkers(
@@ -687,12 +816,10 @@ function processDefineElement(
           defineName
         );
       }
-
-      // Add all collected markers to the main markers map, applying the default attribute
       for (const [markerName, markerInfo] of markersRegExpToAddEntries) {
-        // Add default attribute to each marker we found in the element
-        const updatedMarkerInfo = defaultAttribute
-          ? mergeMarkers(markerInfo, { ...markerInfo, defaultAttribute }, markerName, defineName)
+        // Add extra marker info to each marker we found in the element
+        const updatedMarkerInfo = Object.keys(extraMarkerInfo).length > 0
+          ? mergeMarkers(markerInfo, { ...markerInfo, ...extraMarkerInfo }, markerName, defineName)
           : markerInfo;
 
         markersMap.markersRegExp[markerName] = mergeMarkers(
@@ -703,12 +830,13 @@ function processDefineElement(
         );
       }
 
+      // Add the marker type to the main markers map
       markersMap.markerTypes[markerType] = mergeMarkerTypes(
         markersMap.markerTypes[markerType],
         markerTypeToAdd,
         markerType,
         defineName
-      )
+      );
     }
   }
 
@@ -814,7 +942,7 @@ export function transformUsxSchemaToMarkersMap(
   }
   if (markersMap.markers['xt'] && !markersMap.markers['xt'].defaultAttribute) {
     console.log(
-      'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
+      'Warning: Setting default attribute for xt to link-href because defaultAttribute was not set'
     );
     markersMap.markers['xt'].defaultAttribute = 'link-href';
   }

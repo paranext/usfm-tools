@@ -4,6 +4,7 @@
 
 Warning: Marker named "xt" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
 Warning: Marker named "ref" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: Reference
+Warning: Marker named "ref" has one definition with a skipOutputAttributeToUsfm and one without. Using the one with the skipOutputAttributeToUsfm. In definition: Reference
 Generated markers.json successfully
 
 Skipped definitions:

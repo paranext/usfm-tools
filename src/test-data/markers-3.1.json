@@ -562,6 +562,9 @@
     },
     "ref": {
       "type": "ref",
+      "skipOutputAttributeToUsfm": [
+        "gen"
+      ],
       "defaultAttribute": "loc"
     },
     "rem": {

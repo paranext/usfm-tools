@@ -122,17 +122,20 @@ The marker names and information about those markers are derived from the `usx.r
 
 TODO: Improve wording
 - Closed attribute is just gonna be an exception for now: you have to know not to put the closing tag if `closed="false"`
+  - also not listing `closed` tag in `skipOutputAttributeToUsfm` because it is always skipped you do something special with it anyway
 - Derived metadata is also gonna be an exception; we aren't going to factor those in right now.
 
-TODO:
+TODO: adjust README based on new changes
+- [markerType] note when the marker shouldn't have a `style` attribute
+- Need to look in `ref` tags in `element` and check if `define` has first child `attribute` or `optional` then `attribute` (`category`, `closed`)
+
+TODO: incorporate changes
 - Figure out a way to get this to where you can work on the rest of the code
 - Transform 3.1 to 3.0 somehow?
-- [marker,markerType] note when the marker shouldn't have a `style` attribute
-- Need to look in `ref` tags in `element` and check if `define` has first child `attribute` or `optional` then `attribute` (`category`, `closed`)
 - Skip the definition if all `ref`s pointing to it are pointing to it via `usfm:alt` attribute instead of `name` (`FigureTwo`)
 - [marker] ignore when translating to USFM
   - If all `ref`s pointing to it have `usfm:ignore="true"`, ignore the entire marker when translating to usfm if `attribute`s listed in the `markerType` are present (chapter and verse `eid`)
-  - If its `attribute` has `usfm:ignore="true"` or `noout="true"` attribute on it (`attribute` - chapter and verse `sid`, `closed`)
+  - If its `attribute` has `usfm:ignore="true"` or any `usfm:match` in the attribute has `noout="true"` attribute on it (`attribute` - chapter and verse `sid`, `closed`)
   - If it is `vid` on `para` or `table` (probably should have ignore set)
   - If it's `sid` in `chapter` (probably should have ignore set)
   - `align` and `colspan` attributes in `cell` marker type
