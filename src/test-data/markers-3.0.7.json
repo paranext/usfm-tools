@@ -23,7 +23,8 @@
       "type": "char"
     },
     "c": {
-      "type": "chapter"
+      "type": "chapter",
+      "defaultAttribute": "number"
     },
     "ca": {
       "type": "char"
@@ -51,7 +52,8 @@
       "type": "char"
     },
     "ef": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "efm": {
       "type": "char"
@@ -61,20 +63,24 @@
       "defaultAttribute": "link-href"
     },
     "esb": {
-      "type": "sidebar"
+      "type": "sidebar",
+      "defaultAttribute": "category"
     },
     "ex": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "f": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "fdc": {
       "type": "char",
       "defaultAttribute": "link-href"
     },
     "fe": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "fk": {
       "type": "char",
@@ -131,7 +137,8 @@
       "type": "para"
     },
     "id": {
-      "type": "book"
+      "type": "book",
+      "defaultAttribute": "code"
     },
     "ide": {
       "type": "para"
@@ -400,7 +407,8 @@
       "type": "para"
     },
     "periph": {
-      "type": "periph"
+      "type": "periph",
+      "defaultAttribute": "id"
     },
     "ph": {
       "type": "para"
@@ -607,7 +615,8 @@
       "type": "USJ"
     },
     "usx": {
-      "type": "usx"
+      "type": "usx",
+      "defaultAttribute": "version"
     },
     "v": {
       "type": "verse"
@@ -635,7 +644,8 @@
       "type": "char"
     },
     "x": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "xdc": {
       "type": "char",
@@ -693,15 +703,27 @@
   },
   "markerTypes": {
     "book": {},
-    "cell": {},
-    "chapter": {},
+    "cell": {
+      "skipOutputAttributeToUsfm": [
+        "align"
+      ]
+    },
+    "chapter": {
+      "skipOutputAttributeToUsfm": [
+        "sid"
+      ]
+    },
     "char": {},
     "ms": {},
     "note": {},
     "optbreak": {
       "hasStyleAttribute": false
     },
-    "para": {},
+    "para": {
+      "skipOutputAttributeToUsfm": [
+        "vid"
+      ]
+    },
     "periph": {
       "hasStyleAttribute": false
     },
@@ -711,7 +733,10 @@
     "row": {},
     "sidebar": {},
     "table": {
-      "hasStyleAttribute": false
+      "hasStyleAttribute": false,
+      "skipOutputAttributeToUsfm": [
+        "vid"
+      ]
     },
     "USJ": {
       "hasStyleAttribute": false

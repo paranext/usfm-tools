@@ -120,14 +120,28 @@ The marker names and information about those markers are derived from the `usx.r
         - Exception: For `ms` marker types, `who` takes priority over other attributes if it is present.
         - Exception: `ref` for some reason has `usfm:match` on both its attributes, `loc` and `gen`, though they are both normal attributes. `gen` has no representation in USFM, though, as it indicates the marker should be removed when transforming back to USFM. `loc` has `matchout="&#x27;|&#x27;"`, so I guess it could be differentiated from `periph`'s `id` by checking for more text after the |. `gen` has `usfm:match noout="true"`.
 
-TODO: Improve wording
+TODO: Improve wording/list exception cases we don't deal with right now
 - Closed attribute is just gonna be an exception for now: you have to know not to put the closing tag if `closed="false"`
   - also not listing `closed` tag in `skipOutputAttributeToUsfm` because it is always skipped you do something special with it anyway
 - Derived metadata is also gonna be an exception; we aren't going to factor those in right now.
+  - `vid` on `para` and `table`
+- tables are not supported yet
+  - `table` marker goes around all the `tr`s in USX and USJ
+  - `row` -> `table:row` in USJ
+  - `cell` -> `table:cell` in USJ
+  - `colspan` on `cell` gets put in the marker name in USFM
 
 TODO: adjust README based on new changes
 - [markerType] note when the marker shouldn't have a `style` attribute
 - Need to look in `ref` tags in `element` and check if `define` has first child `attribute` or `optional` then `attribute` (`category`, `closed`)
+- [marker] ignore when translating to USFM
+  - If `attribute` `name` has `ns="<not-empty>"` on it
+  - If its `attribute` has `usfm:ignore="true"` or any `usfm:match` in the attribute has `noout="true"` attribute on it (`attribute` - chapter and verse `sid`, `closed`)
+  - If it is `vid` on `para` or `table` (probably should have ignore set)
+  - If it's `sid` in `chapter` (probably should have ignore set)
+  - `align` and `colspan` attributes in `cell` marker type
+    - `align` (probably should have ignore set because it is already embedded in the style)
+    - `colspan` probably needs some kind of special something set because it gets embedded in the style for USFM but is not present in the style already in USX/USJ
 
 TODO: incorporate changes
 - Figure out a way to get this to where you can work on the rest of the code
@@ -135,14 +149,8 @@ TODO: incorporate changes
 - Skip the definition if all `ref`s pointing to it are pointing to it via `usfm:alt` attribute instead of `name` (`FigureTwo`)
 - [marker] ignore when translating to USFM
   - If all `ref`s pointing to it have `usfm:ignore="true"`, ignore the entire marker when translating to usfm if `attribute`s listed in the `markerType` are present (chapter and verse `eid`)
-  - If its `attribute` has `usfm:ignore="true"` or any `usfm:match` in the attribute has `noout="true"` attribute on it (`attribute` - chapter and verse `sid`, `closed`)
-  - If it is `vid` on `para` or `table` (probably should have ignore set)
-  - If it's `sid` in `chapter` (probably should have ignore set)
-  - `align` and `colspan` attributes in `cell` marker type
-    - These are used in determining which table marker to use in USFM, but they are not paired well enough to the specific markers to do anything with at this time
 - [marker] attributes
   - Console log if there are multiple `usfm:match` tags
-  - Skip if `attribute` `name` has `ns="<not-empty>"` on it
   - Skip if any `usfm:match` with `beforeout` containing `|<attribute-name>=`
     - This is here to prevent `id` on `periph` from being default even though it reasonably should be
   - Skip if name is `style` (`usfm:ptag` and `usfm:tag` are used later for attribute markers, so can't say skip if those are present)

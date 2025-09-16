@@ -21,7 +21,8 @@
       "type": "char"
     },
     "c": {
-      "type": "chapter"
+      "type": "chapter",
+      "defaultAttribute": "number"
     },
     "ca": {
       "type": "char"
@@ -48,10 +49,12 @@
       "type": "char"
     },
     "ef": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "efe": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "efm": {
       "type": "char"
@@ -60,19 +63,23 @@
       "type": "char"
     },
     "esb": {
-      "type": "sidebar"
+      "type": "sidebar",
+      "defaultAttribute": "category"
     },
     "ex": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "f": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "fdc": {
       "type": "char"
     },
     "fe": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "fig": {
       "type": "figure"
@@ -123,7 +130,8 @@
       "type": "para"
     },
     "id": {
-      "type": "book"
+      "type": "book",
+      "defaultAttribute": "code"
     },
     "ide": {
       "type": "para"
@@ -404,7 +412,8 @@
       "type": "para"
     },
     "periph": {
-      "type": "periph"
+      "type": "periph",
+      "defaultAttribute": "id"
     },
     "ph": {
       "type": "para"
@@ -562,9 +571,6 @@
     },
     "ref": {
       "type": "ref",
-      "skipOutputAttributeToUsfm": [
-        "gen"
-      ],
       "defaultAttribute": "loc"
     },
     "rem": {
@@ -680,10 +686,12 @@
       "type": "USJ"
     },
     "usx": {
-      "type": "usx"
+      "type": "usx",
+      "defaultAttribute": "version"
     },
     "v": {
-      "type": "verse"
+      "type": "verse",
+      "defaultAttribute": "number"
     },
     "va": {
       "type": "char"
@@ -708,7 +716,8 @@
       "type": "char"
     },
     "x": {
-      "type": "note"
+      "type": "note",
+      "defaultAttribute": "caller"
     },
     "xdc": {
       "type": "char"
@@ -746,8 +755,16 @@
   },
   "markerTypes": {
     "book": {},
-    "cell": {},
-    "chapter": {},
+    "cell": {
+      "skipOutputAttributeToUsfm": [
+        "align"
+      ]
+    },
+    "chapter": {
+      "skipOutputAttributeToUsfm": [
+        "sid"
+      ]
+    },
     "char": {},
     "figure": {},
     "ms": {},
@@ -755,24 +772,41 @@
     "optbreak": {
       "hasStyleAttribute": false
     },
-    "para": {},
+    "para": {
+      "skipOutputAttributeToUsfm": [
+        "vid"
+      ]
+    },
     "periph": {
       "hasStyleAttribute": false
     },
     "ref": {
-      "hasStyleAttribute": false
+      "hasStyleAttribute": false,
+      "skipOutputAttributeToUsfm": [
+        "gen"
+      ]
     },
     "row": {},
     "sidebar": {},
     "table": {
-      "hasStyleAttribute": false
+      "hasStyleAttribute": false,
+      "skipOutputAttributeToUsfm": [
+        "vid"
+      ]
     },
     "USJ": {
       "hasStyleAttribute": false
     },
     "usx": {
-      "hasStyleAttribute": false
+      "hasStyleAttribute": false,
+      "skipOutputAttributeToUsfm": [
+        "noNamespaceSchemaLocation"
+      ]
     },
-    "verse": {}
+    "verse": {
+      "skipOutputAttributeToUsfm": [
+        "sid"
+      ]
+    }
   }
 }

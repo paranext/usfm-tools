@@ -36,6 +36,24 @@ function getChildElementsByTagName(parent: Element, tagName: string): Element[] 
 }
 
 /**
+ * Helper function to get the first child element with the given tag name (not deep search).
+ *
+ * Logs a warning and just returns the first one if there are more than one matching.
+ */
+function getFirstChildWithTagName(element: Element, tagName: string, defineName: string) {
+  const nameElements = getChildElementsByTagName(element, tagName);
+  if (nameElements.length <= 0) return undefined;
+
+  if (nameElements.length > 1) {
+    console.log(
+      `Warning: XML Element in definition "${defineName}" has multiple ${tagName} elements but expected one. Using the first one.`
+    );
+  }
+
+  return nameElements[0];
+}
+
+/**
  * Helper function to get an element's name from either its attribute or its direct child name element
  * @param element The element to get the name from
  * @param defineName The name of the definition containing the element (for error messages)
@@ -44,15 +62,8 @@ function getChildElementsByTagName(parent: Element, tagName: string): Element[] 
 function getElementName(element: Element, defineName: string): string | undefined {
   let name = element.getAttribute('name') ?? undefined;
   if (!name) {
-    const nameElements = getChildElementsByTagName(element, 'name');
-    if (nameElements.length > 0) {
-      if (nameElements.length > 1) {
-        console.log(
-          `Warning: XML Element in definition "${defineName}" has multiple name elements. Using the first one for getting the element name.`
-        );
-      }
-      name = getTextContent(nameElements[0]);
-    }
+    const nameElement = getFirstChildWithTagName(element, 'name', defineName);
+    if (nameElement) name = getTextContent(nameElement);
   }
 
   return name;
@@ -106,8 +117,8 @@ function logObjectMergeConflictError(
   newValue: unknown
 ) {
   console.error(`Error: ${objectType} named "${objectName}" has conflicting ${propertyName}:`);
-  console.error(`  Existing ${propertyName}: "${existingValue}"`);
-  console.error(`  Conflicting ${propertyName}: "${newValue}"`);
+  console.error(`  Existing ${propertyName}: ${JSON.stringify(existingValue)}`);
+  console.error(`  Conflicting ${propertyName}: ${JSON.stringify(newValue)}`);
   console.error(`  In definition: "${defineName}"`);
 }
 
@@ -119,17 +130,23 @@ function logObjectMergeConflictError(
  * @param objectName name of object e.g. "esb"
  * @param propertyName name of property that had the conflict e.g. "default attribute"
  * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
+ * @param existingValue existing property value
+ * @param newValue new value for the property
  */
 function logObjectUseOnePropertyWarning(
   objectType: string,
   objectName: string,
   propertyName: string,
-  defineName: string
+  defineName: string,
+  existingValue: unknown,
+  newValue: unknown
 ) {
   console.log(
-    `Warning: ${objectType} named "${
-      objectName
-    }" has one definition with a ${propertyName} and one without. Using the one with the ${propertyName}. In definition: ${defineName}`
+    `Warning: ${objectType} named "${objectName}" has one definition with a ${
+      propertyName
+    } and one without: ${JSON.stringify(existingValue)}, ${JSON.stringify(
+      newValue
+    )}. Using the one with the ${propertyName}. In definition: ${defineName}`
   );
 }
 
@@ -169,7 +186,14 @@ function verifyStringsCanBeMerged(
   }
 
   // One is defined, so just log a warning
-  logObjectUseOnePropertyWarning(objectType, objectName, propertyName, defineName);
+  logObjectUseOnePropertyWarning(
+    objectType,
+    objectName,
+    propertyName,
+    defineName,
+    existingString,
+    newString
+  );
 }
 
 /**
@@ -197,7 +221,14 @@ function mergeArrays<T>(
 
   // If one is defined, log a warning and use it
   if (!existingArray || !newArray) {
-    logObjectUseOnePropertyWarning(objectType, objectName, propertyName, defineName);
+    logObjectUseOnePropertyWarning(
+      objectType,
+      objectName,
+      propertyName,
+      defineName,
+      existingArray,
+      newArray
+    );
     return undefined;
   }
   // If the arrays are equal, return one
@@ -211,7 +242,7 @@ function mergeArrays<T>(
   console.log(
     `Warning: ${objectType} named "${
       objectName
-    }" has two definition with ${propertyName} arrays of different lengths: ${JSON.stringify(
+    }" has two definitions with ${propertyName} arrays of different lengths: ${JSON.stringify(
       existingArray
     )}, ${JSON.stringify(newArray)}. Combining them. In definition: ${defineName}`
   );
@@ -265,18 +296,6 @@ function mergeMarkers(
     markerA.defaultAttribute,
     markerB.defaultAttribute
   );
-
-  // Combine skipOutputAttributeToUsfm
-  const mergedSkipOutputAttributeToUsfm = mergeArrays(
-    OBJECT_TYPE_MARKER,
-    markerName,
-    'skipOutputAttributeToUsfm',
-    defineName,
-    markerA.skipOutputAttributeToUsfm,
-    markerB.skipOutputAttributeToUsfm
-  );
-  if (mergedSkipOutputAttributeToUsfm)
-    mergedMarker.skipOutputAttributeToUsfm = mergedSkipOutputAttributeToUsfm;
 
   // Combine attributeMarkers
   const mergedAttributeMarkers = mergeArrays(
@@ -379,6 +398,18 @@ function mergeMarkerTypes(
     );
     process.exit(1);
   }
+
+  // Combine skipOutputAttributeToUsfm
+  const mergedSkipOutputAttributeToUsfm = mergeArrays(
+    OBJECT_TYPE_MARKER,
+    markerTypeName,
+    'skipOutputAttributeToUsfm',
+    defineName,
+    markerTypeA.skipOutputAttributeToUsfm,
+    markerTypeB.skipOutputAttributeToUsfm
+  );
+  if (mergedSkipOutputAttributeToUsfm)
+    mergedMarkerType.skipOutputAttributeToUsfm = mergedSkipOutputAttributeToUsfm;
 
   // Combine skipOutputMarkerToUsfmIfAttributeIsPresent
   const mergedSkipOutputMarkerToUsfmIfAttributeIsPresent = mergeArrays(
@@ -742,37 +773,43 @@ function processDefineElement(
         // Always skip style attribute because it is not like other attributes and should not
         // be considered in this area
         if (attributeName === 'style') continue;
-        // Always skip closed attribute for now because it is a known exception we have to do
-        // other things with. Maybe we will handle this differently later
+        // Exception case - always skip closed attribute for now because it's a really weird
+        // attribute that we have to do manual things with. Maybe we will handle this better
+        // in the future
         if (attributeName === 'closed') continue;
-
-        // TODO: take out all of these
-        if (markerType === 'usx') continue; // Skip all attributes on usx marker type
-        if (markerType === 'book' && attributeName === 'code') continue; // Skip code on book marker type
-        if (markerType === 'periph') continue; // Skip all attributes on periph marker type
-        if ((markerType === 'para' || markerType === 'table') && attributeName === 'vid') continue; // Skip vid on para and table marker types
-        if (markerType === 'cell') continue; // Skip all attributes on cell marker type
-        if (markerType === 'chapter') continue; // Skip all attributes on chapter marker type
-        if (markerType === 'verse') continue; // Skip all attributes on verse marker type
-        if (markerType === 'note' && (attributeName === 'caller' || attributeName === 'category'))
-          continue; // Skip caller and category on note marker type
-        if (markerType === 'sidebar' && attributeName === 'category') continue; // Skip category on sidebar marker type
+        // Exception case - `colspan` is an attribute that gets incorporated into the marker
+        // name. But it isn't marked in any specialway in `usx.rng`. And we're not handling
+        // tables yet anyway. Just skip this attribute until something changes.
+        if (markerType === 'cell' && attributeName === 'colspan') continue;
 
         // If this attribute should be ignored when output to usfm, indicate so
-        // Attribute may have `usfm:ignore="true"` directly on it
+        // Skip output attribute may have `usfm:ignore="true"` directly on it
         if (!skipOutputToUsfm) skipOutputToUsfm = attribute.getAttribute('usfm:ignore') === 'true';
-        // Attribute may have `usfm:match` with `noout="true"`
+        // Skip output attribute may have `usfm:match` with `noout="true"`
         if (!skipOutputToUsfm) {
           const usfmMatches = getChildElementsByTagName(attribute, 'usfm:match');
           skipOutputToUsfm = usfmMatches.some(
             usfmMatch => usfmMatch.getAttribute('noout') === 'true'
           );
         }
-        // Add this attribute to the skipped list on the marker
+        // Skip output attribute may have child `name` element with `ns` attribute not empty
+        if (!skipOutputToUsfm) {
+          const nameElement = getFirstChildWithTagName(attribute, 'name', defineName);
+          if (nameElement && nameElement.getAttribute('ns')) skipOutputToUsfm = true;
+        }
+
+        // Some exception cases for skipping output to USFM - I think these are errors in `usx.rng`
+        // If the errors are fixed, these should be removed
+        if ((markerType === 'para' || markerType === 'table') && attributeName === 'vid')
+          skipOutputToUsfm = true;
+        else if (markerType === 'chapter' && attributeName === 'sid') skipOutputToUsfm = true;
+        else if (markerType === 'cell' && attributeName === 'align') skipOutputToUsfm = true;
+
+        // If we should skip this attribute, add it to the skipped list on the marker type
         if (skipOutputToUsfm) {
-          if (!extraMarkerInfo.skipOutputAttributeToUsfm)
-            extraMarkerInfo.skipOutputAttributeToUsfm = [];
-          extraMarkerInfo.skipOutputAttributeToUsfm.push(attributeName);
+          if (!markerTypeToAdd.skipOutputAttributeToUsfm)
+            markerTypeToAdd.skipOutputAttributeToUsfm = [];
+          markerTypeToAdd.skipOutputAttributeToUsfm.push(attributeName);
         }
 
         // Determine first required/optional attribute to figure out default attribute
@@ -805,9 +842,15 @@ function processDefineElement(
       // Add all collected markers to the main markers map, applying the extra marker info
       for (const [markerName, markerInfo] of markersToAddEntries) {
         // Add extra marker info to each marker we found in the element
-        const updatedMarkerInfo = Object.keys(extraMarkerInfo).length > 0
-          ? mergeMarkers(markerInfo, { ...markerInfo, ...extraMarkerInfo }, markerName, defineName)
-          : markerInfo;
+        const updatedMarkerInfo =
+          Object.keys(extraMarkerInfo).length > 0
+            ? mergeMarkers(
+                markerInfo,
+                { ...markerInfo, ...extraMarkerInfo },
+                markerName,
+                defineName
+              )
+            : markerInfo;
 
         markersMap.markers[markerName] = mergeMarkers(
           markersMap.markers[markerName],
@@ -818,9 +861,15 @@ function processDefineElement(
       }
       for (const [markerName, markerInfo] of markersRegExpToAddEntries) {
         // Add extra marker info to each marker we found in the element
-        const updatedMarkerInfo = Object.keys(extraMarkerInfo).length > 0
-          ? mergeMarkers(markerInfo, { ...markerInfo, ...extraMarkerInfo }, markerName, defineName)
-          : markerInfo;
+        const updatedMarkerInfo =
+          Object.keys(extraMarkerInfo).length > 0
+            ? mergeMarkers(
+                markerInfo,
+                { ...markerInfo, ...extraMarkerInfo },
+                markerName,
+                defineName
+              )
+            : markerInfo;
 
         markersMap.markersRegExp[markerName] = mergeMarkers(
           markersMap.markersRegExp[markerName],

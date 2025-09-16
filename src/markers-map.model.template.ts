@@ -73,15 +73,6 @@ export type NormalMarkerInfo = {
    */
   defaultAttribute?: string;
   /**
-   * List of attributes that should not be output to USFM on this marker.
-   *
-   * This is used for attributes that are not present in USFM. For example, the `sid` attribute on the
-   * `v` marker is not present in USFM because it is derived metadata in USX/USJ and is not present in USFM.
-   *
-   * This property is not used when converting to USX or USJ.
-   */
-  skipOutputAttributeToUsfm?: string[];
-  /**
    * List of attribute markers that may be present on this marker. This list is ordered by the order in
    * which the markers should appear.
    *
@@ -202,6 +193,15 @@ export type MarkerTypeInfoBase = {
    */
   hasStyleAttribute?: boolean;
   /**
+   * List of attributes that should not be output to USFM on markers of this type.
+   *
+   * This is used for attributes that are not present in USFM. For example, the `sid` attribute on the
+   * `verse` type marker is not present in USFM because it is derived metadata in USX/USJ and is not present in USFM.
+   *
+   * This property is not used when converting to USX or USJ.
+   */
+  skipOutputAttributeToUsfm?: string[];
+  /**
    * List of attributes indicating whether to skip outputting this marker to USFM. If any of the listed
    * attributes is present on the marker, skip outputting this marker when converting to USFM.
    *
@@ -223,7 +223,7 @@ export type MarkerTypeInfoBase = {
    * \p This is a plain paragraph.
    * \p This is a paragraph \nd with some special text\nd* in it.
    * ```
-   * 
+   *
    * Note that the newline is not necessarily present for the very first marker in examples such as this
    * one. This is just a shortcut to make examples like this easier to read and write.
    *
