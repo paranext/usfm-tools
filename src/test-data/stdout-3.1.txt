@@ -2,8 +2,8 @@
 > usfm-tools@1.0.0 generate-markers-map
 > tsx src/generate-markers-map --schema src/test-data/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/test-data/markers-3.1.json
 
-Warning: Marker name "xt" has one definition with a default attribute and one without. Using the one with the default attribute.
-Warning: Marker name "ref" has one definition with a default attribute and one without. Using the one with the default attribute.
+Warning: Marker named "xt" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CrossReferenceChar
+Warning: Marker named "ref" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: Reference
 Generated markers.json successfully
 
 Skipped definitions:

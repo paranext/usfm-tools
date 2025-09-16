@@ -749,15 +749,27 @@
     "figure": {},
     "ms": {},
     "note": {},
-    "optbreak": {},
+    "optbreak": {
+      "hasStyleAttribute": false
+    },
     "para": {},
-    "periph": {},
-    "ref": {},
+    "periph": {
+      "hasStyleAttribute": false
+    },
+    "ref": {
+      "hasStyleAttribute": false
+    },
     "row": {},
     "sidebar": {},
-    "table": {},
-    "USJ": {},
-    "usx": {},
+    "table": {
+      "hasStyleAttribute": false
+    },
+    "USJ": {
+      "hasStyleAttribute": false
+    },
+    "usx": {
+      "hasStyleAttribute": false
+    },
     "verse": {}
   }
 }

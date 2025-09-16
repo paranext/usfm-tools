@@ -36,8 +36,10 @@ export type AttributeMarkerInfo = NormalMarkerInfo & {
    *
    * For example, `ca` is an attribute marker for `c` and represents the `altnumber` attribute on the `c`
    * marker in USX/USJ. `attributeMarkerAttributeName` would be `altnumber` for the `ca` marker.
+   * 
+   * If not provided, defaults to the marker name.
    */
-  attributeMarkerAttributeName: string;
+  attributeMarkerAttributeName?: string;
 };
 
 /**

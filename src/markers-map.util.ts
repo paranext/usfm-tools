@@ -1,5 +1,18 @@
 import { DOMParser } from '@xmldom/xmldom';
-import { MarkerInfo, MarkersMap } from "./markers-map.model.template";
+import {
+  AttributeMarkerInfo,
+  CloseableMarkerTypeInfo,
+  MarkerInfo,
+  MarkersMap,
+  MarkerTypeInfo,
+} from './markers-map.model.template';
+
+/** Name of object representing a marker - for use in logging */
+const OBJECT_TYPE_MARKER = 'Marker';
+/** Name of object representing a marker type - for use in logging */
+const OBJECT_TYPE_MARKER_TYPE = 'Marker type';
+
+// #region XML helper functions
 
 /** Helper function to get text content of an element */
 function getTextContent(element: Element): string {
@@ -45,13 +58,151 @@ function getElementName(element: Element, defineName: string): string | undefine
   return name;
 }
 
+// #endregion XML helper functions
+
+// #region object merging functions
+
+/**
+ * Log an error that something went wrong while merging two objects
+ *
+ * @param objectType type of object e.g. "marker"
+ * @param objectName name of object e.g. "esb"
+ * @param propertyName name of property that had the conflict e.g. "default attribute"
+ * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
+ * @param existingValue existing property value
+ * @param newValue new property value that is causing the conflict
+ */
+function logObjectMergeConflictError(
+  objectType: string,
+  objectName: string,
+  propertyName: string,
+  defineName: string,
+  existingValue: unknown,
+  newValue: unknown
+) {
+  console.error(`Error: ${objectType} named "${objectName}" has conflicting ${propertyName}:`);
+  console.error(`  Existing ${propertyName}: "${existingValue}"`);
+  console.error(`  Conflicting ${propertyName}: "${newValue}"`);
+  console.error(`  In definition: "${defineName}"`);
+}
+
+/**
+ * Log a warning while merging two objects that one object had a property and the other did not and that
+ * the merge will use the present property value
+ *
+ * @param objectType type of object e.g. "marker"
+ * @param objectName name of object e.g. "esb"
+ * @param propertyName name of property that had the conflict e.g. "default attribute"
+ * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
+ */
+function logObjectUseOnePropertyWarning(
+  objectType: string,
+  objectName: string,
+  propertyName: string,
+  defineName: string
+) {
+  console.log(
+    `Warning: ${objectType} named "${
+      objectName
+    }" has one definition with a ${propertyName} and one without. Using the one with the ${propertyName}. In definition: ${defineName}`
+  );
+}
+
+/**
+ * Verify that, of two strings, at most one is defined.
+ *
+ * This confirms that the strings can be merged using `{ ...a, ...b }` without conflicts.
+ *
+ * @param objectType type of object e.g. "marker"
+ * @param objectName name of object e.g. "esb"
+ * @param propertyName name of property that is being merged e.g. "default attribute"
+ * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
+ * @param existingString existing string
+ * @param newString new string to merge into the existing string
+ */
+function verifyStringsCanBeMerged(
+  objectType: string,
+  objectName: string,
+  propertyName: string,
+  defineName: string,
+  existingString: string | undefined,
+  newString: string | undefined
+) {
+  if (existingString === newString) return;
+
+  // If both strings are defined but don't match, that's an error
+  if (existingString && newString) {
+    logObjectMergeConflictError(
+      objectType,
+      objectName,
+      propertyName,
+      defineName,
+      existingString,
+      newString
+    );
+    process.exit(1);
+  }
+
+  // One is defined, so just log a warning
+  logObjectUseOnePropertyWarning(objectType, objectName, propertyName, defineName);
+}
+
+/**
+ * Merge two arrays, combining and deduplicating contents. Returns a new array if the merge changed
+ * anything; does not modify the original arrays
+ *
+ * @param objectType type of object e.g. "marker"
+ * @param objectName name of object e.g. "esb"
+ * @param propertyName name of property that is being merged e.g. "default attribute"
+ * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
+ * @param existingArray existing array
+ * @param newArray new array to merge into the existing array
+ * @returns array with merged contents or `undefined` if there was no array
+ */
+function mergeArrays<T>(
+  objectType: string,
+  objectName: string,
+  propertyName: string,
+  defineName: string,
+  existingArray: Array<T> | undefined,
+  newArray: Array<T> | undefined
+) {
+  // If both are undefined, do nothing
+  if (!existingArray && !newArray) return undefined;
+
+  // If one is defined, log a warning and use it
+  if (!existingArray || !newArray) {
+    logObjectUseOnePropertyWarning(objectType, objectName, propertyName, defineName);
+    return undefined;
+  }
+  // If the arrays are equal, return one
+  if (
+    existingArray.length === newArray.length &&
+    !existingArray.some(attributeA => !newArray.includes(attributeA))
+  )
+    return existingArray;
+
+  // Both arrays are defined but don't match, so combine them
+  console.log(
+    `Warning: ${objectType} named "${
+      objectName
+    }" has two definition with ${propertyName} arrays of different lengths: ${JSON.stringify(
+      existingArray
+    )}, ${JSON.stringify(newArray)}. Combining them. In definition: ${defineName}`
+  );
+
+  // Combine the arrays, keeping only unique values
+  return Array.from(new Set([...existingArray, ...newArray]));
+}
+
 /**
  * Verify that two markers with the same name are similar enough that they can merge, then merge them
+ *
  * @param markerA Existing marker info
  * @param markerB New marker info
  * @param markerName Name of marker being compared (for error messages)
  * @param defineName Name of definition adding the new marker (for error messages)
- * @returns merged marker info with markerA properties overridden by markerB properties
+ * @returns merged marker info with markerA properties combined with markerB properties
  */
 function mergeMarkers(
   markerA: MarkerInfo | undefined,
@@ -63,45 +214,210 @@ function mergeMarkers(
   if (!markerA) return markerB;
 
   // Both exist, so verify they are compatible
+
+  // Create the merged marker so we can edit the properties without modifying the original markers
+  const mergedMarker = { ...markerA, ...markerB };
+
   // If types don't match, that's always an error
   if (markerA.type !== markerB.type) {
-    console.error(`Error: Marker name "${markerName}" has conflicting types:`);
-    console.error(`  Existing type: "${markerA.type}"`);
-    console.error(`  Conflicting type: "${markerB.type}"`);
-    console.error(`  In definition: "${defineName}"`);
+    logObjectMergeConflictError(
+      OBJECT_TYPE_MARKER,
+      markerName,
+      'type',
+      defineName,
+      markerA.type,
+      markerB.type
+    );
     process.exit(1);
   }
 
-  // If both default attributes are defined but don't match, that's an error
-  if (markerA.defaultAttribute !== markerB.defaultAttribute) {
-    if (markerA.defaultAttribute && markerB.defaultAttribute) {
-      console.error(`Error: Marker name "${markerName}" has conflicting default attribute:`);
-      console.error(`  Existing default attribute: "${markerA.defaultAttribute}"`);
-      console.error(`  Conflicting default attribute: "${markerB.defaultAttribute}"`);
-      console.error(`  In definition: "${defineName}"`);
-      process.exit(1);
-    } else {
-      console.log(
-        `Warning: Marker name "${markerName}" has one definition with a default attribute and one without. Using the one with the default attribute.`
-      );
-    }
+  // Check defaultAttribute can be merged
+  verifyStringsCanBeMerged(
+    OBJECT_TYPE_MARKER,
+    markerName,
+    'defaultAttribute',
+    defineName,
+    markerA.defaultAttribute,
+    markerB.defaultAttribute
+  );
+
+  // Combine skipOutputAttributeToUsfm
+  const mergedSkipOutputAttributeToUsfm = mergeArrays(
+    OBJECT_TYPE_MARKER,
+    markerName,
+    'skipOutputAttributeToUsfm',
+    defineName,
+    markerA.skipOutputAttributeToUsfm,
+    markerB.skipOutputAttributeToUsfm
+  );
+  if (mergedSkipOutputAttributeToUsfm)
+    mergedMarker.skipOutputAttributeToUsfm = mergedSkipOutputAttributeToUsfm;
+
+  // Combine attributeMarkers
+  const mergedAttributeMarkers = mergeArrays(
+    OBJECT_TYPE_MARKER,
+    markerName,
+    'attributeMarkers',
+    defineName,
+    markerA.attributeMarkers,
+    markerB.attributeMarkers
+  );
+  if (mergedAttributeMarkers) mergedMarker.attributeMarkers = mergedAttributeMarkers;
+
+  // Combine isAttributeMarkerFor
+  // We will do some merging assuming these properties are here. We always handle if the properties
+  // are not present, so it is not a problem
+  const attributeMarkerA = markerA as AttributeMarkerInfo;
+  const attributeMarkerB = markerB as AttributeMarkerInfo;
+  const attributeMergedMarker = mergedMarker as AttributeMarkerInfo;
+
+  const mergedIsAttributeMarkerFor = mergeArrays(
+    OBJECT_TYPE_MARKER,
+    markerName,
+    'isAttributeMarkerFor',
+    defineName,
+    attributeMarkerA.isAttributeMarkerFor,
+    attributeMarkerB.isAttributeMarkerFor
+  );
+  if (mergedIsAttributeMarkerFor)
+    attributeMergedMarker.isAttributeMarkerFor = mergedIsAttributeMarkerFor;
+
+  // Check attributeMarkerAttributeName can be merged
+  verifyStringsCanBeMerged(
+    OBJECT_TYPE_MARKER,
+    markerName,
+    'attributeMarkerAttributeName',
+    defineName,
+    attributeMarkerA.attributeMarkerAttributeName,
+    attributeMarkerB.attributeMarkerAttributeName
+  );
+
+  return mergedMarker;
+}
+
+/**
+ * Verify that two marker types with the same name are similar enough that they can merge, then merge them
+ *
+ * @param markerTypeA Existing marker type info
+ * @param markerTypeB New marker type info
+ * @param markerTypeName Name of marker type being compared (for error messages)
+ * @param defineName Name of definition adding the new marker type (for error messages)
+ * @returns merged marker type info with markerTypeA properties combined with markerTypeB properties
+ */
+function mergeMarkerTypes(
+  markerTypeA: MarkerTypeInfo | undefined,
+  markerTypeB: MarkerTypeInfo,
+  markerTypeName: string,
+  defineName: string
+) {
+  // If only one exists, nothing to verify
+  if (!markerTypeA) return markerTypeB;
+
+  // Both exist, so verify they are compatible
+
+  // Create the merged marker type so we can edit the properties without modifying the original marker types
+  const mergedMarkerType = { ...markerTypeA, ...markerTypeB };
+
+  // If booleans don't match, that's always an error (note we are assuming not present means `false`
+  // even though that is not necessarily the case. Assuming the boolean won't be present if it matches
+  // the default value. We can change this later if needed)
+  if (markerTypeA.hasStyleAttribute !== markerTypeB.hasStyleAttribute) {
+    logObjectMergeConflictError(
+      OBJECT_TYPE_MARKER_TYPE,
+      markerTypeName,
+      'hasStyleAttribute',
+      defineName,
+      markerTypeA.hasStyleAttribute,
+      markerTypeB.hasStyleAttribute
+    );
+    process.exit(1);
+  }
+  if (markerTypeA.requiresNewlineBefore !== markerTypeB.requiresNewlineBefore) {
+    logObjectMergeConflictError(
+      OBJECT_TYPE_MARKER_TYPE,
+      markerTypeName,
+      'requiresNewlineBefore',
+      defineName,
+      markerTypeA.requiresNewlineBefore,
+      markerTypeB.requiresNewlineBefore
+    );
+    process.exit(1);
+  }
+  if (markerTypeA.hasClosingMarker !== markerTypeB.hasClosingMarker) {
+    logObjectMergeConflictError(
+      OBJECT_TYPE_MARKER_TYPE,
+      markerTypeName,
+      'hasClosingMarker',
+      defineName,
+      markerTypeA.hasClosingMarker,
+      markerTypeB.hasClosingMarker
+    );
+    process.exit(1);
   }
 
-  return { ...markerA, ...markerB };
+  // Combine skipOutputMarkerToUsfmIfAttributeIsPresent
+  const mergedSkipOutputMarkerToUsfmIfAttributeIsPresent = mergeArrays(
+    OBJECT_TYPE_MARKER_TYPE,
+    markerTypeName,
+    'skipOutputMarkerToUsfmIfAttributeIsPresent',
+    defineName,
+    markerTypeA.skipOutputMarkerToUsfmIfAttributeIsPresent,
+    markerTypeB.skipOutputMarkerToUsfmIfAttributeIsPresent
+  );
+  if (mergedSkipOutputMarkerToUsfmIfAttributeIsPresent)
+    mergedMarkerType.skipOutputMarkerToUsfmIfAttributeIsPresent =
+      mergedSkipOutputMarkerToUsfmIfAttributeIsPresent;
+
+  // We will do some merging assuming these properties are here. We always handle if the properties
+  // are not present, so it is not a problem
+  const closeableMarkerTypeA = markerTypeA as CloseableMarkerTypeInfo;
+  const closeableMarkerTypeB = markerTypeB as CloseableMarkerTypeInfo;
+
+  // If booleans don't match, that's always an error (note we are assuming not present means `false`
+  // even though that is not necessarily the case. Assuming the boolean won't be present if it matches
+  // the default value. We can change this later if needed)
+  if (
+    closeableMarkerTypeA.isClosingMarkerOptional !== closeableMarkerTypeB.isClosingMarkerOptional
+  ) {
+    logObjectMergeConflictError(
+      OBJECT_TYPE_MARKER_TYPE,
+      markerTypeName,
+      'isClosingMarkerOptional',
+      defineName,
+      closeableMarkerTypeA.isClosingMarkerOptional,
+      closeableMarkerTypeB.isClosingMarkerOptional
+    );
+    process.exit(1);
+  }
+  if (closeableMarkerTypeA.isClosingMarkerEmpty !== closeableMarkerTypeB.isClosingMarkerEmpty) {
+    logObjectMergeConflictError(
+      OBJECT_TYPE_MARKER_TYPE,
+      markerTypeName,
+      'isClosingMarkerEmpty',
+      defineName,
+      closeableMarkerTypeA.isClosingMarkerEmpty,
+      closeableMarkerTypeB.isClosingMarkerEmpty
+    );
+    process.exit(1);
+  }
+
+  return mergedMarkerType;
 }
+
+// #endregion object merging functions
 
 /**
  * Process a define element to extract marker information
  *
  * @param defineElement The define element to process
  * @param defineElements The collection of all define elements (for reference lookups)
- * @param markersMapNoTypes The markers map to populate (without markerTypes)
+ * @param markersMap The markers map to populate
  * @param skippedDefinitions Set to populate with names of definitions that were skipped
  */
 function processDefineElement(
   defineElement: Element,
   defineElements: HTMLCollectionOf<Element>,
-  markersMapNoTypes: Omit<MarkersMap, 'markerTypes'>,
+  markersMap: MarkersMap,
   skippedDefinitions: Set<string>
 ) {
   const defineName = defineElement.getAttribute('name');
@@ -131,10 +447,11 @@ function processDefineElement(
       continue;
     }
 
-    // Compile maps of markers to add for this element so we can set the default attribute if we find an
-    // element-wide default attribute before adding the markers to the main map
+    // Compile maps of markers and a type to add for this element so we can set the default attribute if
+    // we find an element-wide default attribute before adding the markers to the main map
     const markersToAdd: Record<string, MarkerInfo> = {};
     const markersRegExpToAdd: Record<string, MarkerInfo> = {};
+    const markerTypeToAdd: MarkerTypeInfo = {};
 
     // Look for style attribute to get marker names
     let hasStyle = false;
@@ -282,6 +599,8 @@ function processDefineElement(
         markerName,
         defineName
       );
+
+      markerTypeToAdd.hasStyleAttribute = false;
     }
 
     // Figure out element-level default attributes, then add all collected markers to the
@@ -361,8 +680,8 @@ function processDefineElement(
           ? mergeMarkers(markerInfo, { ...markerInfo, defaultAttribute }, markerName, defineName)
           : markerInfo;
 
-        markersMapNoTypes.markers[markerName] = mergeMarkers(
-          markersMapNoTypes.markers[markerName],
+        markersMap.markers[markerName] = mergeMarkers(
+          markersMap.markers[markerName],
           updatedMarkerInfo,
           markerName,
           defineName
@@ -376,13 +695,20 @@ function processDefineElement(
           ? mergeMarkers(markerInfo, { ...markerInfo, defaultAttribute }, markerName, defineName)
           : markerInfo;
 
-        markersMapNoTypes.markersRegExp[markerName] = mergeMarkers(
-          markersMapNoTypes.markersRegExp[markerName],
+        markersMap.markersRegExp[markerName] = mergeMarkers(
+          markersMap.markersRegExp[markerName],
           updatedMarkerInfo,
           markerName,
           defineName
         );
       }
+
+      markersMap.markerTypes[markerType] = mergeMarkerTypes(
+        markersMap.markerTypes[markerType],
+        markerTypeToAdd,
+        markerType,
+        defineName
+      )
     }
   }
 
@@ -402,131 +728,128 @@ function processDefineElement(
  * adding any markers to the map. This Set is transformed in place and is not returned
  * @returns The generated markers map
  */
-export function transformUsxSchemaToMarkersMap(usxSchema: string, version: string, commit: string, skippedDefinitions: Set<string> = new Set<string>()): MarkersMap {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(usxSchema, 'text/xml');
-    
-    const markersMapNoTypes: Omit<MarkersMap, 'markerTypes'> = {
-      version,
-      commit,
-      markers: {},
-      markersRegExp: {},
-    };
-    
-    // Process all define elements
-    const defineElements = doc.getElementsByTagName('define');
-    
-    for (let i = 0; i < defineElements.length; i++) {
-      processDefineElement(defineElements[i], defineElements, markersMapNoTypes, skippedDefinitions);
-    }
-    
-    // Add the required markers that might not be in the schema
-    markersMapNoTypes.markers['cat'] = mergeMarkers(
-      markersMapNoTypes.markers['cat'],
-      { type: 'char' },
-      'cat',
-      'added manually'
-    );
-    markersMapNoTypes.markers['ca'] = mergeMarkers(
-      markersMapNoTypes.markers['ca'],
-      { type: 'char' },
-      'ca',
-      'added manually'
-    );
-    markersMapNoTypes.markers['cp'] = mergeMarkers(
-      markersMapNoTypes.markers['cp'],
-      { type: 'para' },
-      'cp',
-      'added manually'
-    );
-    markersMapNoTypes.markers['va'] = mergeMarkers(
-      markersMapNoTypes.markers['va'],
-      { type: 'char' },
-      'va',
-      'added manually'
-    );
-    markersMapNoTypes.markers['vp'] = mergeMarkers(
-      markersMapNoTypes.markers['vp'],
-      { type: 'char' },
-      'vp',
-      'added manually'
-    );
-    markersMapNoTypes.markers['usfm'] = mergeMarkers(
-      markersMapNoTypes.markers['usfm'],
-      { type: 'para' },
-      'usfm',
-      'added manually'
-    );
-    markersMapNoTypes.markers['USJ'] = mergeMarkers(
-      markersMapNoTypes.markers['USJ'],
-      { type: 'USJ' },
-      'USJ',
-      'added manually'
-    );
-    
-    // In 3.0.8, `link-href` is not set default where it should be, but we need it in a couple
-    // spots. Add it in there if it's missing. It should just be `href` in 3.1+, but we will
-    // trust that it is properly set in 3.1+ schemas.
-    if (markersMapNoTypes.markers['jmp'] && !markersMapNoTypes.markers['jmp'].defaultAttribute) {
-      console.log(
-        'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
-      );
-      markersMapNoTypes.markers['jmp'].defaultAttribute = 'link-href';
-    }
-    if (markersMapNoTypes.markers['xt'] && !markersMapNoTypes.markers['xt'].defaultAttribute) {
-      console.log(
-        'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
-      );
-      markersMapNoTypes.markers['xt'].defaultAttribute = 'link-href';
-    }
-    
-    // Collect the markerTypes
-    const markerTypesSet = new Set<string>();
-    Object.values(markersMapNoTypes.markers)
-      .concat(Object.values(markersMapNoTypes.markersRegExp))
-      .forEach(markerInfo => {
-        markerTypesSet.add(markerInfo.type);
-      });
-    
-    const markersMap: MarkersMap = {
-      ...markersMapNoTypes,
-      markerTypes: [...markerTypesSet].reduce((acc, markerType) => {
-        acc[markerType] = {};
-        return acc;
-      }, {}),
-    };
-    
-    // Sort the markers and marker types
-    markersMap.markers = Object.fromEntries(
-      Object.entries(markersMap.markers).sort(([markerNameA], [markerNameB]) => {
-        const a = markerNameA.toLowerCase();
-        const b = markerNameB.toLowerCase();
-    
-        if (a < b) return -1;
-        if (a > b) return 1;
-        return 0;
-      })
-    );
-    markersMap.markersRegExp = Object.fromEntries(
-      Object.entries(markersMap.markersRegExp).sort(([markerNameA], [markerNameB]) => {
-        const a = markerNameA.toLowerCase();
-        const b = markerNameB.toLowerCase();
-    
-        if (a < b) return -1;
-        if (a > b) return 1;
-        return 0;
-      })
-    );
-    markersMap.markerTypes = Object.fromEntries(
-      Object.entries(markersMap.markerTypes).sort(([markerTypeA], [markerTypeB]) => {
-        const a = markerTypeA.toLowerCase();
-        const b = markerTypeB.toLowerCase();
-    
-        if (a < b) return -1;
-        if (a > b) return 1;
-        return 0;
-      })
-    );
+export function transformUsxSchemaToMarkersMap(
+  usxSchema: string,
+  version: string,
+  commit: string,
+  skippedDefinitions: Set<string> = new Set<string>()
+): MarkersMap {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(usxSchema, 'text/xml');
 
-    return markersMap;
+  const markersMap: MarkersMap = {
+    version,
+    commit,
+    markers: {},
+    markersRegExp: {},
+    markerTypes: {},
+  };
+
+  // Process all define elements
+  const defineElements = doc.getElementsByTagName('define');
+
+  for (let i = 0; i < defineElements.length; i++) {
+    processDefineElement(defineElements[i], defineElements, markersMap, skippedDefinitions);
+  }
+
+  // Add the required markers that might not be in the schema
+  const manualDefineName = 'added manually';
+  markersMap.markers['cat'] = mergeMarkers(
+    markersMap.markers['cat'],
+    { type: 'char' },
+    'cat',
+    manualDefineName
+  );
+  markersMap.markers['ca'] = mergeMarkers(
+    markersMap.markers['ca'],
+    { type: 'char' },
+    'ca',
+    manualDefineName
+  );
+  markersMap.markers['cp'] = mergeMarkers(
+    markersMap.markers['cp'],
+    { type: 'para' },
+    'cp',
+    manualDefineName
+  );
+  markersMap.markers['va'] = mergeMarkers(
+    markersMap.markers['va'],
+    { type: 'char' },
+    'va',
+    manualDefineName
+  );
+  markersMap.markers['vp'] = mergeMarkers(
+    markersMap.markers['vp'],
+    { type: 'char' },
+    'vp',
+    manualDefineName
+  );
+  markersMap.markers['usfm'] = mergeMarkers(
+    markersMap.markers['usfm'],
+    { type: 'para' },
+    'usfm',
+    manualDefineName
+  );
+  markersMap.markers['USJ'] = mergeMarkers(
+    markersMap.markers['USJ'],
+    { type: 'USJ' },
+    'USJ',
+    manualDefineName
+  );
+  markersMap.markerTypes['USJ'] = mergeMarkerTypes(
+    markersMap.markerTypes['USJ'],
+    { hasStyleAttribute: false },
+    'USJ',
+    manualDefineName
+  );
+
+  // In 3.0.8, `link-href` is not set default where it should be, but we need it in a couple
+  // spots. Add it in there if it's missing. It should just be `href` in 3.1+, but we will
+  // trust that it is properly set in 3.1+ schemas.
+  if (markersMap.markers['jmp'] && !markersMap.markers['jmp'].defaultAttribute) {
+    console.log(
+      'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
+    );
+    markersMap.markers['jmp'].defaultAttribute = 'link-href';
+  }
+  if (markersMap.markers['xt'] && !markersMap.markers['xt'].defaultAttribute) {
+    console.log(
+      'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
+    );
+    markersMap.markers['xt'].defaultAttribute = 'link-href';
+  }
+
+  // Sort the markers and marker types
+  markersMap.markers = Object.fromEntries(
+    Object.entries(markersMap.markers).sort(([markerNameA], [markerNameB]) => {
+      const a = markerNameA.toLowerCase();
+      const b = markerNameB.toLowerCase();
+
+      if (a < b) return -1;
+      if (a > b) return 1;
+      return 0;
+    })
+  );
+  markersMap.markersRegExp = Object.fromEntries(
+    Object.entries(markersMap.markersRegExp).sort(([markerNameA], [markerNameB]) => {
+      const a = markerNameA.toLowerCase();
+      const b = markerNameB.toLowerCase();
+
+      if (a < b) return -1;
+      if (a > b) return 1;
+      return 0;
+    })
+  );
+  markersMap.markerTypes = Object.fromEntries(
+    Object.entries(markersMap.markerTypes).sort(([markerTypeA], [markerTypeB]) => {
+      const a = markerTypeA.toLowerCase();
+      const b = markerTypeB.toLowerCase();
+
+      if (a < b) return -1;
+      if (a > b) return 1;
+      return 0;
+    })
+  );
+
+  return markersMap;
 }

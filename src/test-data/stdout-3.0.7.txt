@@ -2,13 +2,13 @@
 > usfm-tools@1.0.0 generate-markers-map
 > tsx src/generate-markers-map --schema src/test-data/usx-3.0.7.rng --version 3.0.7 --commit 6c490bb5675d281b0fa01876fe67f6e3fd50a4ce --outJSON src/test-data/markers-3.0.7.json
 
-Warning: Marker name "w" has one definition with a default attribute and one without. Using the one with the default attribute.
-Warning: Marker name "rb" has one definition with a default attribute and one without. Using the one with the default attribute.
-Warning: Marker name "ts?(\-[se])?" has one definition with a default attribute and one without. Using the one with the default attribute.
-Warning: Marker name "[Zz].+" has one definition with a default attribute and one without. Using the one with the default attribute.
-Warning: Marker name "qt[1-5]?(\-[se])?" has one definition with a default attribute and one without. Using the one with the default attribute.
+Warning: Marker named "w" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CharWithAttrib.char.style.w
+Warning: Marker named "rb" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: CharWithAttrib.char.style.rb
+Warning: Marker named "ts?(\-[se])?" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: Milestone
+Warning: Marker named "[Zz].+" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: Milestone
+Warning: Marker named "qt[1-5]?(\-[se])?" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: MilestoneWithAttrib.ms.style.qt
 Warning: Style attribute in definition "Figure" has no value or param pattern elements. Skipping.
-Warning: Marker name "ref" has one definition with a default attribute and one without. Using the one with the default attribute.
+Warning: Marker named "ref" has one definition with a defaultAttribute and one without. Using the one with the defaultAttribute. In definition: Reference
 Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set
 Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set
 Generated markers.json successfully
