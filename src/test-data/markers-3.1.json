@@ -413,7 +413,7 @@
     },
     "periph": {
       "type": "periph",
-      "defaultAttribute": "id"
+      "defaultAttribute": "alt"
     },
     "ph": {
       "type": "para"
@@ -763,6 +763,9 @@
     "chapter": {
       "skipOutputAttributeToUsfm": [
         "sid"
+      ],
+      "skipOutputMarkerToUsfmIfAttributeIsPresent": [
+        "eid"
       ]
     },
     "char": {},
@@ -806,6 +809,9 @@
     "verse": {
       "skipOutputAttributeToUsfm": [
         "sid"
+      ],
+      "skipOutputMarkerToUsfmIfAttributeIsPresent": [
+        "eid"
       ]
     }
   }

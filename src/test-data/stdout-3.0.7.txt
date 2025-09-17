@@ -8,14 +8,17 @@ Warning: Marker named "id" has one definition with a defaultAttribute and one wi
 Warning: Marker named "id" has one definition with a defaultAttribute and one without: undefined, "code". Using the one with the defaultAttribute. In definition: PeripheralBookIdentification
 Warning: Marker named "id" has one definition with a defaultAttribute and one without: undefined, "code". Using the one with the defaultAttribute. In definition: PeripheralDividedBookIdentification
 Warning: Marker named "periph" has one definition with a defaultAttribute and one without: undefined, "id". Using the one with the defaultAttribute. In definition: PeripheralDivision
-Warning: Marker named "para" has one definition with a skipOutputAttributeToUsfm and one without: undefined, ["vid"]. Using the one with the skipOutputAttributeToUsfm. In definition: Para
+Warning: Marker type named "para" has one definition with a skipOutputAttributeToUsfm and one without: undefined, ["vid"]. Using the one with the skipOutputAttributeToUsfm. In definition: Para
 Warning: Marker named "w" has one definition with a defaultAttribute and one without: undefined, "lemma". Using the one with the defaultAttribute. In definition: CharWithAttrib.char.style.w
 Warning: Marker named "rb" has one definition with a defaultAttribute and one without: undefined, "gloss". Using the one with the defaultAttribute. In definition: CharWithAttrib.char.style.rb
 Warning: Marker named "ts?(\-[se])?" has one definition with a defaultAttribute and one without: undefined, "sid". Using the one with the defaultAttribute. In definition: Milestone
 Warning: Marker named "[Zz].+" has one definition with a defaultAttribute and one without: undefined, "sid". Using the one with the defaultAttribute. In definition: Milestone
 Warning: Marker named "qt[1-5]?(\-[se])?" has one definition with a defaultAttribute and one without: undefined, "sid". Using the one with the defaultAttribute. In definition: MilestoneWithAttrib.ms.style.qt
 Warning: Marker named "c" has one definition with a defaultAttribute and one without: undefined, "number". Using the one with the defaultAttribute. In definition: ChapterStart
-Warning: Marker named "para" has one definition with a skipOutputAttributeToUsfm and one without: ["vid"], undefined. Using the one with the skipOutputAttributeToUsfm. In definition: BookChapterLabel
+Warning: Marker type named "chapter" has one definition with a skipOutputAttributeToUsfm and one without: ["sid"], undefined. Using the one with the skipOutputAttributeToUsfm. In definition: ChapterEnd
+Warning: Marker type named "chapter" has one definition with a skipOutputMarkerToUsfmIfAttributeIsPresent and one without: undefined, ["eid"]. Using the one with the skipOutputMarkerToUsfmIfAttributeIsPresent. In definition: ChapterEnd
+Warning: Marker type named "para" has one definition with a skipOutputAttributeToUsfm and one without: ["vid"], undefined. Using the one with the skipOutputAttributeToUsfm. In definition: BookChapterLabel
+Warning: Marker type named "verse" has one definition with a skipOutputMarkerToUsfmIfAttributeIsPresent and one without: undefined, ["eid"]. Using the one with the skipOutputMarkerToUsfmIfAttributeIsPresent. In definition: VerseEnd
 Warning: Marker named "f" has one definition with a defaultAttribute and one without: undefined, "caller". Using the one with the defaultAttribute. In definition: Footnote
 Warning: Marker named "fe" has one definition with a defaultAttribute and one without: undefined, "caller". Using the one with the defaultAttribute. In definition: Footnote
 Warning: Marker named "ef" has one definition with a defaultAttribute and one without: undefined, "caller". Using the one with the defaultAttribute. In definition: Footnote
@@ -69,7 +72,6 @@ BookIntroductionEndTitles.para.style.enum
 BookTitles.para.style.enum
 Chapter
 ChapterContent
-ChapterEnd
 Char.char.style.enum
 CharWithAttrib.enum
 CrossReferenceChar.char.style.enum
@@ -93,7 +95,6 @@ PeripheralDividedBookIdentification.book.code.enum
 PeripheralOther
 USX
 Verse
-VerseEnd
 cell.align.enum
 char.closed
 char.link

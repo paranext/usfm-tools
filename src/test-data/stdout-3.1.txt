@@ -7,11 +7,15 @@ Warning: Marker named "usx" has one definition with a defaultAttribute and one w
 Warning: Marker named "id" has one definition with a defaultAttribute and one without: undefined, "code". Using the one with the defaultAttribute. In definition: BookIdentification
 Warning: Marker named "id" has one definition with a defaultAttribute and one without: undefined, "code". Using the one with the defaultAttribute. In definition: PeripheralBookIdentification
 Warning: Marker named "id" has one definition with a defaultAttribute and one without: undefined, "code". Using the one with the defaultAttribute. In definition: PeripheralDividedBookIdentification
-Warning: Marker named "periph" has one definition with a defaultAttribute and one without: undefined, "id". Using the one with the defaultAttribute. In definition: PeripheralDivision
-Warning: Marker named "para" has one definition with a skipOutputAttributeToUsfm and one without: undefined, ["vid"]. Using the one with the skipOutputAttributeToUsfm. In definition: Section
+Warning: Marker named "periph" has one definition with a defaultAttribute and one without: undefined, "alt". Using the one with the defaultAttribute. In definition: PeripheralDivision
+Warning: Marker type named "para" has one definition with a skipOutputAttributeToUsfm and one without: undefined, ["vid"]. Using the one with the skipOutputAttributeToUsfm. In definition: Section
 Warning: Marker named "c" has one definition with a defaultAttribute and one without: undefined, "number". Using the one with the defaultAttribute. In definition: ChapterStart
-Warning: Marker named "para" has one definition with a skipOutputAttributeToUsfm and one without: ["vid"], undefined. Using the one with the skipOutputAttributeToUsfm. In definition: BookChapterLabel
+Warning: Marker type named "chapter" has one definition with a skipOutputAttributeToUsfm and one without: ["sid"], undefined. Using the one with the skipOutputAttributeToUsfm. In definition: ChapterEnd
+Warning: Marker type named "chapter" has one definition with a skipOutputMarkerToUsfmIfAttributeIsPresent and one without: undefined, ["eid"]. Using the one with the skipOutputMarkerToUsfmIfAttributeIsPresent. In definition: ChapterEnd
+Warning: Marker type named "para" has one definition with a skipOutputAttributeToUsfm and one without: ["vid"], undefined. Using the one with the skipOutputAttributeToUsfm. In definition: BookChapterLabel
 Warning: Marker named "v" has one definition with a defaultAttribute and one without: undefined, "number". Using the one with the defaultAttribute. In definition: VerseStart
+Warning: Marker type named "verse" has one definition with a skipOutputAttributeToUsfm and one without: ["sid"], undefined. Using the one with the skipOutputAttributeToUsfm. In definition: VerseEnd
+Warning: Marker type named "verse" has one definition with a skipOutputMarkerToUsfmIfAttributeIsPresent and one without: undefined, ["eid"]. Using the one with the skipOutputMarkerToUsfmIfAttributeIsPresent. In definition: VerseEnd
 Warning: Marker named "fe" has one definition with a defaultAttribute and one without: undefined, "caller". Using the one with the defaultAttribute. In definition: Footnote
 Warning: Marker named "f" has one definition with a defaultAttribute and one without: undefined, "caller". Using the one with the defaultAttribute. In definition: Footnote
 Warning: Marker named "efe" has one definition with a defaultAttribute and one without: undefined, "caller". Using the one with the defaultAttribute. In definition: Footnote
@@ -20,6 +24,7 @@ Warning: Marker named "ex" has one definition with a defaultAttribute and one wi
 Warning: Marker named "x" has one definition with a defaultAttribute and one without: undefined, "caller". Using the one with the defaultAttribute. In definition: CrossReference
 Warning: Marker named "xt" has one definition with a defaultAttribute and one without: "href", undefined. Using the one with the defaultAttribute. In definition: CrossReferenceChar
 Warning: Marker named "esb" has one definition with a defaultAttribute and one without: undefined, "category". Using the one with the defaultAttribute. In definition: Sidebar
+Warning: Attribute loc on marker type ref has multiple usfm:match tags. It will not be considered for special attribute properties like leading attribute. In define Reference
 Warning: Marker named "ref" has one definition with a defaultAttribute and one without: undefined, "loc". Using the one with the defaultAttribute. In definition: Reference
 Generated markers.json successfully
 
@@ -29,7 +34,6 @@ BookIdentification.book.code.enum
 Cell.style.enum
 Chapter
 ChapterContent
-ChapterEnd
 Char.char.style.enum
 CharContent
 CrossReference.style.enum
@@ -63,7 +67,6 @@ SectionPara.para.style.enum
 Title.para.style.enum
 USX
 Verse
-VerseEnd
 VersePara.para.style.enum
 category
 cell.align.enum

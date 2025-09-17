@@ -711,6 +711,9 @@
     "chapter": {
       "skipOutputAttributeToUsfm": [
         "sid"
+      ],
+      "skipOutputMarkerToUsfmIfAttributeIsPresent": [
+        "eid"
       ]
     },
     "char": {},
@@ -744,6 +747,10 @@
     "usx": {
       "hasStyleAttribute": false
     },
-    "verse": {}
+    "verse": {
+      "skipOutputMarkerToUsfmIfAttributeIsPresent": [
+        "eid"
+      ]
+    }
   }
 }

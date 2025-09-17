@@ -134,8 +134,11 @@ TODO: Improve wording/list exception cases we don't deal with right now
 TODO: adjust README based on new changes
 - Skip the definition if all `ref`s pointing to it are pointing to it via `usfm:alt` attribute instead of `name` (`FigureTwo`)
 - [markerType] note when the marker shouldn't have a `style` attribute
+  - If the element has no `style` attribute, the marker shouldn't either.
+    - Do not consider the marker type to have no `style` attribute if all `ref`s pointing to it have `usfm:ignore="true"`, meaning it is just listing attributes that indicate the whole marker should not be output to USFM
 - Need to look in `ref` tags in `element` and check if `define` has first child `attribute` or `optional` then `attribute` (`category`, `closed`)
 - [marker] ignore when translating to USFM
+  - If all `ref`s pointing to it have `usfm:ignore="true"`, ignore the entire marker when translating to usfm if `attribute`s listed in the `markerType` are present (chapter and verse `eid`)
   - If `attribute` `name` has `ns="<not-empty>"` on it
   - If its `attribute` has `usfm:ignore="true"` or any `usfm:match` in the attribute has `noout="true"` attribute on it (`attribute` - chapter and verse `sid`, `closed`)
   - If it is `vid` on `para` or `table` (probably should have ignore set)
@@ -143,17 +146,14 @@ TODO: adjust README based on new changes
   - `align` and `colspan` attributes in `cell` marker type
     - `align` (probably should have ignore set because it is already embedded in the style)
     - `colspan` probably needs some kind of special something set because it gets embedded in the style for USFM but is not present in the style already in USX/USJ
+- [marker] attributes
+  - Warn the attribute will not be considered for special attribute types if there are multiple `usfm:match` tags
+  - Do not consider for any special attribute things if name is `style` since that attribute is always the marker name in USFM
+  - Do not consider for default attribute if any `usfm:match` with `beforeout` containing `|<attribute-name>=`. This is here to prevent `id` on `periph` from being default even though it reasonably should be
 
 TODO: incorporate changes
 - Figure out a way to get this to where you can work on the rest of the code
 - Transform 3.1 to 3.0 somehow?
-- [marker] ignore when translating to USFM
-  - If all `ref`s pointing to it have `usfm:ignore="true"`, ignore the entire marker when translating to usfm if `attribute`s listed in the `markerType` are present (chapter and verse `eid`)
-- [marker] attributes
-  - Console log if there are multiple `usfm:match` tags
-  - Skip if any `usfm:match` with `beforeout` containing `|<attribute-name>=`
-    - This is here to prevent `id` on `periph` from being default even though it reasonably should be
-  - Skip if name is `style` (`usfm:ptag` and `usfm:tag` are used later for attribute markers, so can't say skip if those are present)
 - [marker] text content attributes
   - One `usfm:match` with `match="TEXTNOTATTRIB"`
   - Special case: `usx` marker `version` is text content. Do some work to encode that the markers are different in each standard

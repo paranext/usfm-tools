@@ -395,7 +395,7 @@ function mergeMarkerTypes(
 
   // Combine skipOutputAttributeToUsfm
   const mergedSkipOutputAttributeToUsfm = mergeArrays(
-    OBJECT_TYPE_MARKER,
+    OBJECT_TYPE_MARKER_TYPE,
     markerTypeName,
     'skipOutputAttributeToUsfm',
     defineName,
@@ -456,6 +456,129 @@ function mergeMarkerTypes(
 
 // #endregion object merging functions
 
+// #region processing usx.rng data
+
+/**
+ * Create a list of all USFM-style (not XML) attributes for the marker an element represents. Also gather
+ * some preliminary information about those attributes.
+ *
+ * These attributes are children of the element and attributes found in refs in the element.
+ *
+ * The information returned alongside the attributes in this function is only the information about attributes
+ * that is gathered differently based on if the attribute is a child of the element or if the attribute is
+ * found through a ref in the element.
+ *
+ * @param element the XML element that represents the marker being processed
+ * @param markerType type of the marker being processed
+ * @param defineElements The collection of all define elements (for reference lookups)
+ * @param defineName Name of `define` containing this `element` (for error messages)
+ * @returns array of objects containing the attribute and some preliminary info about that attribute
+ */
+function collectAttributesForElement(
+  element: Element,
+  markerType: string,
+  defineElements: Array<Element>,
+  defineName: string
+) {
+  // Make a list of attribute elements to process along with some info we need to determine
+  // based on if the attribute is a child or in a ref
+  // These attributes are children of the element and attributes found in refs in the element
+  const elementAttributes: {
+    attribute: Element;
+    // We already got attribute name, so might as well include it
+    attributeName: string;
+    // ref may be inside optional, so we determine isOptional differently between the two kinds
+    isOptional?: boolean;
+    // ref may have usfm:ignore on it, so determine skipOutputToUsfm differently between the two
+    skipOutputToUsfm?: boolean;
+  }[] = [];
+
+  // Look through child attributes of the element
+  const childAttributes = element.getElementsByTagName('attribute');
+  for (let j = 0; j < childAttributes.length; j++) {
+    const attribute = childAttributes[j];
+
+    const attributeName = getElementName(attribute, defineName);
+    if (!attributeName) continue;
+
+    // Make sure this style attribute is a child of this element, not of a nested element
+    // Also check if attribute is inside an optional element
+    let isOptional = false;
+    let parent = attribute.parentNode;
+    while (parent && parent !== element) {
+      if (parent.nodeName === 'element') break; // Found the closest parent element, so we're done searching
+
+      if (parent.nodeName === 'optional') isOptional = true;
+
+      parent = parent.parentNode;
+    }
+    // If the closest parent element is not the element we are processing, skip this attribute
+    if (parent !== element) continue;
+
+    elementAttributes.push({ attribute, attributeName, isOptional });
+  }
+
+  // Look through direct child refs or refs that are under `optional` tags for attributes
+  const refs = element.getElementsByTagName('ref');
+  for (let j = 0; j < refs.length; j++) {
+    const ref = refs[j];
+
+    const refName = ref.getAttribute('name');
+    if (!refName) {
+      console.log(
+        `Warning: Found ref element without a name attribute in marker type ${markerType} in definition "${defineName}". Skipping.`
+      );
+      continue;
+    }
+
+    // Check to make sure this ref is a direct child or a child of an optional of the element.
+    // If not, skip it
+    let isRefOptional = false;
+    let parent = ref.parentNode;
+    if (!parent) continue;
+    if (parent.nodeName === 'optional') {
+      isRefOptional = true;
+      parent = parent.parentNode;
+      if (!parent) continue;
+    }
+    if (parent !== element) continue;
+
+    // If the attribute pointed to by this ref should be ignored when output to usfm,
+    // indicate so
+    // ref may have `usfm:ignore="true"` directly on it
+    const skipOutputToUsfm = ref.getAttribute('usfm:ignore') === 'true';
+
+    // Get the define element linked from this ref
+    const refDefine = getDefineElementForRef(refName, defineElements, defineName);
+    if (refDefine) {
+      // Find attributes that are direct children or child of an optional of the define
+      const attributes = refDefine.getElementsByTagName('attribute');
+      for (let j = 0; j < attributes.length; j++) {
+        const attribute = attributes[j];
+
+        const attributeName = getElementName(attribute, defineName);
+        if (!attributeName) continue;
+
+        // Skip if not a direct child or child of optional of the define
+        // Should be optional if it is in an optional or if the ref was optional
+        let isOptional = isRefOptional;
+        let parent = attribute.parentNode;
+        if (!parent) continue;
+        if (parent.nodeName === 'optional') {
+          isOptional = true;
+          parent = parent.parentNode;
+          if (!parent) continue;
+        }
+        if (parent !== refDefine) continue;
+
+        elementAttributes.push({ attribute, attributeName, isOptional, skipOutputToUsfm });
+      }
+    }
+  }
+
+  return elementAttributes;
+}
+
 /**
  * Process a define element to extract marker information
  *
@@ -463,12 +586,16 @@ function mergeMarkerTypes(
  * @param defineElements The collection of all define elements (for reference lookups)
  * @param markersMap The markers map to populate
  * @param skippedDefinitions Set to populate with names of definitions that were skipped
+ * @param skipOutputMarkerToUsfmDefineNames array of names of `define` elements whose marker
+ * definitions describe markers that should not be exported to USFM (e.g. which attributes
+ * indicate that the marker should not be exported to USFM)
  */
 function processDefineElement(
   defineElement: Element,
   defineElements: Array<Element>,
   markersMap: MarkersMap,
-  skippedDefinitions: Set<string>
+  skippedDefinitions: Set<string>,
+  skipOutputMarkerToUsfmDefineNames: Set<string>
 ) {
   const defineName = defineElement.getAttribute('name');
   if (!defineName) {
@@ -476,14 +603,11 @@ function processDefineElement(
     return;
   }
 
-  // Skip table-related definitions and explicitly skipped definitions
-  if (defineName === 'ChapterEnd' || defineName === 'VerseEnd') {
-    skippedDefinitions.add(defineName);
-    return;
-  }
+  const skipOutputMarkerToUsfm = skipOutputMarkerToUsfmDefineNames.has(defineName);
 
   const elements = defineElement.getElementsByTagName('element');
-  let createdMarker = false;
+  // Track whether this `define` influenced the markers map so we can record skipped `define`s
+  let didChangeMarkersMap = false;
 
   // Process all elements in this definition
   for (let i = 0; i < elements.length; i++) {
@@ -628,8 +752,9 @@ function processDefineElement(
       }
     }
 
-    // If the element doesn't have a style attribute, its element name (markerType) represents a marker
-    if (!hasStyle) {
+    // If the element doesn't have a style attribute and if this `define` indicates the marker
+    // should not be skipped for USFM, its element name (markerType) represents a marker
+    if (!hasStyle && !skipOutputMarkerToUsfm) {
       const markerName = markerType;
       const markerInfo: MarkerInfo = { type: markerType };
 
@@ -640,114 +765,26 @@ function processDefineElement(
         defineName
       );
 
-      // Note there is no style attribute on this marker
       markerTypeToAdd.hasStyleAttribute = false;
     }
 
-    // Figure out element-level attribute information, then add all collected markers to the
-    // main markers map
-    const markersToAddEntries = Object.entries(markersToAdd);
-    const markersRegExpToAddEntries = Object.entries(markersRegExpToAdd);
-    if (markersToAddEntries.length > 0 || markersRegExpToAddEntries.length > 0) {
-      createdMarker = true;
+    const didCreateMarker =
+      Object.entries(markersToAdd).length > 0 || Object.entries(markersRegExpToAdd).length > 0;
+    didChangeMarkersMap = didCreateMarker;
+    // If this `define` created a marker or may to edit an existing marker type based on the
+    // attributes, figure out element-level attribute information, then add all collected marker
+    // info to the main markers map
+    if (didCreateMarker || skipOutputMarkerToUsfm) {
+      // Gather all the attributes on the element and some information about them
+      const elementAttributes = collectAttributesForElement(
+        element,
+        markerType,
+        defineElements,
+        defineName
+      );
 
-      // Make a list of attribute elements to process along with some info we need to determine
-      // based on if the attribute is a child or in a ref
-      // These attributes are children of the element and attributes found in refs in the element
-      const elementAttributes: {
-        attribute: Element;
-        // We already got attribute name, so might as well include it
-        attributeName: string;
-        // ref may be inside optional, so we determine isOptional differently between the two kinds
-        isOptional?: boolean;
-        // ref may have usfm:ignore on it, so determine skipOutputToUsfm differently between the two
-        skipOutputToUsfm?: boolean;
-      }[] = [];
-
-      // Look through child attributes of the element
-      const childAttributes = element.getElementsByTagName('attribute');
-      for (let j = 0; j < childAttributes.length; j++) {
-        const attribute = childAttributes[j];
-
-        const attributeName = getElementName(attribute, defineName);
-        if (!attributeName) continue;
-
-        // Make sure this style attribute is a child of this element, not of a nested element
-        // Also check if attribute is inside an optional element
-        let isOptional = false;
-        let parent = attribute.parentNode;
-        while (parent && parent !== element) {
-          if (parent.nodeName === 'element') break; // Found the closest parent element, so we're done searching
-
-          if (parent.nodeName === 'optional') isOptional = true;
-
-          parent = parent.parentNode;
-        }
-        // If the closest parent element is not the element we are processing, skip this attribute
-        if (parent !== element) continue;
-
-        elementAttributes.push({ attribute, attributeName, isOptional });
-      }
-
-      // Look through direct child refs or refs that are under `optional` tags for attributes
-      const refs = element.getElementsByTagName('ref');
-      for (let j = 0; j < refs.length; j++) {
-        const ref = refs[j];
-
-        const refName = ref.getAttribute('name');
-        if (!refName) {
-          console.log(
-            `Warning: Found ref element without a name attribute in marker type ${markerType} in definition "${defineName}". Skipping.`
-          );
-          continue;
-        }
-
-        // Check to make sure this ref is a direct child or a child of an optional of the element.
-        // If not, skip it
-        let isRefOptional = false;
-        let parent = ref.parentNode;
-        if (!parent) continue;
-        if (parent.nodeName === 'optional') {
-          isRefOptional = true;
-          parent = parent.parentNode;
-          if (!parent) continue;
-        }
-        if (parent !== element) continue;
-
-        // If the attribute pointed to by this ref should be ignored when output to usfm,
-        // indicate so
-        // ref may have `usfm:ignore="true"` directly on it
-        const skipOutputToUsfm = ref.getAttribute('usfm:ignore') === 'true';
-
-        // Get the define element linked from this ref
-        const refDefine = getDefineElementForRef(refName, defineElements, defineName);
-        if (refDefine) {
-          // Find attributes that are direct children or child of an optional of the define
-          const attributes = refDefine.getElementsByTagName('attribute');
-          for (let j = 0; j < attributes.length; j++) {
-            const attribute = attributes[j];
-
-            const attributeName = getElementName(attribute, defineName);
-            if (!attributeName) continue;
-
-            // Skip if not a direct child or child of optional of the define
-            // Should be optional if it is in an optional or if the ref was optional
-            let isOptional = isRefOptional;
-            let parent = attribute.parentNode;
-            if (!parent) continue;
-            if (parent.nodeName === 'optional') {
-              isOptional = true;
-              parent = parent.parentNode;
-              if (!parent) continue;
-            }
-            if (parent !== refDefine) continue;
-
-            elementAttributes.push({ attribute, attributeName, isOptional, skipOutputToUsfm });
-          }
-        }
-      }
-
-      // Process all found attributes and build up additional marker info
+      // Process all found attributes and build up additional marker info to put on each marker for this
+      // marker type
       const extraMarkerInfo: Partial<MarkerInfo> = {};
 
       // Track the first non-optional non-skipped attributes so we can get default attribute
@@ -776,13 +813,32 @@ function processDefineElement(
         // tables yet anyway. Just skip this attribute until something changes.
         if (markerType === 'cell' && attributeName === 'colspan') continue;
 
+        const usfmMatchElements = getChildElementsByTagName(attribute, 'usfm:match');
+        if (usfmMatchElements.length > 1)
+          console.log(
+            `Warning: Attribute ${attributeName} on marker type ${
+              markerType
+            } has multiple usfm:match tags. It will not be considered for special attribute properties like leading attribute. In define ${
+              defineName
+            }`
+          );
+
+        // If this `define` is a marker that should not be output to USFM, put this attribute in the
+        // list of marker skip attributes and continue to the next attribute
+        if (skipOutputMarkerToUsfm) {
+          if (!markerTypeToAdd.skipOutputMarkerToUsfmIfAttributeIsPresent)
+            markerTypeToAdd.skipOutputMarkerToUsfmIfAttributeIsPresent = [];
+          markerTypeToAdd.skipOutputMarkerToUsfmIfAttributeIsPresent.push(attributeName);
+          didChangeMarkersMap = true;
+          continue;
+        }
+
         // If this attribute should be ignored when output to usfm, indicate so
         // Skip output attribute may have `usfm:ignore="true"` directly on it
         if (!skipOutputToUsfm) skipOutputToUsfm = attribute.getAttribute('usfm:ignore') === 'true';
         // Skip output attribute may have `usfm:match` with `noout="true"`
         if (!skipOutputToUsfm) {
-          const usfmMatches = getChildElementsByTagName(attribute, 'usfm:match');
-          skipOutputToUsfm = usfmMatches.some(
+          skipOutputToUsfm = usfmMatchElements.some(
             usfmMatch => usfmMatch.getAttribute('noout') === 'true'
           );
         }
@@ -806,9 +862,16 @@ function processDefineElement(
           markerTypeToAdd.skipOutputAttributeToUsfm.push(attributeName);
         }
 
+        // Determine if this attribute is hard-coded not to be a default attribute
+        const isNotDefaultAttribute = usfmMatchElements.some(usfmMatchElement =>
+          usfmMatchElement.getAttribute('beforeout')?.includes(`|${attributeName}=`)
+        );
+
         // Determine first required/optional attribute to figure out default attribute
-        // Don't factor in attributes that should be skipped when outputting to usfm
-        if (!skipOutputToUsfm) {
+        // Don't factor in attributes that:
+        // - should be skipped when outputting to usfm
+        // - are specifically not default attributes
+        if (!skipOutputToUsfm && !isNotDefaultAttribute) {
           if (!isOptional) {
             nonOptionalCount++;
             if (!firstRequiredNonSkippedAttribute) {
@@ -834,7 +897,7 @@ function processDefineElement(
 
       // Done collecting additional marker information from attributes. Now,
       // Add all collected markers to the main markers map, applying the extra marker info
-      for (const [markerName, markerInfo] of markersToAddEntries) {
+      for (const [markerName, markerInfo] of Object.entries(markersToAdd)) {
         // Add extra marker info to each marker we found in the element
         const updatedMarkerInfo =
           Object.keys(extraMarkerInfo).length > 0
@@ -853,7 +916,7 @@ function processDefineElement(
           defineName
         );
       }
-      for (const [markerName, markerInfo] of markersRegExpToAddEntries) {
+      for (const [markerName, markerInfo] of Object.entries(markersRegExpToAdd)) {
         // Add extra marker info to each marker we found in the element
         const updatedMarkerInfo =
           Object.keys(extraMarkerInfo).length > 0
@@ -874,6 +937,18 @@ function processDefineElement(
       }
 
       // Add the marker type to the main markers map
+      if (!didCreateMarker && skipOutputMarkerToUsfm && !markersMap.markerTypes[markerType]) {
+        // This isn't necessarily a problem, but it's easier to make sure we don't add any fake marker
+        // types that don't have real markers associated with them if we assume the modifications to
+        // existing marker types will always come after those marker types are defined. Can always
+        // come back and fix this later if we encounter a problem
+        console.log(
+          `Tried adding skipOutputMarkerToUsfmIfAttributeIsPresent to marker type ${
+            markerType
+          } that doesn't already exist! In ${defineName}`
+        );
+        process.exit(1);
+      }
       markersMap.markerTypes[markerType] = mergeMarkerTypes(
         markersMap.markerTypes[markerType],
         markerTypeToAdd,
@@ -884,10 +959,12 @@ function processDefineElement(
   }
 
   // If this definition didn't create any markers, add it to skipped
-  if (!createdMarker) {
+  if (!didChangeMarkersMap) {
     skippedDefinitions.add(defineName);
   }
 }
+
+// #endregion processing usx.rng data
 
 /**
  * Transform a USX RelaxNG schema into a markers map
@@ -925,16 +1002,47 @@ export function transformUsxSchemaToMarkersMap(
   // Set of define names that are referred to in `ref` `name`
   const referredDefines = new Set<string>();
   // Set of define names that are referred to in `ref` `usfm:alt`
-  const referredDefinesAlt = new Set<string>();
+  const referredAltDefines = new Set<string>();
+  // Set of define names that have `usfm:ignore` on all `ref`s pointing to them
+  const referredIgnoreDefines = new Set<string>();
+  // Set of define names that do not have `usfm:ignore` on at least one `ref` pointing to them
+  const referredNonIgnoreDefines = new Set<string>();
   for (let i = 0; i < refElements.length; i++) {
-    const referredName = refElements[i].getAttribute('name');
-    const referredNameAlt = refElements[i].getAttribute('usfm:alt');
+    const refElement = refElements[i];
+    const referredName = refElement.getAttribute('name');
     if (referredName) referredDefines.add(referredName);
-    if (referredNameAlt) referredDefinesAlt.add(referredNameAlt);
+
+    const referredAltName = refElement.getAttribute('usfm:alt');
+    if (referredAltName) referredAltDefines.add(referredAltName);
+
+    // if this ref is ignored, add it to the ignored defines if it hasn't already been added
+    // to the non-ignored defines
+    const ignored = refElement.getAttribute('usfm:ignore') === 'true';
+
+    // Let's assume usfm:ignore only applies to `name` because it makes no sense to be ignored alt
+    if (ignored && referredAltName) {
+      console.log(
+        `Found a ref tag with both usfm:alt ${
+          referredAltName
+        } and usfm:ignore true. name ${referredName}. Doesn't make sense`
+      );
+      process.exit(1);
+    }
+
+    if (referredName) {
+      if (ignored) {
+        if (!referredNonIgnoreDefines.has(referredName)) referredIgnoreDefines.add(referredName);
+        else referredIgnoreDefines.delete(referredName);
+      } else {
+        // This ref is not ignored. Record that it is not *always* ignored in every ref
+        referredNonIgnoreDefines.add(referredName);
+        referredIgnoreDefines.delete(referredName);
+      }
+    }
   }
   // Filter out all the `usfm:alt` referrals that are also referred to by `name`
-  const referredDefinesAltOnly = Array.from(referredDefinesAlt).filter(referredNameAlt =>
-    !referredDefines.has(referredNameAlt)
+  const referredDefinesAltOnly = Array.from(referredAltDefines).filter(
+    referredNameAlt => !referredDefines.has(referredNameAlt)
   );
   // Remove all `usfm:alt`-only defines from consideration
   referredDefinesAltOnly.forEach(referredAltName => {
@@ -953,9 +1061,22 @@ export function transformUsxSchemaToMarkersMap(
     defineElements.splice(referredDefineElementIndex, 1);
   });
 
+  // Set some specific exceptions for 3.0.x because it doesn't have some info present in 3.1
+  // TODO: set these in a smarter way once we have a better system for adding 3.1 info to 3.0.x
+  if (version < '3.1' || version === 'master') {
+    referredIgnoreDefines.add('ChapterEnd');
+    referredIgnoreDefines.add('VerseEnd');
+  }
+
   // Process all define elements
   for (let i = 0; i < defineElements.length; i++) {
-    processDefineElement(defineElements[i], defineElements, markersMap, skippedDefinitions);
+    processDefineElement(
+      defineElements[i],
+      defineElements,
+      markersMap,
+      skippedDefinitions,
+      referredIgnoreDefines
+    );
   }
 
   // Add the required markers that might not be in the schema
