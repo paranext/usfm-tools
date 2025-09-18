@@ -25,21 +25,27 @@
  */
 export type AttributeMarkerInfo = NormalMarkerInfo & {
   /**
-   * List of markers for which this marker is an attribute marker.
+   * List of normal marker names for which this marker is an attribute marker.
    *
    * For example, `ca` and `cp` are attribute markers for `c`. `isAttributeMarkerFor` would be `['c']` for
    * both `ca` and `cp`.
    */
-  isAttributeMarkerFor: string[];
+  isAttributeMarkerFor?: string[];
+  /**
+   * List of RegExp patterns matching marker names for which this marker is an attribute marker.
+   *
+   * For example, pretend `ex1` and `ex2` are attribute markers for markers matching RegExp `/test/`.
+   * `isAttributeMarkerForRegExp` would be `['test']` for
+   * both `ex1` and `ex2`.
+   */
+  isAttributeMarkerForRegExp?: string[];
   /**
    * The name of the USX/USJ attribute this attribute marker represents.
    *
    * For example, `ca` is an attribute marker for `c` and represents the `altnumber` attribute on the `c`
    * marker in USX/USJ. `attributeMarkerAttributeName` would be `altnumber` for the `ca` marker.
-   * 
-   * If not provided, defaults to the marker name.
    */
-  attributeMarkerAttributeName?: string;
+  attributeMarkerAttributeName: string;
 };
 
 /**

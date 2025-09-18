@@ -22,13 +22,31 @@
     },
     "c": {
       "type": "chapter",
+      "attributeMarkers": [
+        "ca",
+        "cp"
+      ],
       "defaultAttribute": "number"
     },
     "ca": {
-      "type": "char"
+      "type": "char",
+      "attributeMarkerAttributeName": "altnumber",
+      "isAttributeMarkerFor": [
+        "c"
+      ]
     },
     "cat": {
-      "type": "char"
+      "type": "char",
+      "attributeMarkerAttributeName": "category",
+      "isAttributeMarkerFor": [
+        "fe",
+        "f",
+        "efe",
+        "ef",
+        "ex",
+        "x",
+        "esb"
+      ]
     },
     "cd": {
       "type": "para"
@@ -40,7 +58,11 @@
       "type": "para"
     },
     "cp": {
-      "type": "para"
+      "type": "para",
+      "attributeMarkerAttributeName": "pubnumber",
+      "isAttributeMarkerFor": [
+        "c"
+      ]
     },
     "d": {
       "type": "para"
@@ -50,10 +72,16 @@
     },
     "ef": {
       "type": "note",
+      "attributeMarkers": [
+        "cat"
+      ],
       "defaultAttribute": "caller"
     },
     "efe": {
       "type": "note",
+      "attributeMarkers": [
+        "cat"
+      ],
       "defaultAttribute": "caller"
     },
     "efm": {
@@ -64,14 +92,23 @@
     },
     "esb": {
       "type": "sidebar",
+      "attributeMarkers": [
+        "cat"
+      ],
       "defaultAttribute": "category"
     },
     "ex": {
       "type": "note",
+      "attributeMarkers": [
+        "cat"
+      ],
       "defaultAttribute": "caller"
     },
     "f": {
       "type": "note",
+      "attributeMarkers": [
+        "cat"
+      ],
       "defaultAttribute": "caller"
     },
     "fdc": {
@@ -79,6 +116,9 @@
     },
     "fe": {
       "type": "note",
+      "attributeMarkers": [
+        "cat"
+      ],
       "defaultAttribute": "caller"
     },
     "fig": {
@@ -691,13 +731,25 @@
     },
     "v": {
       "type": "verse",
+      "attributeMarkers": [
+        "va",
+        "vp"
+      ],
       "defaultAttribute": "number"
     },
     "va": {
-      "type": "char"
+      "type": "char",
+      "attributeMarkerAttributeName": "altnumber",
+      "isAttributeMarkerFor": [
+        "v"
+      ]
     },
     "vp": {
-      "type": "char"
+      "type": "char",
+      "attributeMarkerAttributeName": "pubnumber",
+      "isAttributeMarkerFor": [
+        "v"
+      ]
     },
     "w": {
       "type": "char",
@@ -717,6 +769,9 @@
     },
     "x": {
       "type": "note",
+      "attributeMarkers": [
+        "cat"
+      ],
       "defaultAttribute": "caller"
     },
     "xdc": {

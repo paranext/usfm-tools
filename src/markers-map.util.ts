@@ -11,6 +11,16 @@ import {
 const OBJECT_TYPE_MARKER = 'Marker';
 /** Name of object representing a marker type - for use in logging */
 const OBJECT_TYPE_MARKER_TYPE = 'Marker type';
+/**
+ * RegExp to match against `usfm:match` or `usf:tag` or `usfm:ptag`'s `beforeout` to see if it has a
+ * marker.
+ *
+ * Matches:
+ * - 0: the whole string
+ * - 1: `\n` if there is one before the marker; `undefined` otherwise
+ * - 2: the marker name
+ */
+const BEFORE_OUT_MARKER_NAME_REGEXP = /(\\n)?\\\\(\S+)/;
 
 // #region XML helper functions
 
@@ -320,6 +330,17 @@ function mergeMarkers(
   if (mergedIsAttributeMarkerFor)
     attributeMergedMarker.isAttributeMarkerFor = mergedIsAttributeMarkerFor;
 
+  const mergedIsAttributeMarkerForRegExp = mergeArrays(
+    OBJECT_TYPE_MARKER,
+    markerName,
+    'isAttributeMarkerForRegExp',
+    defineName,
+    attributeMarkerA.isAttributeMarkerForRegExp,
+    attributeMarkerB.isAttributeMarkerForRegExp
+  );
+  if (mergedIsAttributeMarkerForRegExp)
+    attributeMergedMarker.isAttributeMarkerForRegExp = mergedIsAttributeMarkerForRegExp;
+
   // Check attributeMarkerAttributeName can be merged
   verifyStringsCanBeMerged(
     OBJECT_TYPE_MARKER,
@@ -329,6 +350,25 @@ function mergeMarkers(
     attributeMarkerA.attributeMarkerAttributeName,
     attributeMarkerB.attributeMarkerAttributeName
   );
+
+  // Make sure the requirements for `AttributeMarkerInfo` are met if any `AttributeMarkerInfo` properties
+  // are present
+  if (
+    (attributeMergedMarker.isAttributeMarkerFor ||
+      attributeMergedMarker.isAttributeMarkerForRegExp) &&
+    !attributeMergedMarker.attributeMarkerAttributeName
+  ) {
+    console.log(
+      `Error: While merging, ${OBJECT_TYPE_MARKER} ${markerName} has isAttributeMarkerFor ${JSON.stringify(
+        attributeMergedMarker.isAttributeMarkerFor
+      )} and isAttributeMarkerForRegExp ${
+        attributeMergedMarker.isAttributeMarkerForRegExp
+      } but has no attributeMarkerAttributeName. Must have attributeMarkerAttributeName. Merging in define ${
+        defineName
+      }`
+    );
+    process.exit(1);
+  }
 
   return mergedMarker;
 }
@@ -460,19 +500,20 @@ function mergeMarkerTypes(
 
 /**
  * Create a list of all USFM-style (not XML) attributes for the marker an element represents. Also gather
- * some preliminary information about those attributes.
+ * some information about those attributes.
  *
  * These attributes are children of the element and attributes found in refs in the element.
  *
  * The information returned alongside the attributes in this function is only the information about attributes
  * that is gathered differently based on if the attribute is a child of the element or if the attribute is
- * found through a ref in the element.
+ * found through a ref in the element. Plus some derived data that will also be used to determine information
+ * that is gathered the same way for all attributes.
  *
  * @param element the XML element that represents the marker being processed
  * @param markerType type of the marker being processed
  * @param defineElements The collection of all define elements (for reference lookups)
  * @param defineName Name of `define` containing this `element` (for error messages)
- * @returns array of objects containing the attribute and some preliminary info about that attribute
+ * @returns array of objects containing the attribute and some info about that attribute
  */
 function collectAttributesForElement(
   element: Element,
@@ -481,22 +522,26 @@ function collectAttributesForElement(
   defineName: string
 ) {
   // Make a list of attribute elements to process along with some info we need to determine
-  // based on if the attribute is a child or in a ref
+  // differently based on if the attribute is a child or in a ref
   // These attributes are children of the element and attributes found in refs in the element
   const elementAttributes: {
+    /** The `attribute` element in the marker we are analyzing */
     attribute: Element;
+    /** The name of the attribute we are analyzing */
     // We already got attribute name, so might as well include it
     attributeName: string;
+    /** Whether this attribute is marked as optional */
     // ref may be inside optional, so we determine isOptional differently between the two kinds
     isOptional?: boolean;
+    /** Whether this attribute should be skipped when outputting the marker to USFM */
     // ref may have usfm:ignore on it, so determine skipOutputToUsfm differently between the two
     skipOutputToUsfm?: boolean;
   }[] = [];
 
   // Look through child attributes of the element
   const childAttributes = element.getElementsByTagName('attribute');
-  for (let j = 0; j < childAttributes.length; j++) {
-    const attribute = childAttributes[j];
+  for (let i = 0; i < childAttributes.length; i++) {
+    const attribute = childAttributes[i];
 
     const attributeName = getElementName(attribute, defineName);
     if (!attributeName) continue;
@@ -576,7 +621,46 @@ function collectAttributesForElement(
     }
   }
 
-  return elementAttributes;
+  // Finish determining the fields with some logic that is the same no matter where the
+  // attribute comes from
+  const finalElementAttributes: ((typeof elementAttributes)[number] & {
+    /** The `usfm:match` elements that are direct children of this `attribute` element */
+    usfmMatchElements: Element[];
+  })[] = elementAttributes.map(elementAttribute => {
+    const { attribute, attributeName } = elementAttribute;
+    // We did some computation on skipOutputToUsfm for when the attribute is through a ref,
+    // but we need to do more to determine if we should skip outputting this attribute to USFM
+    // As such, this is just a `let` so we can modify it
+    let { skipOutputToUsfm } = elementAttribute;
+
+    // Get the `usfm:match` elements because we will do lots with them
+    const usfmMatchElements = getChildElementsByTagName(attribute, 'usfm:match');
+
+    // Skip output attribute may have `usfm:ignore="true"` directly on it
+    if (!skipOutputToUsfm) skipOutputToUsfm = attribute.getAttribute('usfm:ignore') === 'true';
+    // Skip output attribute may have `usfm:match` with `noout="true"`
+    if (!skipOutputToUsfm) {
+      skipOutputToUsfm = usfmMatchElements.some(
+        usfmMatch => usfmMatch.getAttribute('noout') === 'true'
+      );
+    }
+    // Skip output attribute may have child `name` element with `ns` attribute not empty
+    if (!skipOutputToUsfm) {
+      const nameElement = getFirstChildWithTagName(attribute, 'name', defineName);
+      if (nameElement && nameElement.getAttribute('ns')) skipOutputToUsfm = true;
+    }
+
+    // Some exception cases for skipping output to USFM - I think these are errors in `usx.rng`
+    // If the errors are fixed, these should be removed
+    if ((markerType === 'para' || markerType === 'table') && attributeName === 'vid')
+      skipOutputToUsfm = true;
+    else if (markerType === 'chapter' && attributeName === 'sid') skipOutputToUsfm = true;
+    else if (markerType === 'cell' && attributeName === 'align') skipOutputToUsfm = true;
+
+    return { ...elementAttribute, skipOutputToUsfm, usfmMatchElements };
+  });
+
+  return finalElementAttributes;
 }
 
 /**
@@ -768,8 +852,12 @@ function processDefineElement(
       markerTypeToAdd.hasStyleAttribute = false;
     }
 
-    const didCreateMarker =
-      Object.entries(markersToAdd).length > 0 || Object.entries(markersRegExpToAdd).length > 0;
+    // Get a list of marker names we are creating before adding attribute markers and such
+    const markerNamesToAdd = Object.keys(markersToAdd);
+    const markerNamesToAddRegExp = Object.keys(markersRegExpToAdd);
+    // If we are creating any new markers, we changed the markers map
+    const didCreateMarker = markerNamesToAdd.length > 0 || markerNamesToAddRegExp.length > 0;
+
     didChangeMarkersMap = didCreateMarker;
     // If this `define` created a marker or may to edit an existing marker type based on the
     // attributes, figure out element-level attribute information, then add all collected marker
@@ -786,6 +874,8 @@ function processDefineElement(
       // Process all found attributes and build up additional marker info to put on each marker for this
       // marker type
       const extraMarkerInfo: Partial<MarkerInfo> = {};
+      // As we look through the attributes, collect attribute markers to add to the markers map
+      const attributeMarkersToAdd: Record<string, MarkerInfo> = {};
 
       // Track the first non-optional non-skipped attributes so we can get default attribute
       let nonOptionalCount = 0;
@@ -794,11 +884,8 @@ function processDefineElement(
 
       // Loop through all attributes and determine some characteristics
       for (let j = 0; j < elementAttributes.length; j++) {
-        const { attribute, attributeName, isOptional } = elementAttributes[j];
-        // We did some computation on skipOutputToUsfm for when the attribute is through a ref,
-        // but we need to do more to determine if we should skip outputting this attribute to USFM
-        // As such, this is just a `let` so we can modify it
-        let { skipOutputToUsfm } = elementAttributes[j];
+        const { attribute, attributeName, isOptional, skipOutputToUsfm, usfmMatchElements } =
+          elementAttributes[j];
 
         // Determine if we should manually skip this attribute
         // Always skip style attribute because it is not like other attributes and should not
@@ -813,16 +900,6 @@ function processDefineElement(
         // tables yet anyway. Just skip this attribute until something changes.
         if (markerType === 'cell' && attributeName === 'colspan') continue;
 
-        const usfmMatchElements = getChildElementsByTagName(attribute, 'usfm:match');
-        if (usfmMatchElements.length > 1)
-          console.log(
-            `Warning: Attribute ${attributeName} on marker type ${
-              markerType
-            } has multiple usfm:match tags. It will not be considered for special attribute properties like leading attribute. In define ${
-              defineName
-            }`
-          );
-
         // If this `define` is a marker that should not be output to USFM, put this attribute in the
         // list of marker skip attributes and continue to the next attribute
         if (skipOutputMarkerToUsfm) {
@@ -833,33 +910,114 @@ function processDefineElement(
           continue;
         }
 
-        // If this attribute should be ignored when output to usfm, indicate so
-        // Skip output attribute may have `usfm:ignore="true"` directly on it
-        if (!skipOutputToUsfm) skipOutputToUsfm = attribute.getAttribute('usfm:ignore') === 'true';
-        // Skip output attribute may have `usfm:match` with `noout="true"`
-        if (!skipOutputToUsfm) {
-          skipOutputToUsfm = usfmMatchElements.some(
-            usfmMatch => usfmMatch.getAttribute('noout') === 'true'
-          );
-        }
-        // Skip output attribute may have child `name` element with `ns` attribute not empty
-        if (!skipOutputToUsfm) {
-          const nameElement = getFirstChildWithTagName(attribute, 'name', defineName);
-          if (nameElement && nameElement.getAttribute('ns')) skipOutputToUsfm = true;
-        }
-
-        // Some exception cases for skipping output to USFM - I think these are errors in `usx.rng`
-        // If the errors are fixed, these should be removed
-        if ((markerType === 'para' || markerType === 'table') && attributeName === 'vid')
-          skipOutputToUsfm = true;
-        else if (markerType === 'chapter' && attributeName === 'sid') skipOutputToUsfm = true;
-        else if (markerType === 'cell' && attributeName === 'align') skipOutputToUsfm = true;
-
         // If we should skip this attribute, add it to the skipped list on the marker type
         if (skipOutputToUsfm) {
           if (!markerTypeToAdd.skipOutputAttributeToUsfm)
             markerTypeToAdd.skipOutputAttributeToUsfm = [];
           markerTypeToAdd.skipOutputAttributeToUsfm.push(attributeName);
+        }
+
+        // Determine if this meets the generic conditions to be a special type of attribute
+        let canBeSpecialAttributeType = true;
+
+        if (usfmMatchElements.length > 1) {
+          console.log(
+            `Warning: Attribute ${attributeName} on marker type ${
+              markerType
+            } has multiple usfm:match tags. It will not be considered for special attribute properties like leading attribute. In define ${
+              defineName
+            }`
+          );
+          canBeSpecialAttributeType = false;
+        }
+
+        const usfmTagElements = getChildElementsByTagName(attribute, 'usfm:tag');
+        if (usfmTagElements.length > 1) {
+          console.log(
+            `Warning: Attribute ${attributeName} on marker type ${
+              markerType
+            } has multiple usfm:tag tags. It will not be considered for special attribute properties like leading attribute. In define ${
+              defineName
+            }`
+          );
+          canBeSpecialAttributeType = false;
+        }
+
+        const usfmParagraphTagElements = getChildElementsByTagName(attribute, 'usfm:ptag');
+        if (usfmParagraphTagElements.length > 1) {
+          console.log(
+            `Warning: Attribute ${attributeName} on marker type ${
+              markerType
+            } has multiple usfm:ptag tags. It will not be considered for special attribute properties like leading attribute. In define ${
+              defineName
+            }`
+          );
+          canBeSpecialAttributeType = false;
+        }
+
+        if (canBeSpecialAttributeType) {
+          const usfmMatchElement = usfmMatchElements.length > 0 ? usfmMatchElements[0] : undefined;
+          const usfmTagElement = usfmTagElements.length > 0 ? usfmTagElements[0] : undefined;
+          const usfmParagraphTagElement =
+            usfmParagraphTagElements.length > 0 ? usfmParagraphTagElements[0] : undefined;
+
+          // Determine if this is an attribute marker
+          const matchLikeElements = [usfmMatchElement, usfmTagElement, usfmParagraphTagElement];
+          // Test the found match-like elements for if they have a marker in their `beforeout` meaning
+          // they would print a marker before their contents when outputting to USFM
+          let isAttributeMarker = false;
+          matchLikeElements.forEach(matchLikeElement => {
+            if (!matchLikeElement) return;
+
+            // Special case: `usx` `version` is not an attribute marker even though it looks just like one
+            if (markerType === 'usx' && attributeName === 'version') return;
+
+            const beforeOutMatches = BEFORE_OUT_MARKER_NAME_REGEXP.exec(
+              matchLikeElement.getAttribute('beforeout') ?? ''
+            );
+            // Get the marker name out of the `usfm:match`-like element's `beforeout` if it exists
+            const attributeMarkerName = beforeOutMatches?.[2];
+
+            if (!attributeMarkerName) return;
+
+            if (isAttributeMarker) {
+              console.log(
+                `Warning: found more than one usfm:match-like elements with beforeout with a marker inside in attribute ${
+                  attributeName
+                } in define ${defineName}. Ignoring all but the first.`
+              );
+              return;
+            }
+            isAttributeMarker = true;
+
+            // If it's a `usfm:ptag`, it is a paragraph marker
+            let isParagraphMarkerType = matchLikeElement.tagName === 'usfm:ptag';
+            if (!isParagraphMarkerType)
+              // If the `beforeout` has `\n`, it is a paragraph marker
+              isParagraphMarkerType = !!beforeOutMatches[1];
+
+            // Create the attribute marker info and set it up to be added to the markers map
+            const attributeMarkerInfo: MarkerInfo = {
+              type: isParagraphMarkerType ? 'para' : 'char',
+              attributeMarkerAttributeName: attributeName,
+            };
+
+            if (markerNamesToAdd.length > 0)
+              attributeMarkerInfo.isAttributeMarkerFor = markerNamesToAdd;
+            if (markerNamesToAddRegExp.length > 0)
+              attributeMarkerInfo.isAttributeMarkerForRegExp = markerNamesToAddRegExp;
+
+            attributeMarkersToAdd[attributeMarkerName] = mergeMarkers(
+              attributeMarkersToAdd[attributeMarkerName],
+              attributeMarkerInfo,
+              attributeMarkerName,
+              defineName
+            );
+
+            // Add info about this attribute marker to the markers to add
+            if (!extraMarkerInfo.attributeMarkers) extraMarkerInfo.attributeMarkers = [];
+            extraMarkerInfo.attributeMarkers.push(attributeMarkerName);
+          });
         }
 
         // Determine if this attribute is hard-coded not to be a default attribute
@@ -897,6 +1055,7 @@ function processDefineElement(
 
       // Done collecting additional marker information from attributes. Now,
       // Add all collected markers to the main markers map, applying the extra marker info
+      const updateMarkerInfoDefineName = `${defineName} (merging extraMarkerInfo into marker to add)`
       for (const [markerName, markerInfo] of Object.entries(markersToAdd)) {
         // Add extra marker info to each marker we found in the element
         const updatedMarkerInfo =
@@ -905,7 +1064,7 @@ function processDefineElement(
                 markerInfo,
                 { ...markerInfo, ...extraMarkerInfo },
                 markerName,
-                defineName
+                updateMarkerInfoDefineName
               )
             : markerInfo;
 
@@ -924,13 +1083,23 @@ function processDefineElement(
                 markerInfo,
                 { ...markerInfo, ...extraMarkerInfo },
                 markerName,
-                defineName
+                updateMarkerInfoDefineName
               )
             : markerInfo;
 
         markersMap.markersRegExp[markerName] = mergeMarkers(
           markersMap.markersRegExp[markerName],
           updatedMarkerInfo,
+          markerName,
+          defineName
+        );
+      }
+
+      // Add attribute markers without the extra info because it doesn't apply to them
+      for (const [markerName, markerInfo] of Object.entries(attributeMarkersToAdd)) {
+        markersMap.markers[markerName] = mergeMarkers(
+          markersMap.markers[markerName],
+          markerInfo,
           markerName,
           defineName
         );
@@ -943,7 +1112,7 @@ function processDefineElement(
         // existing marker types will always come after those marker types are defined. Can always
         // come back and fix this later if we encounter a problem
         console.log(
-          `Tried adding skipOutputMarkerToUsfmIfAttributeIsPresent to marker type ${
+          `Error: Tried adding skipOutputMarkerToUsfmIfAttributeIsPresent to marker type ${
             markerType
           } that doesn't already exist! In ${defineName}`
         );
@@ -1022,7 +1191,7 @@ export function transformUsxSchemaToMarkersMap(
     // Let's assume usfm:ignore only applies to `name` because it makes no sense to be ignored alt
     if (ignored && referredAltName) {
       console.log(
-        `Found a ref tag with both usfm:alt ${
+        `Error: Found a ref tag with both usfm:alt ${
           referredAltName
         } and usfm:ignore true. name ${referredName}. Doesn't make sense`
       );
@@ -1061,9 +1230,10 @@ export function transformUsxSchemaToMarkersMap(
     defineElements.splice(referredDefineElementIndex, 1);
   });
 
+  const isVersion3_1OrHigher = version >= '3.1' && version !== 'master';
   // Set some specific exceptions for 3.0.x because it doesn't have some info present in 3.1
   // TODO: set these in a smarter way once we have a better system for adding 3.1 info to 3.0.x
-  if (version < '3.1' || version === 'master') {
+  if (!isVersion3_1OrHigher) {
     referredIgnoreDefines.add('ChapterEnd');
     referredIgnoreDefines.add('VerseEnd');
   }
@@ -1081,36 +1251,38 @@ export function transformUsxSchemaToMarkersMap(
 
   // Add the required markers that might not be in the schema
   const manualDefineName = 'added manually';
-  markersMap.markers['cat'] = mergeMarkers(
-    markersMap.markers['cat'],
-    { type: 'char' },
-    'cat',
-    manualDefineName
-  );
-  markersMap.markers['ca'] = mergeMarkers(
-    markersMap.markers['ca'],
-    { type: 'char' },
-    'ca',
-    manualDefineName
-  );
-  markersMap.markers['cp'] = mergeMarkers(
-    markersMap.markers['cp'],
-    { type: 'para' },
-    'cp',
-    manualDefineName
-  );
-  markersMap.markers['va'] = mergeMarkers(
-    markersMap.markers['va'],
-    { type: 'char' },
-    'va',
-    manualDefineName
-  );
-  markersMap.markers['vp'] = mergeMarkers(
-    markersMap.markers['vp'],
-    { type: 'char' },
-    'vp',
-    manualDefineName
-  );
+  if (!isVersion3_1OrHigher) {
+    markersMap.markers['cat'] = mergeMarkers(
+      markersMap.markers['cat'],
+      { type: 'char' },
+      'cat',
+      manualDefineName
+    );
+    markersMap.markers['ca'] = mergeMarkers(
+      markersMap.markers['ca'],
+      { type: 'char' },
+      'ca',
+      manualDefineName
+    );
+    markersMap.markers['cp'] = mergeMarkers(
+      markersMap.markers['cp'],
+      { type: 'para' },
+      'cp',
+      manualDefineName
+    );
+    markersMap.markers['va'] = mergeMarkers(
+      markersMap.markers['va'],
+      { type: 'char' },
+      'va',
+      manualDefineName
+    );
+    markersMap.markers['vp'] = mergeMarkers(
+      markersMap.markers['vp'],
+      { type: 'char' },
+      'vp',
+      manualDefineName
+    );
+  }
   markersMap.markers['usfm'] = mergeMarkers(
     markersMap.markers['usfm'],
     { type: 'para' },
