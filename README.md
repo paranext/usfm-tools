@@ -95,6 +95,9 @@ The marker names and information about those markers are derived from the `usx.r
               - `alt` is the marker's text content in USFM (has `usfm:match match="TEXTNOTATTRIB"`)
               - `id` seems to be an exception. There does not appear to be any particular reason why `id` should not be the default attribute, but it is not. (has `usfm:match` with `beforeout="&#x27;|id=&quot;&#x27;"` because it is hard-coded to be in the USFM and not default)
             - `style` on any marker type (TODO: do all have `usfm:tag`/`usfm:ptag`? Anything else with `usfm:tag` or `ptag`? `esbe`(has text content), `cat` (attribute), `ref`(doesn't have text content))
+              - `sidebar` has `usfm:ptag` direct child with non-matching text content `esbe` which should be a new marker
+              - `ref` has `usfm:tag` direct child with no text content, so it shouldn't be a new marker
+              - `periph` and `optbreak` have `usfm:match` direct children, but these do not indicate a new marker. Just part of the marker itself
             - TODO: all of `fig`'s "FigureTwo" deprecated syntax attributes have `usfm:match beforeout="|" match="TEXTNOTATTRIBOPT"`, but none of them are leading attributes or text content.
             - `vid` on `para` and `table` marker types
               - `vid` is derived metadata in USX/USJ and is not present in USFM (no obvious indication in `usx.rng`)
@@ -164,6 +167,8 @@ TODO: adjust README based on new changes
   - In `style` attribute element (or, if there is no `style` element, in the `element` element), one `usfm:ptag` or `usfm:tag` or `usfm:match` direct child with `beforeout` with `\n` in it (`verse` - `\n` is optional, whereas it does not seem to be optional in the others. Does this matter for us? I don't think so; I think it all normalizes out to being just whitespace).
     - `cell` has `usfm:ptag` which I think is a bug.
     - `periph` doesn't have `\n` in its `usfm:match` `beforeout`, which I think is a bug.
+- [marker] additional very simple markers that go with other markers
+  - Check for marker type element direct children `usfm:ptag` or `usfm:tag` with text content and create a simple marker (no attributes or whatnot from the other markers of this marker type) whose name is the text content of the tag. Like `esbe` in `sidebar` marker type
 
 TODO: incorporate changes
 - Figure out a way to get this to where you can work on the rest of the code
@@ -175,8 +180,6 @@ TODO: incorporate changes
   - One `usfm:match` is present
     - `match` must not be `TEXTNOTATTRIB` or `TEXTNOTATTRIBOPT`
     - `beforeout` must not contain `\\__ `
-- [marker] `esbe`/`sidebar` get marker from `usfm:ptag` with text content different than the name attribute directly under the element
-  - Can check element's direct children for `usfm:ptag` and create new tag if names don't match. Console log if `usfm:ptag` and `usfm:tag` with no/same are direct children of these elements because that is strange
 - [marker] comments
 - [markerType] programmatically determine if marker types need closing tag
  - `usfm:endtag` is present in the element
@@ -184,6 +187,8 @@ TODO: incorporate changes
  - Closing tag is empty if `matchref="" or "&#x27;&#x27;"` and `matchout` is not empty/not provided (`category`)
   - [marker] closing tag should not go in the USFM if `noout="true"`
 - Explain how the terms I am using from XML sorta map to the USFM concepts but aren't exact one-to-one equals
+- [markerType] note when the marker shouldn't have a `style` attribute
+  - Improve accuracy: if the `element` has no `style` attribute and has direct child `usfm:tag` (`ref`), `usfm:ptag` (none - `sidebar` is closest), or `usfm:match` (`periph` and `optbreak`), no `style` attribute. If doesn't have one of these direct children (`table`, `usx`), the marker shouldn't be output to USFM at all. Or at least it indicates a very special case. Maybe not handling this yet is why `usx` considers `usfm` to be a leading attribute in the `usx.rng` but we don't.
 - Extra work later?
   - Do we need to keep track of whether a nested marker that closes has `+` on its markers? Probably, but maybe the plus is on the style in USX
     - Paratext 9.4 fails to nest markers without the `+`. It doesn't put anything particular if the `+` is present. I guess that means we might just need to track if `+` is present for 

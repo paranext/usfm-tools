@@ -663,19 +663,33 @@ function collectAttributesForElement(
   return finalElementAttributes;
 }
 
+/**
+ * Determine if the XML element indicates that the marker type has a newline before it in USFM.
+ *
+ * This XML element may be a `style` attribute or an `element` element representing a marker
+ * type.
+ *
+ * @param element XML element to check
+ * @param elementType what kind of element this is (for logging)
+ * @param markerType which marker type this is (for logging)
+ * @param defineName Name of `define` containing this XML element (for error messages)
+ * @returns `true` if the element indicates the marker type has a newline before it in USFM,
+ * `false` if the element indicates the marker type does not have a newline before it in USFM,
+ * and `undefined` if the element doesn't have any indication either way.
+ */
 function determineHasNewlineBeforeForElement(
   element: Element,
   elementType: string,
   markerType: string,
   defineName: string
 ) {
-  const elementUsfmTagElements = getChildElementsByTagName(element, 'usfm:tag')
+  const elementUsfmTagLikeElements = getChildElementsByTagName(element, 'usfm:tag')
     .concat(getChildElementsByTagName(element, 'usfm:ptag'))
     .concat(getChildElementsByTagName(element, 'usfm:match'));
 
-  if (elementUsfmTagElements.length === 0) return undefined;
+  if (elementUsfmTagLikeElements.length === 0) return undefined;
 
-  if (elementUsfmTagElements.length > 1) {
+  if (elementUsfmTagLikeElements.length > 1) {
     console.log(
       `Error: ${elementType} for marker type "${
         markerType
@@ -686,7 +700,7 @@ function determineHasNewlineBeforeForElement(
     process.exit(1);
   }
 
-  const styleUsfmTagElement = elementUsfmTagElements[0];
+  const styleUsfmTagElement = elementUsfmTagLikeElements[0];
 
   // has newline before if it is a `usfm:ptag` or `beforeout` has newline in it
   return (
@@ -744,6 +758,9 @@ function processDefineElement(
     // we find an element-wide default attribute before adding the markers to the main map
     const markersToAdd: Record<string, MarkerInfo> = {};
     const markersRegExpToAdd: Record<string, MarkerInfo> = {};
+    // There will be some markers we want to add without adding extra marker info based on what is in the
+    // element
+    const plainMarkersToAdd: Record<string, MarkerInfo> = {};
     // Just modify the existing marker type if this marker just has information about skipping
     // it. These markers to skip don't have much information in them
     const markerTypeToAdd: MarkerTypeInfo = skipOutputMarkerToUsfm
@@ -941,6 +958,42 @@ function processDefineElement(
       }
     } else if (hasNewlineBefore) markerTypeToAdd.hasNewlineBefore = true;
 
+    // Determine if there are additional plain markers in the element that should be recorded
+    const elementUsfmTagElements = getChildElementsByTagName(element, 'usfm:tag').concat(
+      getChildElementsByTagName(element, 'usfm:ptag')
+    );
+    elementUsfmTagElements.forEach(usfmTagElement => {
+      const markerName = getTextContent(usfmTagElement);
+
+      // If the usfm:tag or usfm:ptag is empty, it seems to be representing this marker and
+      // will be covered below
+      if (!markerName) return;
+
+      // Not much information about this additional marker, but we can tell if it should have
+      // a newline
+      const additionalMarkerHasNewline = usfmTagElement.tagName === 'usfm:ptag';
+
+      if (additionalMarkerHasNewline !== hasNewlineBefore) {
+        console.log(
+          `Error: additional plain marker "${markerName}" in marker type "${
+            markerType
+          }" has different hasNewlineBefore. marker type: ${hasNewlineBefore}; additional marker: ${
+            hasNewlineBefore
+          }. In define ${defineName}`
+        );
+        process.exit(1);
+      }
+
+      const markerInfo: MarkerInfo = { type: markerType };
+
+      plainMarkersToAdd[markerName] = mergeMarkers(
+        plainMarkersToAdd[markerName],
+        markerInfo,
+        markerName,
+        defineName
+      );
+    });
+
     // If the element doesn't have a style attribute and if this `define` indicates the marker
     // should not be skipped for USFM, its element name (markerType) represents a marker
     if (!hasStyle && !skipOutputMarkerToUsfm) {
@@ -957,11 +1010,26 @@ function processDefineElement(
       markerTypeToAdd.hasStyleAttribute = false;
     }
 
-    // Get a list of marker names we are creating before adding attribute markers and such
     const markerNamesToAdd = Object.keys(markersToAdd);
     const markerNamesToAddRegExp = Object.keys(markersRegExpToAdd);
+    const plainMarkerNamesToAdd = Object.keys(plainMarkersToAdd);
+    const totalNumberOfMarkersAdded =
+      markerNamesToAdd.length + markerNamesToAddRegExp.length + plainMarkerNamesToAdd.length;
+
+    if (!hasStyle && totalNumberOfMarkersAdded > 1) {
+      console.log(
+        `Error: Marker type "${
+          markerType
+        }" has no "style" attribute but is trying to create ${totalNumberOfMarkersAdded} markers. This does not make sense because there must be a "style" attribute to distinguish between markers. In define ${
+          defineName
+        }`
+      );
+      process.exit(1);
+    }
+
+    // Get a list of marker names we are creating before adding attribute markers and such
     // If we are creating any new markers, we changed the markers map
-    const didCreateMarker = markerNamesToAdd.length > 0 || markerNamesToAddRegExp.length > 0;
+    const didCreateMarker = totalNumberOfMarkersAdded > 0;
 
     didChangeMarkersMap = didCreateMarker;
     // If this `define` created a marker or may to edit an existing marker type based on the
@@ -1180,6 +1248,8 @@ function processDefineElement(
           defineName
         );
       }
+
+      // Add all collected RegExp markers to the main markers map, applying the extra marker info
       for (const [markerName, markerInfo] of Object.entries(markersRegExpToAdd)) {
         // Add extra marker info to each marker we found in the element
         const updatedMarkerInfo =
@@ -1195,6 +1265,16 @@ function processDefineElement(
         markersMap.markersRegExp[markerName] = mergeMarkers(
           markersMap.markersRegExp[markerName],
           updatedMarkerInfo,
+          markerName,
+          defineName
+        );
+      }
+
+      // Add all collected plain markers to the main markers map, not applying the extra marker info
+      for (const [markerName, markerInfo] of Object.entries(plainMarkersToAdd)) {
+        markersMap.markers[markerName] = mergeMarkers(
+          markersMap.markers[markerName],
+          markerInfo,
           markerName,
           defineName
         );

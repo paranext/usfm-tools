@@ -97,6 +97,9 @@
       ],
       "defaultAttribute": "category"
     },
+    "esbe": {
+      "type": "sidebar"
+    },
     "ex": {
       "type": "note",
       "attributeMarkers": [
