@@ -132,6 +132,7 @@ TODO: Improve wording/list exception cases we don't deal with right now
   - `row` -> `table:row` in USJ
   - `cell` -> `table:cell` in USJ
   - `colspan` on `cell` gets put in the marker name in USFM
+- `optbreak` is pretty exceptional or at least will be until otherwise
 
 TODO: adjust README based on new changes
 - Skip the definition if all `ref`s pointing to it are pointing to it via `usfm:alt` attribute instead of `name` (`FigureTwo`)
@@ -159,6 +160,10 @@ TODO: adjust README based on new changes
   - `para` if `usfm:ptag` or `beforeout` has `\n`; `char` otherwise
   - `isAttributeMarker` on the attribute-created marker
   - `attributeMarkers` list on the parent marker
+- [markerType] programmatically determine if marker types should have newlines before the marker
+  - In `style` attribute element (or, if there is no `style` element, in the `element` element), one `usfm:ptag` or `usfm:tag` or `usfm:match` direct child with `beforeout` with `\n` in it (`verse` - `\n` is optional, whereas it does not seem to be optional in the others. Does this matter for us? I don't think so; I think it all normalizes out to being just whitespace).
+    - `cell` has `usfm:ptag` which I think is a bug.
+    - `periph` doesn't have `\n` in its `usfm:match` `beforeout`, which I think is a bug.
 
 TODO: incorporate changes
 - Figure out a way to get this to where you can work on the rest of the code
@@ -173,8 +178,6 @@ TODO: incorporate changes
 - [marker] `esbe`/`sidebar` get marker from `usfm:ptag` with text content different than the name attribute directly under the element
   - Can check element's direct children for `usfm:ptag` and create new tag if names don't match. Console log if `usfm:ptag` and `usfm:tag` with no/same are direct children of these elements because that is strange
 - [marker] comments
-- [markerType] programmatically determine if marker types need newlines before the marker
-  - `usfm:ptag` or `beforeout` has `\n` in it (`verse`). But `cell` has `usfm:ptag` which I think is a bug
 - [markerType] programmatically determine if marker types need closing tag
  - `usfm:endtag` is present in the element
  - `usfm:endtag` is outside the `element` for `milestone` because its `element` has `<empty/>` in it

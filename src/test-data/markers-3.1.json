@@ -811,11 +811,13 @@
   "markerTypes": {
     "book": {},
     "cell": {
+      "hasNewlineBefore": true,
       "skipOutputAttributeToUsfm": [
         "align"
       ]
     },
     "chapter": {
+      "hasNewlineBefore": true,
       "skipOutputAttributeToUsfm": [
         "sid"
       ],
@@ -831,11 +833,13 @@
       "hasStyleAttribute": false
     },
     "para": {
+      "hasNewlineBefore": true,
       "skipOutputAttributeToUsfm": [
         "vid"
       ]
     },
     "periph": {
+      "hasNewlineBefore": true,
       "hasStyleAttribute": false
     },
     "ref": {
@@ -844,8 +848,12 @@
         "gen"
       ]
     },
-    "row": {},
-    "sidebar": {},
+    "row": {
+      "hasNewlineBefore": true
+    },
+    "sidebar": {
+      "hasNewlineBefore": true
+    },
     "table": {
       "hasStyleAttribute": false,
       "skipOutputAttributeToUsfm": [
@@ -862,6 +870,7 @@
       ]
     },
     "verse": {
+      "hasNewlineBefore": true,
       "skipOutputAttributeToUsfm": [
         "sid"
       ],

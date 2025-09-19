@@ -235,7 +235,7 @@ export type MarkerTypeInfoBase = {
    *
    * If not present, defaults to `false`
    */
-  requiresNewlineBefore?: boolean;
+  hasNewlineBefore?: boolean;
 };
 
 /** Information about a USFM/USX/USJ marker type that is essential for proper translation between formats */

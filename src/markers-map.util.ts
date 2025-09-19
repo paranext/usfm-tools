@@ -410,14 +410,14 @@ function mergeMarkerTypes(
     );
     process.exit(1);
   }
-  if (markerTypeA.requiresNewlineBefore !== markerTypeB.requiresNewlineBefore) {
+  if (markerTypeA.hasNewlineBefore !== markerTypeB.hasNewlineBefore) {
     logObjectMergeConflictError(
       OBJECT_TYPE_MARKER_TYPE,
       markerTypeName,
-      'requiresNewlineBefore',
+      'hasNewlineBefore',
       defineName,
-      markerTypeA.requiresNewlineBefore,
-      markerTypeB.requiresNewlineBefore
+      markerTypeA.hasNewlineBefore,
+      markerTypeB.hasNewlineBefore
     );
     process.exit(1);
   }
@@ -571,7 +571,7 @@ function collectAttributesForElement(
     const refName = ref.getAttribute('name');
     if (!refName) {
       console.log(
-        `Warning: Found ref element without a name attribute in marker type ${markerType} in definition "${defineName}". Skipping.`
+        `Warning: Found ref element without a name attribute in marker type "${markerType}" in definition "${defineName}". Skipping.`
       );
       continue;
     }
@@ -663,6 +663,38 @@ function collectAttributesForElement(
   return finalElementAttributes;
 }
 
+function determineHasNewlineBeforeForElement(
+  element: Element,
+  elementType: string,
+  markerType: string,
+  defineName: string
+) {
+  const elementUsfmTagElements = getChildElementsByTagName(element, 'usfm:tag')
+    .concat(getChildElementsByTagName(element, 'usfm:ptag'))
+    .concat(getChildElementsByTagName(element, 'usfm:match'));
+
+  if (elementUsfmTagElements.length === 0) return undefined;
+
+  if (elementUsfmTagElements.length > 1) {
+    console.log(
+      `Error: ${elementType} for marker type "${
+        markerType
+      }" has more than one usfm:tag or usfm:ptag or usfm:match. This is unexpected; algorithms may need to change. In define ${
+        defineName
+      }`
+    );
+    process.exit(1);
+  }
+
+  const styleUsfmTagElement = elementUsfmTagElements[0];
+
+  // has newline before if it is a `usfm:ptag` or `beforeout` has newline in it
+  return (
+    styleUsfmTagElement.tagName === 'usfm:ptag' ||
+    styleUsfmTagElement.getAttribute('beforeout')?.includes('\\n')
+  );
+}
+
 /**
  * Process a define element to extract marker information
  *
@@ -673,13 +705,16 @@ function collectAttributesForElement(
  * @param skipOutputMarkerToUsfmDefineNames array of names of `define` elements whose marker
  * definitions describe markers that should not be exported to USFM (e.g. which attributes
  * indicate that the marker should not be exported to USFM)
+ * @param isVersion3_1OrHigher whether the `usx.rng` file is from 3.1+. 3.1+ has much more
+ * information that we can use
  */
 function processDefineElement(
   defineElement: Element,
   defineElements: Array<Element>,
   markersMap: MarkersMap,
   skippedDefinitions: Set<string>,
-  skipOutputMarkerToUsfmDefineNames: Set<string>
+  skipOutputMarkerToUsfmDefineNames: Set<string>,
+  isVersion3_1OrHigher: boolean
 ) {
   const defineName = defineElement.getAttribute('name');
   if (!defineName) {
@@ -709,10 +744,17 @@ function processDefineElement(
     // we find an element-wide default attribute before adding the markers to the main map
     const markersToAdd: Record<string, MarkerInfo> = {};
     const markersRegExpToAdd: Record<string, MarkerInfo> = {};
-    const markerTypeToAdd: MarkerTypeInfo = {};
+    // Just modify the existing marker type if this marker just has information about skipping
+    // it. These markers to skip don't have much information in them
+    const markerTypeToAdd: MarkerTypeInfo = skipOutputMarkerToUsfm
+      ? { ...markersMap.markerTypes[markerType] }
+      : {};
 
     // Look for style attribute to get marker names
     let hasStyle = false;
+    // Try to determine if the marker type should have newline before by looking at the style
+    // attributes.
+    let hasNewlineBefore: boolean | undefined = undefined;
     const attributes = element.getElementsByTagName('attribute');
     for (let j = 0; j < attributes.length; j++) {
       const attribute = attributes[j];
@@ -736,6 +778,33 @@ function processDefineElement(
 
       const styleAttribute = attribute;
       hasStyle = true;
+
+      // Determine if there should be a newline before the marker based on the style attribute
+      const styleHasNewlineBefore = determineHasNewlineBeforeForElement(
+        attribute,
+        'Style attribute',
+        markerType,
+        defineName
+      );
+      if (isVersion3_1OrHigher && styleHasNewlineBefore === undefined)
+        console.log(
+          `Warning: Style attribute for marker type "${
+            markerType
+          }" has no usfm:tag or usfm:ptag or usfm:match. This is unexpected; algorithms may need to change. In define ${
+            defineName
+          }`
+        );
+      if (styleHasNewlineBefore !== undefined) {
+        if (hasNewlineBefore !== undefined && hasNewlineBefore !== styleHasNewlineBefore) {
+          console.log(
+            `Error: Marker type was found to have multiple style attributes with conflicting hasNewlineBefore. Earlier style hasNewlineBefore: ${
+              hasNewlineBefore
+            }; later style hasNewlineBefore: ${styleHasNewlineBefore}. In define ${defineName}`
+          );
+          process.exit(1);
+        }
+        hasNewlineBefore = styleHasNewlineBefore;
+      }
 
       // Collect all value elements and param pattern elements under style and under the referenced enums
       // Start with value elements under style
@@ -836,6 +905,42 @@ function processDefineElement(
       }
     }
 
+    // Determine if there should be a newline before the marker based on the element
+    let elementHasNewlineBefore = determineHasNewlineBeforeForElement(
+      element,
+      'Element',
+      markerType,
+      defineName
+    );
+
+    // An exception case for newline before - I think this is an error in `usx.rng`
+    // If the error is fixed, this should be removed
+    if (markerType === 'periph') elementHasNewlineBefore = true;
+
+    if (elementHasNewlineBefore !== undefined) {
+      if (hasNewlineBefore !== undefined && hasNewlineBefore !== elementHasNewlineBefore) {
+        console.log(
+          `Error: Marker type "${markerType}" was found to have conflicting hasNewlineBefore. From style hasNewlineBefore: ${
+            hasNewlineBefore
+          }; From element hasNewlineBefore: ${elementHasNewlineBefore}. In define ${defineName}`
+        );
+        process.exit(1);
+      }
+      hasNewlineBefore = elementHasNewlineBefore;
+    }
+
+    // Set hasNewlineBefore on marker type if applicable
+    if (hasNewlineBefore === undefined) {
+      // Only 3.1+ has this data, and it's not really expected that skip output markers will have it
+      if (isVersion3_1OrHigher && !skipOutputMarkerToUsfm) {
+        console.log(
+          `Warning: could not determine marker type "${
+            markerType
+          }" hasNewlineBefore. In define ${defineName}.`
+        );
+      }
+    } else if (hasNewlineBefore) markerTypeToAdd.hasNewlineBefore = true;
+
     // If the element doesn't have a style attribute and if this `define` indicates the marker
     // should not be skipped for USFM, its element name (markerType) represents a marker
     if (!hasStyle && !skipOutputMarkerToUsfm) {
@@ -922,9 +1027,9 @@ function processDefineElement(
 
         if (usfmMatchElements.length > 1) {
           console.log(
-            `Warning: Attribute ${attributeName} on marker type ${
+            `Warning: Attribute "${attributeName}" on marker type "${
               markerType
-            } has multiple usfm:match tags. It will not be considered for special attribute properties like leading attribute. In define ${
+            }" has multiple usfm:match tags. It will not be considered for special attribute properties like leading attribute. In define ${
               defineName
             }`
           );
@@ -934,9 +1039,9 @@ function processDefineElement(
         const usfmTagElements = getChildElementsByTagName(attribute, 'usfm:tag');
         if (usfmTagElements.length > 1) {
           console.log(
-            `Warning: Attribute ${attributeName} on marker type ${
+            `Warning: Attribute "${attributeName}" on marker type "${
               markerType
-            } has multiple usfm:tag tags. It will not be considered for special attribute properties like leading attribute. In define ${
+            }" has multiple usfm:tag tags. It will not be considered for special attribute properties like leading attribute. In define ${
               defineName
             }`
           );
@@ -946,9 +1051,9 @@ function processDefineElement(
         const usfmParagraphTagElements = getChildElementsByTagName(attribute, 'usfm:ptag');
         if (usfmParagraphTagElements.length > 1) {
           console.log(
-            `Warning: Attribute ${attributeName} on marker type ${
+            `Warning: Attribute "${attributeName}" on marker type "${
               markerType
-            } has multiple usfm:ptag tags. It will not be considered for special attribute properties like leading attribute. In define ${
+            }" has multiple usfm:ptag tags. It will not be considered for special attribute properties like leading attribute. In define ${
               defineName
             }`
           );
@@ -1055,7 +1160,7 @@ function processDefineElement(
 
       // Done collecting additional marker information from attributes. Now,
       // Add all collected markers to the main markers map, applying the extra marker info
-      const updateMarkerInfoDefineName = `${defineName} (merging extraMarkerInfo into marker to add)`
+      const updateMarkerInfoDefineName = `${defineName} (merging extraMarkerInfo into marker to add)`;
       for (const [markerName, markerInfo] of Object.entries(markersToAdd)) {
         // Add extra marker info to each marker we found in the element
         const updatedMarkerInfo =
@@ -1112,9 +1217,9 @@ function processDefineElement(
         // existing marker types will always come after those marker types are defined. Can always
         // come back and fix this later if we encounter a problem
         console.log(
-          `Error: Tried adding skipOutputMarkerToUsfmIfAttributeIsPresent to marker type ${
+          `Error: Tried adding skipOutputMarkerToUsfmIfAttributeIsPresent to marker type "${
             markerType
-          } that doesn't already exist! In ${defineName}`
+          }" that doesn't already exist! In ${defineName}`
         );
         process.exit(1);
       }
@@ -1245,7 +1350,8 @@ export function transformUsxSchemaToMarkersMap(
       defineElements,
       markersMap,
       skippedDefinitions,
-      referredIgnoreDefines
+      referredIgnoreDefines,
+      isVersion3_1OrHigher
     );
   }
 
