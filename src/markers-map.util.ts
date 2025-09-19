@@ -29,6 +29,33 @@ function getTextContent(element: Element): string {
   return (element.textContent || '').trim();
 }
 
+/**
+ * Helper function to get next child of this element's parent. Almost the exact same as
+ * `element.nextElementSibling`, but this returns `undefined` because `null` is dumb
+ */
+function getNextElementSibling(element: Element): Element | undefined {
+  const parent = element.parentNode;
+
+  if (!parent) return undefined;
+
+  let foundThisElement = false;
+  for (let i = 0; i < parent.childNodes.length; i++) {
+    const sibling = parent.childNodes[i];
+
+    if (!foundThisElement) {
+      if (sibling === element) foundThisElement = true;
+      continue;
+    }
+
+    // Child is not an element node, so skip
+    if (sibling.nodeType !== 1 /* Node.ELEMENT_NODE - not defined in Node.js */) continue;
+
+    return sibling as Element;
+  }
+
+  return undefined;
+}
+
 /** Helper function to get child elements by tag name (not deep search) */
 function getChildElementsByTagName(parent: Element, tagName: string): Element[] {
   const elements: Element[] = [];
@@ -278,6 +305,24 @@ function mergeMarkers(
   // Create the merged marker so we can edit the properties without modifying the original markers
   const mergedMarker = { ...markerA, ...markerB };
 
+  // If isClosingMarkerOptional is not `undefined` and is being changed, that's an error
+  // The data seems too sparse to be able to confidently say if the boolean ever changes, it's
+  // an error
+  if (
+    markerA.isClosingMarkerOptional !== undefined &&
+    markerA.isClosingMarkerOptional !== markerB.isClosingMarkerOptional
+  ) {
+    logObjectMergeConflictError(
+      OBJECT_TYPE_MARKER,
+      markerName,
+      'isClosingMarkerOptional',
+      defineName,
+      markerA.isClosingMarkerOptional,
+      markerB.isClosingMarkerOptional
+    );
+    process.exit(1);
+  }
+
   // If types don't match, that's always an error
   if (markerA.type !== markerB.type) {
     logObjectMergeConflictError(
@@ -466,19 +511,6 @@ function mergeMarkerTypes(
   // If booleans don't match, that's always an error (note we are assuming not present means `false`
   // even though that is not necessarily the case. Assuming the boolean won't be present if it matches
   // the default value. We can change this later if needed)
-  if (
-    closeableMarkerTypeA.isClosingMarkerOptional !== closeableMarkerTypeB.isClosingMarkerOptional
-  ) {
-    logObjectMergeConflictError(
-      OBJECT_TYPE_MARKER_TYPE,
-      markerTypeName,
-      'isClosingMarkerOptional',
-      defineName,
-      closeableMarkerTypeA.isClosingMarkerOptional,
-      closeableMarkerTypeB.isClosingMarkerOptional
-    );
-    process.exit(1);
-  }
   if (closeableMarkerTypeA.isClosingMarkerEmpty !== closeableMarkerTypeB.isClosingMarkerEmpty) {
     logObjectMergeConflictError(
       OBJECT_TYPE_MARKER_TYPE,
@@ -769,9 +801,11 @@ function processDefineElement(
     const plainMarkersToAdd: Record<string, MarkerInfo> = {};
     // Just modify the existing marker type if this marker just has information about skipping
     // it. These markers to skip don't have much information in them
-    const markerTypeToAdd: MarkerTypeInfo = skipOutputMarkerToUsfm
-      ? { ...markersMap.markerTypes[markerType] }
-      : {};
+    // Need the type assertion here because TypeScript gets ahead of itself otherwise and implies this
+    // must be a `NonCloseableMarkerTypeInfo` since `hasClosingMarker` is not present
+    const markerTypeToAdd = (
+      skipOutputMarkerToUsfm ? { ...markersMap.markerTypes[markerType] } : {}
+    ) as MarkerTypeInfo;
 
     // Look for style attribute to get marker names
     let hasStyle = false;
@@ -964,6 +998,78 @@ function processDefineElement(
       }
     } else if (hasNewlineBefore) markerTypeToAdd.hasNewlineBefore = true;
 
+    // Determine if the marker type should have a closing tag
+    // First step is to find an appropriate `usfm:endtag`
+    let usfmEndTagElement: Element | undefined;
+    const usfmEndTagElements = element.getElementsByTagName('usfm:endtag');
+    if (usfmEndTagElements.length > 0) {
+      // There were at least one `usfm:endtag` elements in the element, so verify we can use the first one
+      usfmEndTagElement = usfmEndTagElements[0];
+
+      if (usfmEndTagElements.length > 2) {
+        console.log(
+          `Error: Could not determine if marker type should have a closing tag. Marker type "${
+            markerType
+          }" has more than two usfm:endtag elements. In define ${defineName}`
+        );
+        process.exit(1);
+      }
+
+      if (usfmEndTagElements.length === 2) {
+        // Determine if the two elements are basically just `\nd` and `\+nd`
+        // by checking all attributes are the same except `matchref` and the `+` in `before`
+        const secondEndTagElement = usfmEndTagElements[1];
+
+        const firstAttributes = Array.from(usfmEndTagElement.attributes);
+        const secondAttributes = Array.from(secondEndTagElement.attributes);
+
+        if (
+          firstAttributes.length !== secondAttributes.length ||
+          firstAttributes.some(firstAttribute => {
+            const secondAttribute = secondAttributes.find(
+              secondAttributeToCheck => secondAttributeToCheck.name === firstAttribute.name
+            );
+            // If the second end tag doesn't have this attribute, they don't match
+            if (!secondAttribute) return true;
+
+            // matchref doesn't have to match, funny enough
+            if (firstAttribute.name === 'matchref') return false;
+
+            if (firstAttribute.name === 'before') {
+              // Before should match other than a + in one
+              return (
+                firstAttribute.value.replace('+', '') !== secondAttribute.value.replace('+', '')
+              );
+            }
+
+            return firstAttribute.value !== secondAttribute.value;
+          })
+        ) {
+          console.log(
+            `Error: Could not determine if marker type should have a closing tag. Marker type "${
+              markerType
+            }" has two usfm:endtag elements whose attributes don't match. In define ${defineName}`
+          );
+          process.exit(1);
+        }
+      }
+    } else {
+      const nextElementSibling = getNextElementSibling(element);
+      if (nextElementSibling?.tagName === 'usfm:endtag') {
+        // There are no `usfm:endtag` elements in this element, but the next sibling is one!
+        usfmEndTagElement = nextElementSibling;
+      }
+    }
+
+    // There's an end tag, so mark that on the marker type. Also check the `usfm:endtag` for
+    // being empty
+    if (usfmEndTagElement) {
+      markerTypeToAdd.hasClosingMarker = true;
+      if (markerTypeToAdd.hasClosingMarker && usfmEndTagElement.getAttribute('matchref') === "''") {
+        markerTypeToAdd.isClosingMarkerEmpty = true;
+      }
+    }
+
     // Determine if there are additional plain markers in the element that should be recorded
     const elementUsfmTagElements = getChildElementsByTagName(element, 'usfm:tag').concat(
       getChildElementsByTagName(element, 'usfm:ptag')
@@ -1055,9 +1161,14 @@ function processDefineElement(
         defineName
       );
 
-      // Process all found attributes and build up additional marker info to put on each marker for this
-      // marker type
+      // Process all found attributes and some other info and build up additional marker info
+      // to put on each marker for this marker type
       const extraMarkerInfo: Partial<MarkerInfo> = {};
+
+      // Determine if the end tag is optional for all markers created by this element
+      if (usfmEndTagElement?.getAttribute('noout') === 'true')
+        extraMarkerInfo.isClosingMarkerOptional = true;
+
       // As we look through the attributes, collect attribute markers to add to the markers map
       const attributeMarkersToAdd: Record<string, MarkerInfo> = {};
 

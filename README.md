@@ -169,6 +169,15 @@ TODO: adjust README based on new changes
     - `periph` doesn't have `\n` in its `usfm:match` `beforeout`, which I think is a bug.
 - [marker] additional very simple markers that go with other markers
   - Check for marker type element direct children `usfm:ptag` or `usfm:tag` with text content and create a simple marker (no attributes or whatnot from the other markers of this marker type) whose name is the text content of the tag. Like `esbe` in `sidebar` marker type
+- [markerType] programmatically determine if marker types have a closing tag
+  - One `usfm:endtag` is present somewhere in the element
+    - If there are two that share the same attributes other than `matchref` and `before` being the same other than a `+` in one, can consider just the first one. This is for some `char` markers that have both `\nd` and `\+nd` listed
+    - `usfm:endtag` is outside the `element` for `milestone` because its `element` has `<empty/>` in it
+    - `ref` should have closing tag. `usfm:endtag` is outside the element for some reason. Unsure if this is a problem
+  - Closing tag is empty if `matchref="&#x27;&#x27;"` (which I think basically means empty - there is very intentionally nothing to match)
+    - Note: `ref`'s `usfm:endtag` has `matchref=""`, and it should have a closing tag
+    - Note: `category` has `matchref=""` and `matchout` is not empty/not provided (`category`). If we end up handling `category` more precisely, this might need to be considered.
+- [marker] closing tag should not go in the USFM if the `usfm:endtag` has `noout="true"`
 
 TODO: incorporate changes
 - Figure out a way to get this to where you can work on the rest of the code
@@ -181,11 +190,6 @@ TODO: incorporate changes
     - `match` must not be `TEXTNOTATTRIB` or `TEXTNOTATTRIBOPT`
     - `beforeout` must not contain `\\__ `
 - [marker] comments
-- [markerType] programmatically determine if marker types need closing tag
- - `usfm:endtag` is present in the element
- - `usfm:endtag` is outside the `element` for `milestone` because its `element` has `<empty/>` in it
- - Closing tag is empty if `matchref="" or "&#x27;&#x27;"` and `matchout` is not empty/not provided (`category`)
-  - [marker] closing tag should not go in the USFM if `noout="true"`
 - Explain how the terms I am using from XML sorta map to the USFM concepts but aren't exact one-to-one equals
 - [markerType] note when the marker shouldn't have a `style` attribute
   - Improve accuracy: if the `element` has no `style` attribute and has direct child `usfm:tag` (`ref`), `usfm:ptag` (none - `sidebar` is closest), or `usfm:match` (`periph` and `optbreak`), no `style` attribute. If doesn't have one of these direct children (`table`, `usx`), the marker shouldn't be output to USFM at all. Or at least it indicates a very special case. Maybe not handling this yet is why `usx` considers `usfm` to be a leading attribute in the `usx.rng` but we don't.

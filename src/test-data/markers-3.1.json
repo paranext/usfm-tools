@@ -115,7 +115,8 @@
       "defaultAttribute": "caller"
     },
     "fdc": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "fe": {
       "type": "note",
@@ -128,34 +129,42 @@
       "type": "figure"
     },
     "fk": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "fl": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "fm": {
       "type": "char"
     },
     "fp": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "fq": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "fqa": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "fr": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "ft": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "fv": {
       "type": "char"
     },
     "fw": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "h": {
       "type": "para"
@@ -778,32 +787,41 @@
       "defaultAttribute": "caller"
     },
     "xdc": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "xk": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "xnt": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "xo": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "xop": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "xot": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "xq": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     },
     "xt": {
       "type": "char",
-      "defaultAttribute": "href"
+      "defaultAttribute": "href",
+      "isClosingMarkerOptional": true
     },
     "xta": {
-      "type": "char"
+      "type": "char",
+      "isClosingMarkerOptional": true
     }
   },
   "markersRegExp": {
@@ -828,10 +846,19 @@
         "eid"
       ]
     },
-    "char": {},
-    "figure": {},
-    "ms": {},
-    "note": {},
+    "char": {
+      "hasClosingMarker": true
+    },
+    "figure": {
+      "hasClosingMarker": true
+    },
+    "ms": {
+      "hasClosingMarker": true,
+      "isClosingMarkerEmpty": true
+    },
+    "note": {
+      "hasClosingMarker": true
+    },
     "optbreak": {
       "hasStyleAttribute": false
     },
@@ -846,6 +873,7 @@
       "hasStyleAttribute": false
     },
     "ref": {
+      "hasClosingMarker": true,
       "hasStyleAttribute": false,
       "skipOutputAttributeToUsfm": [
         "gen"

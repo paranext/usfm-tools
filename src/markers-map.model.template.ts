@@ -91,6 +91,26 @@ export type NormalMarkerInfo = {
    * {@link AttributeMarkerInfo.attributeMarkerAttributeName} for more information.
    */
   attributeMarkers?: string[];
+  /**
+   * Whether the closing marker for this marker is explicitly considered optional in USFM. This should always
+   * be not present or `false` if there is no closing marker for the marker type of this marker.
+   *
+   * If this is `false` and a closing marker for this marker in USFM is *not* present, the USX/USJ
+   * for this marker should have the attribute `closed` set to `false`.
+   *
+   * If this is `true` and a closing marker for this marker in USFM *is* present, the USX/USJ
+   * for this marker should have the `closed` attribute set to `true`.
+   *
+   * Disclaimer: Currently, this is only determined for 3.1+. It is not very important for 3.0.x- as most
+   * or maybe all closing markers are optional in 3.0.x-.
+   *
+   * Disclaimer: The implications of this value regarding when the `closed` attribute should be present are
+   * interpreted from the contents of `usx.rng`. It is possible this has never been implemented, and this may
+   * need to be adjusted if the eventual implementation differs from these statements.
+   *
+   * If not present, defaults to `false`
+   */
+  isClosingMarkerOptional?: boolean;
 };
 
 /**
@@ -122,25 +142,6 @@ export type CloseableMarkerTypeInfo = MarkerTypeInfoBase & {
    * If not present, defaults to `false`
    */
   hasClosingMarker: true;
-  /**
-   * Whether the closing marker for markers of this type is explicitly considered optional in USFM.
-   * 
-   * If this is `false` and a closing marker for a marker of this type in USFM is *not* present, the USX/USJ
-   * for that marker of this type should have the attribute `closed` set to `false`.
-   * 
-   * If this is `true` and a closing marker for a marker of this type in USFM *is* present, the USX/USJ
-   * for that marker of this type should have the `closed` attribute set to `true`.
-   * 
-   * Disclaimer: Currently, this is only determined for 3.1+. It is not very important for 3.0.x- as most
-   * or maybe all markers are optional in 3.0.x-.
-   * 
-   * Disclaimer: The implications of this value regarding when the `closed` attribute should be present are
-   * interpreted from the contents of `usx.rng`. It is possible this has never been implemented, and this may
-   * need to be adjusted if the eventual implementation differs from these statements.
-   *
-   * If not present, defaults to `false`
-   */
-  isClosingMarkerOptional?: boolean;
   /**
    * Whether the closing marker for markers of this type is "empty" in USFM, meaning the marker name is
    * absent from the closing marker.
