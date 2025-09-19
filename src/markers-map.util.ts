@@ -666,8 +666,8 @@ function collectAttributesForElement(
 /**
  * Determine if the XML element indicates that the marker type has a newline before it in USFM.
  *
- * This XML element may be a `style` attribute or an `element` element representing a marker
- * type.
+ * This XML element may be a `style` attribute, an `element` element representing a marker
+ * type, or a "`usfm:tag`-like" element (`usfm:tag`, `usfm:ptag`, `usfm:match`)
  *
  * @param element XML element to check
  * @param elementType what kind of element this is (for logging)
@@ -683,9 +683,15 @@ function determineHasNewlineBeforeForElement(
   markerType: string,
   defineName: string
 ) {
-  const elementUsfmTagLikeElements = getChildElementsByTagName(element, 'usfm:tag')
-    .concat(getChildElementsByTagName(element, 'usfm:ptag'))
-    .concat(getChildElementsByTagName(element, 'usfm:match'));
+  const isElementUsfmTagLike =
+    element.tagName === 'usfm:tag' ||
+    element.tagName === 'usfm:ptag' ||
+    element.tagName === 'usfm:match';
+  const elementUsfmTagLikeElements = isElementUsfmTagLike
+    ? [element]
+    : getChildElementsByTagName(element, 'usfm:tag')
+        .concat(getChildElementsByTagName(element, 'usfm:ptag'))
+        .concat(getChildElementsByTagName(element, 'usfm:match'));
 
   if (elementUsfmTagLikeElements.length === 0) return undefined;
 
@@ -971,7 +977,12 @@ function processDefineElement(
 
       // Not much information about this additional marker, but we can tell if it should have
       // a newline
-      const additionalMarkerHasNewline = usfmTagElement.tagName === 'usfm:ptag';
+      const additionalMarkerHasNewline = determineHasNewlineBeforeForElement(
+        usfmTagElement,
+        `additional marker "${markerName}"`,
+        markerType,
+        defineName
+      );
 
       if (additionalMarkerHasNewline !== hasNewlineBefore) {
         console.log(
