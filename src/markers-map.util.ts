@@ -780,6 +780,77 @@ function determineHasNewlineBeforeForElement(
 }
 
 /**
+ * Get the `usfm:endtag` element associated with a marker type `element` if one exists.
+ *
+ * @param element marker type `element`
+ * @param markerType which marker type this is (for logging)
+ * @param defineName Name of `define` containing this XML element (for error messages)
+ * @returns `usfm:endtag` element for this marker type `element` or `undefined` if one was not found
+ */
+function getUsfmEndTagForElement(element: Element, markerType: string, defineName: string) {
+  let usfmEndTagElement: Element | undefined;
+  const usfmEndTagElements = element.getElementsByTagName('usfm:endtag');
+  if (usfmEndTagElements.length > 0) {
+    // There were at least one `usfm:endtag` elements in the element, so verify we can use the first one
+    usfmEndTagElement = usfmEndTagElements[0];
+
+    if (usfmEndTagElements.length > 2) {
+      console.log(
+        `Error: Could not determine if marker type should have a closing tag. Marker type "${
+          markerType
+        }" has more than two usfm:endtag elements. In define ${defineName}`
+      );
+      process.exit(1);
+    }
+
+    if (usfmEndTagElements.length === 2) {
+      // Determine if the two elements are basically just `\nd` and `\+nd`
+      // by checking all attributes are the same except `matchref` and the `+` in `before`
+      const secondEndTagElement = usfmEndTagElements[1];
+
+      const firstAttributes = Array.from(usfmEndTagElement.attributes);
+      const secondAttributes = Array.from(secondEndTagElement.attributes);
+
+      if (
+        firstAttributes.length !== secondAttributes.length ||
+        firstAttributes.some(firstAttribute => {
+          const secondAttribute = secondAttributes.find(
+            secondAttributeToCheck => secondAttributeToCheck.name === firstAttribute.name
+          );
+          // If the second end tag doesn't have this attribute, they don't match
+          if (!secondAttribute) return true;
+
+          // matchref doesn't have to match, funny enough
+          if (firstAttribute.name === 'matchref') return false;
+
+          if (firstAttribute.name === 'before') {
+            // Before should match other than a + in one
+            return firstAttribute.value.replace('+', '') !== secondAttribute.value.replace('+', '');
+          }
+
+          return firstAttribute.value !== secondAttribute.value;
+        })
+      ) {
+        console.log(
+          `Error: Could not determine if marker type should have a closing tag. Marker type "${
+            markerType
+          }" has two usfm:endtag elements whose attributes don't match. In define ${defineName}`
+        );
+        process.exit(1);
+      }
+    }
+  } else {
+    const nextElementSibling = getNextElementSibling(element);
+    if (nextElementSibling?.tagName === 'usfm:endtag') {
+      // There are no `usfm:endtag` elements in this element, but the next sibling is one!
+      usfmEndTagElement = nextElementSibling;
+    }
+  }
+
+  return usfmEndTagElement;
+}
+
+/**
  * Process a define element to extract marker information
  *
  * @param defineElement The define element to process
@@ -962,8 +1033,7 @@ function processDefineElement(
 
           // Sometimes there is documentation right after
           const commentNode = getNextCommentSibling(styleValueElement);
-          if (commentNode)
-            markerInfo.description = getTextContent(commentNode);
+          if (commentNode) markerInfo.description = getTextContent(commentNode);
 
           markersToAdd[markerName] = mergeMarkers(
             markersToAdd[markerName],
@@ -1035,66 +1105,11 @@ function processDefineElement(
 
     // Determine if the marker type should have a closing tag
     // First step is to find an appropriate `usfm:endtag`
-    let usfmEndTagElement: Element | undefined;
-    const usfmEndTagElements = element.getElementsByTagName('usfm:endtag');
-    if (usfmEndTagElements.length > 0) {
-      // There were at least one `usfm:endtag` elements in the element, so verify we can use the first one
-      usfmEndTagElement = usfmEndTagElements[0];
-
-      if (usfmEndTagElements.length > 2) {
-        console.log(
-          `Error: Could not determine if marker type should have a closing tag. Marker type "${
-            markerType
-          }" has more than two usfm:endtag elements. In define ${defineName}`
-        );
-        process.exit(1);
-      }
-
-      if (usfmEndTagElements.length === 2) {
-        // Determine if the two elements are basically just `\nd` and `\+nd`
-        // by checking all attributes are the same except `matchref` and the `+` in `before`
-        const secondEndTagElement = usfmEndTagElements[1];
-
-        const firstAttributes = Array.from(usfmEndTagElement.attributes);
-        const secondAttributes = Array.from(secondEndTagElement.attributes);
-
-        if (
-          firstAttributes.length !== secondAttributes.length ||
-          firstAttributes.some(firstAttribute => {
-            const secondAttribute = secondAttributes.find(
-              secondAttributeToCheck => secondAttributeToCheck.name === firstAttribute.name
-            );
-            // If the second end tag doesn't have this attribute, they don't match
-            if (!secondAttribute) return true;
-
-            // matchref doesn't have to match, funny enough
-            if (firstAttribute.name === 'matchref') return false;
-
-            if (firstAttribute.name === 'before') {
-              // Before should match other than a + in one
-              return (
-                firstAttribute.value.replace('+', '') !== secondAttribute.value.replace('+', '')
-              );
-            }
-
-            return firstAttribute.value !== secondAttribute.value;
-          })
-        ) {
-          console.log(
-            `Error: Could not determine if marker type should have a closing tag. Marker type "${
-              markerType
-            }" has two usfm:endtag elements whose attributes don't match. In define ${defineName}`
-          );
-          process.exit(1);
-        }
-      }
-    } else {
-      const nextElementSibling = getNextElementSibling(element);
-      if (nextElementSibling?.tagName === 'usfm:endtag') {
-        // There are no `usfm:endtag` elements in this element, but the next sibling is one!
-        usfmEndTagElement = nextElementSibling;
-      }
-    }
+    const usfmEndTagElement = getUsfmEndTagForElement(
+      element,
+      markerType,
+      defineName
+    );
 
     // There's an end tag, so mark that on the marker type. Also check the `usfm:endtag` for
     // being empty
