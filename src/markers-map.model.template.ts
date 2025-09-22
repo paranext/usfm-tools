@@ -57,6 +57,8 @@ export type NormalMarkerInfo = {
    * of mandatory whitespace is around the marker in USFM. See {@link MarkerTypeInfoBase} for information.
    */
   type: string;
+  /** Explanation of the meaning of this marker */
+  description?: string;
   /**
    * Which attribute can be provided without specifying the attribute name in USFM.
    *
@@ -164,7 +166,7 @@ export type CloseableMarkerTypeInfo = MarkerTypeInfoBase & {
 /**
  * Information about a USFM/USX/USJ marker type that does not have a closing marker. See {@link MarkerInfo}
  * for other kinds of marker types.
- * 
+ *
  * For example, `char` marker types such as `nd` markers have closing markers, but `para` marker types such
  * as `p` do not:
  *

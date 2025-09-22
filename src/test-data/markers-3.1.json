@@ -3,22 +3,28 @@
   "commit": "50f2a6ac3fc1d867d906df28bc00fcff729a7b76",
   "markers": {
     "add": {
-      "type": "char"
+      "type": "char",
+      "description": "For a translational addition to the text"
     },
     "addpn": {
-      "type": "char"
+      "type": "char",
+      "description": "For chinese words to be dot underline & underline (DEPRECATED - used nested char@style pn)"
     },
     "b": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text stanza break (e.g. stanza break)"
     },
     "bd": {
-      "type": "char"
+      "type": "char",
+      "description": "A character style, use bold text"
     },
     "bdit": {
-      "type": "char"
+      "type": "char",
+      "description": "A character style, use bold + italic text"
     },
     "bk": {
-      "type": "char"
+      "type": "char",
+      "description": "For the quoted name of a book"
     },
     "c": {
       "type": "chapter",
@@ -49,29 +55,36 @@
       ]
     },
     "cd": {
-      "type": "para"
+      "type": "para",
+      "description": "Chapter Description (Publishing option D, e.g. in Russian Bibles)"
     },
     "cl": {
-      "type": "para"
+      "type": "para",
+      "description": "Chapter label used for translations that add a word such as \"Chapter\""
     },
     "cls": {
-      "type": "para"
+      "type": "para",
+      "description": "Closure of an Epistle"
     },
     "cp": {
       "type": "para",
+      "description": "Chapter published style",
       "attributeMarkerAttributeName": "pubnumber",
       "isAttributeMarkerFor": [
         "c"
       ]
     },
     "d": {
-      "type": "para"
+      "type": "para",
+      "description": "A Hebrew text heading, to provide description (e.g. Psalms)"
     },
     "dc": {
-      "type": "char"
+      "type": "char",
+      "description": "Deuterocanonical/LXX additions or insertions in the Protocanonical text"
     },
     "ef": {
       "type": "note",
+      "description": "Study note",
       "attributeMarkers": [
         "cat"
       ],
@@ -79,16 +92,19 @@
     },
     "efe": {
       "type": "note",
+      "description": "Extended study endnote",
       "attributeMarkers": [
         "cat"
       ],
       "defaultAttribute": "caller"
     },
     "efm": {
-      "type": "char"
+      "type": "char",
+      "description": "Reference to caller of previous footnote in a study Bible"
     },
     "em": {
-      "type": "char"
+      "type": "char",
+      "description": "A character style, use emphasized text style"
     },
     "esb": {
       "type": "sidebar",
@@ -102,6 +118,7 @@
     },
     "ex": {
       "type": "note",
+      "description": "Extended cross reference",
       "attributeMarkers": [
         "cat"
       ],
@@ -109,6 +126,7 @@
     },
     "f": {
       "type": "note",
+      "description": "Footnote",
       "attributeMarkers": [
         "cat"
       ],
@@ -116,10 +134,12 @@
     },
     "fdc": {
       "type": "char",
+      "description": "Footnote text, applies to Deuterocanon only (DEPRECATED - use char@style dc)",
       "isClosingMarkerOptional": true
     },
     "fe": {
       "type": "note",
+      "description": "Endnote",
       "attributeMarkers": [
         "cat"
       ],
@@ -130,441 +150,578 @@
     },
     "fk": {
       "type": "char",
+      "description": "A footnote keyword",
       "isClosingMarkerOptional": true
     },
     "fl": {
       "type": "char",
+      "description": "A footnote label text item, for marking or \"labelling\" the type or alternate translation being provided in the note.",
       "isClosingMarkerOptional": true
     },
     "fm": {
-      "type": "char"
+      "type": "char",
+      "description": "Reference to caller of previous footnote"
     },
     "fp": {
       "type": "char",
+      "description": "A Footnote additional paragraph marker",
       "isClosingMarkerOptional": true
     },
     "fq": {
       "type": "char",
+      "description": "A footnote scripture quote or alternate rendering",
       "isClosingMarkerOptional": true
     },
     "fqa": {
       "type": "char",
+      "description": "A footnote alternate rendering for a portion of scripture text",
       "isClosingMarkerOptional": true
     },
     "fr": {
       "type": "char",
+      "description": "The origin reference for the footnote",
       "isClosingMarkerOptional": true
     },
     "ft": {
       "type": "char",
+      "description": "Footnote text, Protocanon",
       "isClosingMarkerOptional": true
     },
     "fv": {
-      "type": "char"
+      "type": "char",
+      "description": "A verse number within the footnote text"
     },
     "fw": {
       "type": "char",
+      "description": "A footnote witness list, for distinguishing a list of sigla representing witnesses in critical editions.",
       "isClosingMarkerOptional": true
     },
     "h": {
-      "type": "para"
+      "type": "para",
+      "description": "Running header text for a book"
     },
     "h1": {
-      "type": "para"
+      "type": "para",
+      "description": "Running header text"
     },
     "h2": {
-      "type": "para"
+      "type": "para",
+      "description": "Running header text, left side of page (DEPRECATED)"
     },
     "h3": {
-      "type": "para"
+      "type": "para",
+      "description": "Running header text, right side of page (DEPRECATED)"
     },
     "ib": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction blank line"
     },
     "id": {
       "type": "book",
       "defaultAttribute": "code"
     },
     "ide": {
-      "type": "para"
+      "type": "para",
+      "description": "File encoding information (DEPRECATED)"
     },
     "ie": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction ending marker"
     },
     "iex": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction explanatory or bridge text (e.g. explanation of missing book in Short Old Testament)"
     },
     "ili": {
-      "type": "para"
+      "type": "para",
+      "description": "A list entry, level 1 (if single level)"
     },
     "ili1": {
-      "type": "para"
+      "type": "para",
+      "description": "A list entry, level 1 (if multiple levels)"
     },
     "ili2": {
-      "type": "para"
+      "type": "para",
+      "description": "A list entry, level 2"
     },
     "im": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction prose paragraph, with no first line indent (may occur after poetry)"
     },
     "imi": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction prose paragraph text, indented, with no first line indent"
     },
     "imq": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction prose paragraph, quote from the body text, with no first line indent"
     },
     "imt": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction major title, level 1 - (if single level)"
     },
     "imt1": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction major title, level 1 (if multiple levels)"
     },
     "imt2": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction major title, level 2"
     },
     "imt3": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction major title, level 3"
     },
     "imt4": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction major title, level 4 (usually within parenthesis)"
     },
     "imte": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction major title at introduction end, level 1 (if single level)"
     },
     "imte1": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction major title at introduction end, level 1 (if multiple levels)"
     },
     "imte2": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction major title at introduction end, level 2"
     },
     "io": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction outline text, level 1 (if single level)"
     },
     "io1": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction outline text, level 1 (if multiple levels)"
     },
     "io2": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction outline text, level 2"
     },
     "io3": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction outline text, level 3"
     },
     "io4": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction outline text, level 4"
     },
     "ior": {
       "type": "char"
     },
     "iot": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction outline title"
     },
     "ip": {
-      "type": "para"
+      "type": "para",
+      "description": "Division or Section introductory paragraph (study Bible)"
     },
     "ipi": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction prose paragraph, indented, with first line indent"
     },
     "ipq": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction prose paragraph, quote from the body text"
     },
     "ipr": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction prose paragraph, right aligned"
     },
     "iq": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction poetry text, level 1 (if single level)"
     },
     "iq1": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction poetry text, level 1 (if multiple levels)"
     },
     "iq2": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction poetry text, level 2"
     },
     "iq3": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction poetry text, level 3"
     },
     "iqt": {
       "type": "char"
     },
     "is": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction section heading, level 1 (if single level)"
     },
     "is1": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction section heading, level 1 (if multiple levels)"
     },
     "is2": {
-      "type": "para"
+      "type": "para",
+      "description": "Introduction section heading, level 2"
     },
     "it": {
-      "type": "char"
+      "type": "char",
+      "description": "A character style, use italic text"
     },
     "jmp": {
       "type": "char",
-      "defaultAttribute": "href"
+      "defaultAttribute": "href",
+      "description": "For associating linking attributes to a span of text"
     },
     "k": {
       "type": "char",
-      "defaultAttribute": "key"
+      "defaultAttribute": "key",
+      "description": "For a keyword"
     },
     "k1": {
-      "type": "para"
+      "type": "para",
+      "description": "Concordance main entry text or keyword, level 1"
     },
     "k2": {
-      "type": "para"
+      "type": "para",
+      "description": "Concordance main entry text or keyword, level 2"
     },
     "lf": {
-      "type": "para"
+      "type": "para",
+      "description": "List footer (introductory remark)"
     },
     "lh": {
-      "type": "para"
+      "type": "para",
+      "description": "List header (introductory remark)"
     },
     "li": {
-      "type": "para"
+      "type": "para",
+      "description": "A list entry, level 1 (if single level)"
     },
     "li1": {
-      "type": "para"
+      "type": "para",
+      "description": "A list entry, level 1 (if multiple levels)"
     },
     "li2": {
-      "type": "para"
+      "type": "para",
+      "description": "A list entry, level 2"
     },
     "li3": {
-      "type": "para"
+      "type": "para",
+      "description": "A list entry, level 3"
     },
     "li4": {
-      "type": "para"
+      "type": "para",
+      "description": "A list entry, level 4"
     },
     "lik": {
-      "type": "char"
+      "type": "char",
+      "description": "Structured list entry key text"
     },
     "lim": {
-      "type": "para"
+      "type": "para",
+      "description": "An embedded list entry, level 1 (if single level)"
     },
     "lim1": {
-      "type": "para"
+      "type": "para",
+      "description": "An embedded list entry, level 1 (if multiple levels)"
     },
     "lim2": {
-      "type": "para"
+      "type": "para",
+      "description": "An embedded list entry, level 2"
     },
     "lim3": {
-      "type": "para"
+      "type": "para",
+      "description": "An embedded list entry, level 3"
     },
     "lim4": {
-      "type": "para"
+      "type": "para",
+      "description": "An embedded list entry, level 4"
     },
     "lit": {
-      "type": "para"
+      "type": "para",
+      "description": "For a comment or note inserted for liturgical use"
     },
     "litl": {
-      "type": "char"
+      "type": "char",
+      "description": "List entry total text"
     },
     "liv": {
-      "type": "char"
+      "type": "char",
+      "description": "Structured list entry value 1 content (if single value)"
     },
     "liv1": {
-      "type": "char"
+      "type": "char",
+      "description": "Structured list entrt value 1 content (if multiple values)"
     },
     "liv2": {
-      "type": "char"
+      "type": "char",
+      "description": "Structured list entry value 2 content"
     },
     "liv3": {
-      "type": "char"
+      "type": "char",
+      "description": "Structured list entry value 3 content"
     },
     "liv4": {
-      "type": "char"
+      "type": "char",
+      "description": "Structured list entry value 4 content"
     },
     "liv5": {
-      "type": "char"
+      "type": "char",
+      "description": "Structured list entry value 5 content"
     },
     "m": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, with no first line indent (may occur after poetry) aka: Paragraph Continuation"
     },
     "mi": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, indented, with no first line indent; often used for discourse"
     },
     "mi1": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, level 1 indented, with no first line indent; often used for discourse"
     },
     "mi2": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, level 2 indented, with no first line indent; often used for discourse"
     },
     "mi3": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, level 3 indented, with no first line indent; often used for discourse"
     },
     "mi4": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, level 4 indented, with no first line indent; often used for discourse"
     },
     "mr": {
-      "type": "para"
+      "type": "para",
+      "description": "A major section division references range heading"
     },
     "ms": {
-      "type": "para"
+      "type": "para",
+      "description": "A major section division heading, level 1 (if single level)"
     },
     "ms1": {
-      "type": "para"
+      "type": "para",
+      "description": "A major section division heading, level 1 (if multiple levels)"
     },
     "ms2": {
-      "type": "para"
+      "type": "para",
+      "description": "A major section division heading, level 2"
     },
     "ms3": {
-      "type": "para"
+      "type": "para",
+      "description": "A major section division heading, level 3"
     },
     "mt": {
-      "type": "para"
+      "type": "para",
+      "description": "The main title of the book (if single level)"
     },
     "mt1": {
-      "type": "para"
+      "type": "para",
+      "description": "The main title of the book (if multiple levels)"
     },
     "mt2": {
-      "type": "para"
+      "type": "para",
+      "description": "A secondary title usually occurring before the main title"
     },
     "mt3": {
-      "type": "para"
+      "type": "para",
+      "description": "A tertiary title occurring after the main title"
     },
     "mt4": {
-      "type": "para"
+      "type": "para",
+      "description": "The main title of the book (if single level)"
     },
     "mte": {
-      "type": "para"
+      "type": "para",
+      "description": "The main title of the book repeated at the end of the book, level 1 (if single level)"
     },
     "mte1": {
-      "type": "para"
+      "type": "para",
+      "description": "The main title of the book repeat /ed at the end of the book, level 1 (if multiple levels)"
     },
     "mte2": {
-      "type": "para"
+      "type": "para",
+      "description": "A secondary title occurring before or after the 'ending' main title"
     },
     "nb": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, with no break from previous paragraph text (at chapter boundary)"
     },
     "nd": {
-      "type": "char"
+      "type": "char",
+      "description": "For name of deity"
     },
     "ndx": {
-      "type": "char"
+      "type": "char",
+      "description": "A subject index text item"
     },
     "no": {
-      "type": "char"
+      "type": "char",
+      "description": "A character style, use normal text"
     },
     "optbreak": {
       "type": "optbreak"
     },
     "ord": {
-      "type": "char"
+      "type": "char",
+      "description": "For the text portion of an ordinal number"
     },
     "p": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, with first line indent"
     },
     "p1": {
-      "type": "para"
+      "type": "para",
+      "description": "Front or back matter text paragraph, level 1 (if multiple levels)"
     },
     "p2": {
-      "type": "para"
+      "type": "para",
+      "description": "Front or back matter text paragraph, level 2 (if multiple levels)"
     },
     "pb": {
-      "type": "para"
+      "type": "para",
+      "description": "Page Break used for new reader portions and children's bibles where content is controlled by the page"
     },
     "pc": {
-      "type": "para"
+      "type": "para",
+      "description": "Inscription (paragraph text centered)"
     },
     "periph": {
       "type": "periph",
       "defaultAttribute": "alt"
     },
     "ph": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, with level 1 hanging indent (if single level) (DEPRECATED - use para@style li#)"
     },
     "ph1": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, with level 1 hanging indent (if multiple levels)"
     },
     "ph2": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, with level 2 hanging indent"
     },
     "ph3": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, with level 3 hanging indent"
     },
     "pi": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, level 1 indent (if single level), with first line indent; often used for discourse"
     },
     "pi1": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, level 1 indent (if multiple levels), with first line indent; often used for discourse"
     },
     "pi2": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, level 2 indent, with first line indent; often used for discourse"
     },
     "pi3": {
-      "type": "para"
+      "type": "para",
+      "description": "Paragraph text, level 3 indent, with first line indent; often used for discourse"
     },
     "pm": {
-      "type": "para"
+      "type": "para",
+      "description": "Embedded text paragraph"
     },
     "pmc": {
-      "type": "para"
+      "type": "para",
+      "description": "Embedded text closing"
     },
     "pmo": {
-      "type": "para"
+      "type": "para",
+      "description": "Embedded text opening"
     },
     "pmr": {
-      "type": "para"
+      "type": "para",
+      "description": "Embedded text refrain"
     },
     "pn": {
-      "type": "char"
+      "type": "char",
+      "description": "For a proper name"
     },
     "png": {
-      "type": "char"
+      "type": "char",
+      "description": "For a geographic proper name"
     },
     "po": {
-      "type": "para"
+      "type": "para",
+      "description": "Letter opening"
     },
     "pr": {
-      "type": "para"
+      "type": "para",
+      "description": "Text refrain (paragraph right-aligned)"
     },
     "pro": {
-      "type": "char"
+      "type": "char",
+      "description": "For indicating pronunciation in CJK texts (DEPRECATED - used char@style rb)"
     },
     "q": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, level 1 indent (if single level)"
     },
     "q1": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, level 1 indent (if multiple levels)"
     },
     "q2": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, level 2 indent"
     },
     "q3": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, level 3 indent"
     },
     "q4": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, level 4 indent"
     },
     "qa": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, Acrostic marker/heading"
     },
     "qac": {
-      "type": "char"
+      "type": "char",
+      "description": "Poetry text, Acrostic markup of the first character of a line of acrostic poetry"
     },
     "qc": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, centered"
     },
     "qd": {
-      "type": "para"
+      "type": "para",
+      "description": "A Hebrew musical performance annotation, similar in content to Hebrew descriptive title."
     },
     "qm": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, embedded, level 1 indent (if single level)"
     },
     "qm1": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, embedded, level 1 indent (if multiple levels)"
     },
     "qm2": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, embedded, level 2 indent"
     },
     "qm3": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, embedded, level 3 indent"
     },
     "qr": {
-      "type": "para"
+      "type": "para",
+      "description": "Poetry text, Right Aligned"
     },
     "qs": {
-      "type": "char"
+      "type": "char",
+      "description": "Poetry text, Selah"
     },
     "qt": {
-      "type": "char"
+      "type": "char",
+      "description": "For Old Testament quoted text appearing in the New Testament"
     },
     "qt-e": {
       "type": "ms",
@@ -615,7 +772,8 @@
       "defaultAttribute": "who"
     },
     "r": {
-      "type": "para"
+      "type": "para",
+      "description": "Parallel reference(s)"
     },
     "rb": {
       "type": "char",
@@ -626,64 +784,84 @@
       "defaultAttribute": "loc"
     },
     "rem": {
-      "type": "para"
+      "type": "para",
+      "description": "Remark"
     },
     "restore": {
-      "type": "para"
+      "type": "para",
+      "description": "Comment about when text was restored"
     },
     "rq": {
-      "type": "char"
+      "type": "char",
+      "description": "A cross-reference indicating the source text for the preceding quotation."
     },
     "s": {
-      "type": "para"
+      "type": "para",
+      "description": "A section heading, level 1 (if single level)"
     },
     "s1": {
-      "type": "para"
+      "type": "para",
+      "description": "A section heading, level 1 (if multiple levels)"
     },
     "s2": {
-      "type": "para"
+      "type": "para",
+      "description": "A section heading, level 2 (e.g. Proverbs 22-24)"
     },
     "s3": {
-      "type": "para"
+      "type": "para",
+      "description": "A section heading, level 3 (e.g. Genesis \"The First Day\") (\\s3 can take a \\v!)"
     },
     "s4": {
-      "type": "para"
+      "type": "para",
+      "description": "A section heading, level 4"
     },
     "sc": {
-      "type": "char"
+      "type": "char",
+      "description": "A character style, for small capitalization text"
     },
     "sd": {
-      "type": "para"
+      "type": "para",
+      "description": "Vertical space used to divide the text into sections, level 1 (if single level)"
     },
     "sd1": {
-      "type": "para"
+      "type": "para",
+      "description": "Semantic division location (vertical space used to divide the text into sections), level 1 (if multiple levels)"
     },
     "sd2": {
-      "type": "para"
+      "type": "para",
+      "description": "Semantic division location (vertical space used to divide the text into sections), level 2"
     },
     "sd3": {
-      "type": "para"
+      "type": "para",
+      "description": "Semantic division location (vertical space used to divide the text into sections), level 3"
     },
     "sd4": {
-      "type": "para"
+      "type": "para",
+      "description": "Semantic division location (vertical space used to divide the text into sections), level 4"
     },
     "sig": {
-      "type": "char"
+      "type": "char",
+      "description": "For the signature of the author of an Epistle"
     },
     "sls": {
-      "type": "char"
+      "type": "char",
+      "description": "To represent where the original text is in a secondary language or from an alternate text source"
     },
     "sp": {
-      "type": "para"
+      "type": "para",
+      "description": "A heading, to identify the speaker (e.g. Job)"
     },
     "sr": {
-      "type": "para"
+      "type": "para",
+      "description": "A section division references range heading"
     },
     "sts": {
-      "type": "para"
+      "type": "para",
+      "description": "Remark"
     },
     "sup": {
-      "type": "char"
+      "type": "char",
+      "description": "A character style, for superscript text. Typically for use in critical edition footnotes."
     },
     "t-e": {
       "type": "ms",
@@ -697,25 +875,32 @@
       "type": "table"
     },
     "tl": {
-      "type": "char"
+      "type": "char",
+      "description": "For transliterated words"
     },
     "toc1": {
-      "type": "para"
+      "type": "para",
+      "description": "Long table of contents text"
     },
     "toc2": {
-      "type": "para"
+      "type": "para",
+      "description": "Short table of contents text"
     },
     "toc3": {
-      "type": "para"
+      "type": "para",
+      "description": "Book Abbreviation"
     },
     "toca1": {
-      "type": "para"
+      "type": "para",
+      "description": "Alternative language long table of contents text"
     },
     "toca2": {
-      "type": "para"
+      "type": "para",
+      "description": "Alternative language short table of contents text"
     },
     "toca3": {
-      "type": "para"
+      "type": "para",
+      "description": "Alternative language book Abbreviation"
     },
     "tr": {
       "type": "row"
@@ -758,6 +943,7 @@
     },
     "vp": {
       "type": "char",
+      "description": "Published verse marker - this is a verse marking that would be used in the published text",
       "attributeMarkerAttributeName": "pubnumber",
       "isAttributeMarkerFor": [
         "v"
@@ -768,19 +954,24 @@
       "defaultAttribute": "lemma"
     },
     "wa": {
-      "type": "char"
+      "type": "char",
+      "description": "An Aramaic wordlist text item"
     },
     "wg": {
-      "type": "char"
+      "type": "char",
+      "description": "A Greek Wordlist text item"
     },
     "wh": {
-      "type": "char"
+      "type": "char",
+      "description": "A Hebrew wordlist text item"
     },
     "wj": {
-      "type": "char"
+      "type": "char",
+      "description": "For marking the words of Jesus"
     },
     "x": {
       "type": "note",
+      "description": "Cross reference",
       "attributeMarkers": [
         "cat"
       ],
@@ -788,39 +979,48 @@
     },
     "xdc": {
       "type": "char",
+      "description": "Cross-reference target reference(s), Deuterocanon only (DEPRECATED - use char@style dc)",
       "isClosingMarkerOptional": true
     },
     "xk": {
       "type": "char",
+      "description": "A cross reference keyword",
       "isClosingMarkerOptional": true
     },
     "xnt": {
       "type": "char",
+      "description": "Cross-reference target reference(s), New Testament only",
       "isClosingMarkerOptional": true
     },
     "xo": {
       "type": "char",
+      "description": "The cross reference origin reference",
       "isClosingMarkerOptional": true
     },
     "xop": {
       "type": "char",
+      "description": "Published cross reference origin text (origin reference that should appear in the published text)",
       "isClosingMarkerOptional": true
     },
     "xot": {
       "type": "char",
+      "description": "Cross-reference target reference(s), Old Testament only",
       "isClosingMarkerOptional": true
     },
     "xq": {
       "type": "char",
+      "description": "A cross-reference quotation from the scripture text",
       "isClosingMarkerOptional": true
     },
     "xt": {
       "type": "char",
       "defaultAttribute": "href",
+      "description": "The cross reference target reference(s), protocanon only",
       "isClosingMarkerOptional": true
     },
     "xta": {
       "type": "char",
+      "description": "Cross reference target references added text",
       "isClosingMarkerOptional": true
     }
   },

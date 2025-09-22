@@ -25,12 +25,12 @@ const BEFORE_OUT_MARKER_NAME_REGEXP = /(\\n)?\\\\(\S+)/;
 // #region XML helper functions
 
 /** Helper function to get text content of an element */
-function getTextContent(element: Element): string {
+function getTextContent(element: ChildNode): string {
   return (element.textContent || '').trim();
 }
 
 /**
- * Helper function to get next child of this element's parent. Almost the exact same as
+ * Helper function to get next child element of this element's parent. Almost the exact same as
  * `element.nextElementSibling`, but this returns `undefined` because `null` is dumb
  */
 function getNextElementSibling(element: Element): Element | undefined {
@@ -51,6 +51,38 @@ function getNextElementSibling(element: Element): Element | undefined {
     if (sibling.nodeType !== 1 /* Node.ELEMENT_NODE - not defined in Node.js */) continue;
 
     return sibling as Element;
+  }
+
+  return undefined;
+}
+
+/**
+ * Helper function to get next child comment-like node of this element's parent. Similar to
+ * `element.nextSibling`, but this specifically finds an `a:documentation` element or a `Comment`
+ * node. It also returns `undefined` because `null` is dumb
+ */
+function getNextCommentSibling(element: Element): ChildNode | undefined {
+  const parent = element.parentNode;
+
+  if (!parent) return undefined;
+
+  let foundThisElement = false;
+  for (let i = 0; i < parent.childNodes.length; i++) {
+    const sibling = parent.childNodes[i];
+
+    if (!foundThisElement) {
+      if (sibling === element) foundThisElement = true;
+      continue;
+    }
+
+    // Child is not an `a:documentation` node or a `Comment` node, so skip
+    if (
+      sibling.nodeName !== 'a:documentation' &&
+      sibling.nodeType !== 8 /* Node.COMMENT_NODE - not defined in Node.js */
+    )
+      continue;
+
+    return sibling;
   }
 
   return undefined;
@@ -926,9 +958,12 @@ function processDefineElement(
 
           // Sometimes, defaultAttribute is specified on the style value element
           const defaultAttribute = styleValueElement.getAttribute('usfm:propval');
-          if (defaultAttribute) {
-            markerInfo.defaultAttribute = defaultAttribute;
-          }
+          if (defaultAttribute) markerInfo.defaultAttribute = defaultAttribute;
+
+          // Sometimes there is documentation right after
+          const commentNode = getNextCommentSibling(styleValueElement);
+          if (commentNode)
+            markerInfo.description = getTextContent(commentNode);
 
           markersToAdd[markerName] = mergeMarkers(
             markersToAdd[markerName],

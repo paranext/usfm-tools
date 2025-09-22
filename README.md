@@ -178,6 +178,7 @@ TODO: adjust README based on new changes
     - Note: `ref`'s `usfm:endtag` has `matchref=""`, and it should have a closing tag
     - Note: `category` has `matchref=""` and `matchout` is not empty/not provided (`category`). If we end up handling `category` more precisely, this might need to be considered.
 - [marker] closing tag should not go in the USFM if the `usfm:endtag` has `noout="true"`
+- [marker] comments
 
 TODO: incorporate changes
 - Figure out a way to get this to where you can work on the rest of the code
@@ -189,10 +190,9 @@ TODO: incorporate changes
   - One `usfm:match` is present
     - `match` must not be `TEXTNOTATTRIB` or `TEXTNOTATTRIBOPT`
     - `beforeout` must not contain `\\__ `
-- [marker] comments
 - Explain how the terms I am using from XML sorta map to the USFM concepts but aren't exact one-to-one equals
 - [markerType] note when the marker shouldn't have a `style` attribute
-  - Improve accuracy: if the `element` has no `style` attribute and has direct child `usfm:tag` (`ref`), `usfm:ptag` (none - `sidebar` is closest), or `usfm:match` (`periph` and `optbreak`), no `style` attribute. If doesn't have one of these direct children (`table`, `usx`), the marker shouldn't be output to USFM at all. Or at least it indicates a very special case. Maybe not handling this yet is why `usx` considers `usfm` to be a leading attribute in the `usx.rng` but we don't.
+  - Improve accuracy: if the `element` has no `style` attribute and has direct child `usfm:tag` (`ref`), `usfm:ptag` (none - `sidebar` is closest), or `usfm:match` (`periph` and `optbreak`), no `style` attribute. If doesn't have one of these direct children (`table`, `usx`), the marker shouldn't be output to USFM at all. Or at least it indicates a very special case. Maybe not handling this yet is why `usx` considers `usfm` to be a leading attribute in the `usx.rng` but we don't. And `table`
 - Extra work later?
   - Do we need to keep track of whether a nested marker that closes has `+` on its markers? Probably, but maybe the plus is on the style in USX
     - Paratext 9.4 fails to nest markers without the `+`. It doesn't put anything particular if the `+` is present. I guess that means we might just need to track if `+` is present for 
