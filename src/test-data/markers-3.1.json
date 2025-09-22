@@ -47,13 +47,13 @@
       "type": "char",
       "attributeMarkerAttributeName": "category",
       "isAttributeMarkerFor": [
-        "fe",
-        "f",
-        "efe",
         "ef",
+        "efe",
+        "esb",
         "ex",
-        "x",
-        "esb"
+        "f",
+        "fe",
+        "x"
       ]
     },
     "cd": {

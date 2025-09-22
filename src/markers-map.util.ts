@@ -22,6 +22,20 @@ const OBJECT_TYPE_MARKER_TYPE = 'Marker type';
  */
 const BEFORE_OUT_MARKER_NAME_REGEXP = /(\\n)?\\\\(\S+)/;
 
+// #region misc helpful functions
+
+/** Comparison function for comparing two strings lower case culture invariant */
+function compareStringsInvariantCaseInsensitive(a: string, b: string) {
+  const aLower = a.toLowerCase();
+  const bLower = b.toLowerCase();
+
+  if (aLower < bLower) return -1;
+  if (aLower > bLower) return 1;
+  return 0;
+}
+
+// #endregion misc helpful functions
+
 // #region XML helper functions
 
 /** Helper function to get text content of an element */
@@ -1715,37 +1729,30 @@ export function transformUsxSchemaToMarkersMap(
     markersMap.markers['xt'].defaultAttribute = 'link-href';
   }
 
-  // Sort the markers and marker types
+  // Sort the markers, marker types, and `isAttributeMarkerFor`s
   markersMap.markers = Object.fromEntries(
     Object.entries(markersMap.markers).sort(([markerNameA], [markerNameB]) => {
-      const a = markerNameA.toLowerCase();
-      const b = markerNameB.toLowerCase();
-
-      if (a < b) return -1;
-      if (a > b) return 1;
-      return 0;
+      return compareStringsInvariantCaseInsensitive(markerNameA, markerNameB);
     })
   );
   markersMap.markersRegExp = Object.fromEntries(
     Object.entries(markersMap.markersRegExp).sort(([markerNameA], [markerNameB]) => {
-      const a = markerNameA.toLowerCase();
-      const b = markerNameB.toLowerCase();
-
-      if (a < b) return -1;
-      if (a > b) return 1;
-      return 0;
+      return compareStringsInvariantCaseInsensitive(markerNameA, markerNameB);
     })
   );
   markersMap.markerTypes = Object.fromEntries(
     Object.entries(markersMap.markerTypes).sort(([markerTypeA], [markerTypeB]) => {
-      const a = markerTypeA.toLowerCase();
-      const b = markerTypeB.toLowerCase();
-
-      if (a < b) return -1;
-      if (a > b) return 1;
-      return 0;
+      return compareStringsInvariantCaseInsensitive(markerTypeA, markerTypeB);
     })
   );
+  Object.values(markersMap.markers)
+    .concat(Object.values(markersMap.markersRegExp))
+    .forEach(markerInfo => {
+      if (!('attributeMarkerAttributeName' in markerInfo)) return;
+
+      markerInfo.isAttributeMarkerFor?.sort(compareStringsInvariantCaseInsensitive);
+      markerInfo.isAttributeMarkerForRegExp?.sort(compareStringsInvariantCaseInsensitive);
+    });
 
   return markersMap;
 }
