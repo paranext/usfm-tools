@@ -136,6 +136,9 @@ TODO: Improve wording/list exception cases we don't deal with right now
   - `cell` -> `table:cell` in USJ
   - `colspan` on `cell` gets put in the marker name in USFM
 - `optbreak` is pretty exceptional or at least will be until otherwise
+- Determining when to close certain markers that have lots of content like `periph`, `esb`, `table`, `usx`
+  - There are specific rules for how to know when these should be closed. This is not covered in the marker data at this time
+- `usfm` marker must be after `id`, but `id` is in `usx` and `USJ` contents
 
 TODO: adjust README based on new changes
 - Skip the definition if all `ref`s pointing to it are pointing to it via `usfm:alt` attribute instead of `name` (`FigureTwo`)
@@ -145,7 +148,7 @@ TODO: adjust README based on new changes
 - Need to look in `ref` tags in `element` and check if `define` has first child `attribute` or `optional` then `attribute` (`category`, `closed`)
 - [marker] ignore when translating to USFM
   - If all `ref`s pointing to it have `usfm:ignore="true"`, ignore the entire marker when translating to usfm if `attribute`s listed in the `markerType` are present (chapter and verse `eid`)
-  - If `attribute` `name` has `ns="<not-empty>"` on it (these attributes are not related to Scripture data and should not be exported to USFM)
+  - If `attribute` `name` has `ns="http://www.w3.org/2001/XMLSchema-instance"` on it or name starts with `xsi:` (these attributes are not related to Scripture data and should not be exported to USFM)
   - If its `attribute` has `usfm:ignore="true"` or any `usfm:match` in the attribute has `noout="true"` attribute on it (`attribute` - chapter and verse `sid`, `closed`)
   - If it is `vid` on `para` or `table` (probably should have `usfm:ignore` set)
   - If it's `sid` in `chapter` (probably should have `usfm:ignore` set)
@@ -155,14 +158,24 @@ TODO: adjust README based on new changes
 - [marker] attributes
   - Warn the attribute will not be considered for special attribute types if there are multiple `usfm:match` tags
   - Do not consider for any special attribute things if name is `style` since that attribute is always the marker name in USFM
-  - Do not consider for default attribute if any `usfm:match` with `beforeout` containing `|<attribute-name>=`. This is here to prevent `id` on `periph` from being default even though it reasonably should be
+  - Do not consider for any special attribute things if it is marked to skip output to USFM because all the special attribute things are related to output to USFM
+  - Do not consider for default attribute or special attributes if any `usfm:match` with `beforeout` containing `|<attribute-name>=`. This is here to prevent `id` on `periph` from being default even though it reasonably should be
 - [marker] attribute markers - `ca`, `cp`, `va`, `vp`, `cat`
   - One `usfm:match` or `usfm:tag` or `usfm:ptag` with  `beforeout` `\\__`
-    - Special case: `version` on `usx` is not an attribute marker (probably needs some kind of special marking indicating `usx` marker is replaced by `usfm` marker, then `version` could be adjusted to be text content attribute without a special case)
+    - Special case: `version` on `usx` is not an attribute marker (once this script can handle replacement markers, this won't need to be a special case)
   - get marker name from `beforeout`
   - `para` if `usfm:ptag` or `beforeout` has `\n`; `char` otherwise
   - `isAttributeMarker` on the attribute-created marker
   - `attributeMarkers` list on the parent marker
+- [marker] text content attributes
+  - Not an attribute marker (`cp` qualifies for both otherwise)
+  - One `usfm:match` with `match="TEXTNOTATTRIB"` or `match="TEXTNWS"`
+    - Special case: `usx` marker `version` is text content (it has `match="TEXTNWS"` in one of two occurrences; probably should be on both. Probably needs some kind of special marking indicating `usx` marker is replaced by `usfm` marker)
+- [marker] Leading attributes
+  - Not an attribute marker or text content attribute
+  - One `usfm:match` is present
+    - `match` must not be `TEXTNOTATTRIB` or `TEXTNOTATTRIBOPT`
+    - `beforeout` must not contain `\\__ `
 - [markerType] programmatically determine if marker types should have newlines before the marker
   - In `style` attribute element (or, if there is no `style` element, in the `element` element), one `usfm:ptag` or `usfm:tag` or `usfm:match` direct child with `beforeout` with `\n` in it (`verse` - `\n` is optional, whereas it does not seem to be optional in the others. Does this matter for us? I don't think so; I think it all normalizes out to being just whitespace).
     - `cell` has `usfm:ptag` which I think is a bug.
@@ -183,16 +196,13 @@ TODO: adjust README based on new changes
 TODO: incorporate changes
 - Figure out a way to get this to where you can work on the rest of the code
 - Transform 3.1 to 3.0 somehow?
-- [marker] text content attributes
-  - One `usfm:match` with `match="TEXTNOTATTRIB"`
-    - Special case: `usx` marker `version` is text content. Do some work to encode that the markers are different in each standard
-- [marker] Leading attributes
-  - One `usfm:match` is present
-    - `match` must not be `TEXTNOTATTRIB` or `TEXTNOTATTRIBOPT`
-    - `beforeout` must not contain `\\__ `
+- Do some work to encode that the `usx`, `usfm`, and `USJ` markers are different in each standard
+- TODO: Should all the special attribute stuff be on `markerType` instead? Some risk in that `cat` is a marker attribute on all `note` marker types, but maybe that's coincidence
 - Explain how the terms I am using from XML sorta map to the USFM concepts but aren't exact one-to-one equals
 - [markerType] note when the marker shouldn't have a `style` attribute
   - Improve accuracy: if the `element` has no `style` attribute and has direct child `usfm:tag` (`ref`), `usfm:ptag` (none - `sidebar` is closest), or `usfm:match` (`periph` and `optbreak`), no `style` attribute. If doesn't have one of these direct children (`table`, `usx`), the marker shouldn't be output to USFM at all. Or at least it indicates a very special case. Maybe not handling this yet is why `usx` considers `usfm` to be a leading attribute in the `usx.rng` but we don't. And `table`
+  - `usx` doesn't have `usfm:tag` or `usfm:ptag` and its attribute has `beforeout` with `\\__`. Could use those two indicators to determine it should be replaced with `usfm` in output. But then this still doesn't cover moving `usfm` under `id`
+- Figure out how to determine when to close these long-running markers with their own content hierarchies - `usx`, `table`, `periph`, `esb`, others?
 - Extra work later?
   - Do we need to keep track of whether a nested marker that closes has `+` on its markers? Probably, but maybe the plus is on the style in USX
     - Paratext 9.4 fails to nest markers without the `+`. It doesn't put anything particular if the `+` is present. I guess that means we might just need to track if `+` is present for 

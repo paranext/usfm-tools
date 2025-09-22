@@ -793,7 +793,7 @@
     },
     "usx": {
       "type": "usx",
-      "defaultAttribute": "version"
+      "textContentAttribute": "version"
     },
     "v": {
       "type": "verse"
@@ -937,7 +937,10 @@
       "hasStyleAttribute": false
     },
     "usx": {
-      "hasStyleAttribute": false
+      "hasStyleAttribute": false,
+      "skipOutputAttributeToUsfm": [
+        "xsi:noNamespaceSchemaLocation"
+      ]
     },
     "verse": {
       "skipOutputMarkerToUsfmIfAttributeIsPresent": [

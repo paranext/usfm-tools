@@ -81,6 +81,55 @@ export type NormalMarkerInfo = {
    */
   defaultAttribute?: string;
   /**
+   * The name of the text content attribute that is present on this marker if this marker has text content
+   * in USFM.
+   *
+   * Text content attributes are attributes in USX/USJ that are represented in USFM as the actual text
+   * content of the marker.
+   *
+   * For example, `alt` is a text content attribute on the `periph` marker. This value would be `alt` for
+   * the `periph` marker.
+   *
+   * Following is an example of a `periph` marker in USFM:
+   *
+   * ```usfm
+   * \periph Example Peripheral|id="x-example"
+   * \p Some contents of the example peripheral
+   * ```
+   *
+   * The equivalent in USX would be:
+   *
+   * ```xml
+   * <periph alt="Title Page" id="title">
+   *  <para style="p">Some contents of the example peripheral</para>
+   * </periph>
+   * ```
+   */
+  textContentAttribute?: string;
+  /**
+   * List of leading attributes that must be present on this marker. This list is ordered by the order in
+   * which the attributes should appear.
+   *
+   * Leading attributes are attributes in USJ/USX that are listed in USFM directly after the marker and
+   * separated only by a space.
+   *
+   * For example, `code` is a leading attribute on the `id` marker. This value would be `['code']` for the
+   * `id` marker.
+   *
+   * Following is an example of an `id` marker in USFM:
+   *
+   * ```usfm
+   * \id MAT 41MATEX.SFM, Example Translation, September 2025
+   * ```
+   *
+   * The equivalent in USX would be:
+   *
+   * ```xml
+   * <book code="MAT" style="id">41MATEX.SFM, Example Translation, September 2025</book>
+   * ```
+   */
+  leadingAttributes?: string[];
+  /**
    * List of attribute markers that may be present on this marker. This list is ordered by the order in
    * which the markers should appear.
    *

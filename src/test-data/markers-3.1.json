@@ -28,11 +28,13 @@
     },
     "c": {
       "type": "chapter",
+      "leadingAttributes": [
+        "number"
+      ],
       "attributeMarkers": [
         "ca",
         "cp"
-      ],
-      "defaultAttribute": "number"
+      ]
     },
     "ca": {
       "type": "char",
@@ -85,18 +87,22 @@
     "ef": {
       "type": "note",
       "description": "Study note",
+      "leadingAttributes": [
+        "caller"
+      ],
       "attributeMarkers": [
         "cat"
-      ],
-      "defaultAttribute": "caller"
+      ]
     },
     "efe": {
       "type": "note",
       "description": "Extended study endnote",
+      "leadingAttributes": [
+        "caller"
+      ],
       "attributeMarkers": [
         "cat"
-      ],
-      "defaultAttribute": "caller"
+      ]
     },
     "efm": {
       "type": "char",
@@ -110,8 +116,7 @@
       "type": "sidebar",
       "attributeMarkers": [
         "cat"
-      ],
-      "defaultAttribute": "category"
+      ]
     },
     "esbe": {
       "type": "sidebar"
@@ -119,18 +124,22 @@
     "ex": {
       "type": "note",
       "description": "Extended cross reference",
+      "leadingAttributes": [
+        "caller"
+      ],
       "attributeMarkers": [
         "cat"
-      ],
-      "defaultAttribute": "caller"
+      ]
     },
     "f": {
       "type": "note",
       "description": "Footnote",
+      "leadingAttributes": [
+        "caller"
+      ],
       "attributeMarkers": [
         "cat"
-      ],
-      "defaultAttribute": "caller"
+      ]
     },
     "fdc": {
       "type": "char",
@@ -140,10 +149,12 @@
     "fe": {
       "type": "note",
       "description": "Endnote",
+      "leadingAttributes": [
+        "caller"
+      ],
       "attributeMarkers": [
         "cat"
-      ],
-      "defaultAttribute": "caller"
+      ]
     },
     "fig": {
       "type": "figure"
@@ -218,7 +229,9 @@
     },
     "id": {
       "type": "book",
-      "defaultAttribute": "code"
+      "leadingAttributes": [
+        "code"
+      ]
     },
     "ide": {
       "type": "para",
@@ -589,7 +602,7 @@
     },
     "periph": {
       "type": "periph",
-      "defaultAttribute": "alt"
+      "textContentAttribute": "alt"
     },
     "ph": {
       "type": "para",
@@ -924,15 +937,17 @@
     },
     "usx": {
       "type": "usx",
-      "defaultAttribute": "version"
+      "textContentAttribute": "version"
     },
     "v": {
       "type": "verse",
+      "leadingAttributes": [
+        "number"
+      ],
       "attributeMarkers": [
         "va",
         "vp"
-      ],
-      "defaultAttribute": "number"
+      ]
     },
     "va": {
       "type": "char",
@@ -972,10 +987,12 @@
     "x": {
       "type": "note",
       "description": "Cross reference",
+      "leadingAttributes": [
+        "caller"
+      ],
       "attributeMarkers": [
         "cat"
-      ],
-      "defaultAttribute": "caller"
+      ]
     },
     "xdc": {
       "type": "char",

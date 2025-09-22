@@ -708,11 +708,17 @@ function collectAttributesForElement(
         usfmMatch => usfmMatch.getAttribute('noout') === 'true'
       );
     }
-    // Skip output attribute may have child `name` element with `ns` attribute not empty
+    // Skip output attribute may have child `name` element with `ns` attribute set to XML schema
     if (!skipOutputToUsfm) {
       const nameElement = getFirstChildWithTagName(attribute, 'name', defineName);
-      if (nameElement && nameElement.getAttribute('ns')) skipOutputToUsfm = true;
+      if (
+        nameElement &&
+        nameElement.getAttribute('ns') === 'http://www.w3.org/2001/XMLSchema-instance'
+      )
+        skipOutputToUsfm = true;
     }
+    // Skip output attribute name starts with `xsi:` (also indicates it is XML schema-related)
+    if (!skipOutputToUsfm && attributeName.startsWith('xsi:')) skipOutputToUsfm = true;
 
     // Some exception cases for skipping output to USFM - I think these are errors in `usx.rng`
     // If the errors are fixed, these should be removed
@@ -1105,11 +1111,7 @@ function processDefineElement(
 
     // Determine if the marker type should have a closing tag
     // First step is to find an appropriate `usfm:endtag`
-    const usfmEndTagElement = getUsfmEndTagForElement(
-      element,
-      markerType,
-      defineName
-    );
+    const usfmEndTagElement = getUsfmEndTagForElement(element, markerType, defineName);
 
     // There's an end tag, so mark that on the marker type. Also check the `usfm:endtag` for
     // being empty
@@ -1262,8 +1264,18 @@ function processDefineElement(
           markerTypeToAdd.skipOutputAttributeToUsfm.push(attributeName);
         }
 
+        // Determine if this attribute is hard-coded into the USFM attributes list and specifically not
+        // default attribute
+        const isInAttributesListNotDefault = usfmMatchElements.some(usfmMatchElement =>
+          usfmMatchElement.getAttribute('beforeout')?.includes(`|${attributeName}=`)
+        );
+
         // Determine if this meets the generic conditions to be a special type of attribute
-        let canBeSpecialAttributeType = true;
+        // - Attributes skipped when output to USFM are never special attributes becuase all special
+        // attributes relate to how the attribute is output to USFM.
+        // - Attributes hard-coded to be listed in the attributes list are not special attributes either.
+        // - Special attributes also shouldn't have multiple `usfm:match`, `usfm:tag`, or `usfm:ptag` elements
+        let canBeSpecialAttributeType = !skipOutputToUsfm && !isInAttributesListNotDefault;
 
         if (usfmMatchElements.length > 1) {
           console.log(
@@ -1299,6 +1311,9 @@ function processDefineElement(
           );
           canBeSpecialAttributeType = false;
         }
+
+        // Determine if the attribute is a special attribute
+        let isSpecialAttribute = false;
 
         if (canBeSpecialAttributeType) {
           const usfmMatchElement = usfmMatchElements.length > 0 ? usfmMatchElements[0] : undefined;
@@ -1363,18 +1378,42 @@ function processDefineElement(
             if (!extraMarkerInfo.attributeMarkers) extraMarkerInfo.attributeMarkers = [];
             extraMarkerInfo.attributeMarkers.push(attributeMarkerName);
           });
-        }
+          isSpecialAttribute = isAttributeMarker;
 
-        // Determine if this attribute is hard-coded not to be a default attribute
-        const isNotDefaultAttribute = usfmMatchElements.some(usfmMatchElement =>
-          usfmMatchElement.getAttribute('beforeout')?.includes(`|${attributeName}=`)
-        );
+          // Determine if this is a text content attribute
+          if (
+            !isSpecialAttribute &&
+            (usfmMatchElement?.getAttribute('match') === 'TEXTNOTATTRIB' ||
+              usfmMatchElement?.getAttribute('match') === 'TEXTNWS' ||
+              (markerType === 'usx' && attributeName === 'version'))
+          ) {
+            // If the attribute is specified as matching the text content of the marker, it is a text
+            // content attribute! Add info about this text content attribute to the markers
+            extraMarkerInfo.textContentAttribute = attributeName;
+            isSpecialAttribute = true;
+          }
+
+          // Determine if this is a leading attribute
+          if (
+            !isSpecialAttribute &&
+            usfmMatchElement &&
+            usfmMatchElement.getAttribute('match') !== 'TEXTNOTATTRIBOPT'
+          ) {
+            // The attribute has a `usfm:match` element and is not one of the other special attributes
+            // and isn't an optional text content attribute (not supported in this script as it is only
+            // relevant in deprecated Figure USFM 2.0 syntax as of 3.1), so it is a leading attribute!
+            if (!extraMarkerInfo.leadingAttributes) extraMarkerInfo.leadingAttributes = [];
+            extraMarkerInfo.leadingAttributes.push(attributeName);
+            isSpecialAttribute = true;
+          }
+        }
 
         // Determine first required/optional attribute to figure out default attribute
         // Don't factor in attributes that:
         // - should be skipped when outputting to usfm
         // - are specifically not default attributes
-        if (!skipOutputToUsfm && !isNotDefaultAttribute) {
+        // - are special attributes which are never default attributes
+        if (!skipOutputToUsfm && !isInAttributesListNotDefault && !isSpecialAttribute) {
           if (!isOptional) {
             nonOptionalCount++;
             if (!firstRequiredNonSkippedAttribute) {
