@@ -330,7 +330,7 @@
     },
     "ip": {
       "type": "para",
-      "description": "Division or Section introductory paragraph (study Bible)"
+      "description": "Introduction prose paragraph\nDivision or Section introductory paragraph (study Bible)"
     },
     "ipi": {
       "type": "para",
@@ -870,7 +870,7 @@
     },
     "sts": {
       "type": "para",
-      "description": "Remark"
+      "description": "Status\nRemark"
     },
     "sup": {
       "type": "char",
@@ -930,10 +930,12 @@
       "defaultAttribute": "sid"
     },
     "usfm": {
-      "type": "para"
+      "type": "para",
+      "textContentAttribute": "version"
     },
     "USJ": {
-      "type": "USJ"
+      "type": "usx",
+      "textContentAttribute": "version"
     },
     "usx": {
       "type": "usx",
@@ -1032,7 +1034,7 @@
     "xt": {
       "type": "char",
       "defaultAttribute": "href",
-      "description": "The cross reference target reference(s), protocanon only",
+      "description": "Inline scripture reference formatting.\nThe cross reference target reference(s), protocanon only",
       "isClosingMarkerOptional": true
     },
     "xta": {

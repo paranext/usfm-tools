@@ -207,6 +207,9 @@ TODO: incorporate changes
   - Do we need to keep track of whether a nested marker that closes has `+` on its markers? Probably, but maybe the plus is on the style in USX
     - Paratext 9.4 fails to nest markers without the `+`. It doesn't put anything particular if the `+` is present. I guess that means we might just need to track if `+` is present for 
   - `cl` and `esbe` both specify `afterout="&#x27;\n&#x27;"` meaning a newline after them. But it seems to get reduced with newlines that come before the stuff after, so I dunno if we really need this. Maybe test P9 putting stuff after these markers and see what happens
+    - `book` marker type also has a `usfm:match` in it with `matchout="&#x27;\n&#x27;"`. Thinking this indicates it is a block-level marker, but it's weird because this may be the only one like this. All other block-level markers have `usfm:ptag`. But `id` is always the first line of the file. How should we track this?
+    - Actually, it seems `hasNewlineBefore` doesn't line up with block-level marker types for `periph` or `verse` (optional newline) either. Maybe block-level should be its own property on marker types.
+      - `periph` is not quite a block-level marker type, actually; more like a multi-block type. Need to define some rules around when these can end. `periph`, `table`, `usx`, `esb` (has its own closing marker). Can provide attributes in USFM with inline syntax, not block-level syntax.
   - If needed, can tell if marker type doesn't have text content via `<empty/>`
     - Probably doesn't matter for our needs because, if a marker is empty, it won't have `contents`. You can tell if there should be a closing marker (like milestones) from other things.
 

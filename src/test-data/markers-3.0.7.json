@@ -210,7 +210,7 @@
     },
     "imt": {
       "type": "para",
-      "description": "Introduction major title, level 1 (if single level)"
+      "description": "Introduction major title, level 1 (if single level)\nIntroduction major title, level 1 - (if single level)"
     },
     "imt1": {
       "type": "para",
@@ -270,7 +270,7 @@
     },
     "ip": {
       "type": "para",
-      "description": "Division or Section introductory paragraph (study Bible)"
+      "description": "Introduction prose paragraph\nDivision or Section introductory paragraph (study Bible)"
     },
     "ipi": {
       "type": "para",
@@ -465,7 +465,7 @@
     },
     "mt4": {
       "type": "para",
-      "description": "A small secondary title sometimes occuring within parentheses"
+      "description": "Introduction major title, level 1 (if single level)\nA small secondary title sometimes occuring within parentheses"
     },
     "mte": {
       "type": "para",
@@ -504,7 +504,7 @@
     },
     "p": {
       "type": "para",
-      "description": "Front or back matter text paragraph, level 1"
+      "description": "Paragraph text, with first line indent\nFront or back matter text paragraph, level 1"
     },
     "p1": {
       "type": "para",
@@ -786,10 +786,12 @@
       "description": "Translator's chunk (to identify chunks of text suitable for translating at one time)"
     },
     "usfm": {
-      "type": "para"
+      "type": "para",
+      "textContentAttribute": "version"
     },
     "USJ": {
-      "type": "USJ"
+      "type": "usx",
+      "textContentAttribute": "version"
     },
     "usx": {
       "type": "usx",
@@ -866,7 +868,7 @@
     },
     "xt": {
       "type": "char",
-      "description": "The cross reference target reference(s), protocanon only",
+      "description": "A target reference(s)\nA cross reference target reference(s)\nThe cross reference target reference(s), protocanon only",
       "defaultAttribute": "link-href"
     },
     "xta": {

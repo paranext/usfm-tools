@@ -274,6 +274,64 @@ function verifyStringsCanBeMerged(
 }
 
 /**
+ * Merge two strings, deduplicating and concatenating the strings with `\n` between.
+ *
+ *
+ * @param objectType type of object e.g. "marker"
+ * @param objectName name of object e.g. "esb"
+ * @param propertyName name of property that is being merged e.g. "default attribute"
+ * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
+ * @param existingString existing string
+ * @param newString new string to merge into the existing string
+ * @param shouldWarn `true` if we should warn if only one string is defined or if both strings are defined and get combined
+ * @returns string consisting of both passed in strings concatenated or `undefined` if there was no
+ * string passed in
+ */
+function mergeStrings(
+  objectType: string,
+  objectName: string,
+  propertyName: string,
+  defineName: string,
+  existingString: string | undefined,
+  newString: string | undefined,
+  shouldWarn = false
+) {
+  // If they're the same (`undefined` or a string), just return it
+  if (existingString === newString) return existingString;
+
+  // If only one string is defined, just return that
+  if (!existingString || !newString) {
+    if (shouldWarn) {
+      logObjectUseOnePropertyWarning(
+        objectType,
+        objectName,
+        propertyName,
+        defineName,
+        existingString,
+        newString
+      );
+    }
+    return existingString ?? newString;
+  }
+
+  // If the new string is one of any in the string split by \n, just return the existing one
+  if (existingString.split('\n').includes(newString)) return existingString;
+
+  // Both arrays are defined but don't match, so concat them
+  if (shouldWarn) {
+    console.log(
+      `Warning: ${objectType} named "${
+        objectName
+      }" has two definitions with different ${propertyName} strings: ${JSON.stringify(
+        existingString
+      )}, ${JSON.stringify(newString)}. Concatenating them with \\n between. In definition: ${defineName}`
+    );
+  }
+
+  return `${existingString}\n${newString}`;
+}
+
+/**
  * Merge two arrays, combining and deduplicating contents. Returns a new array if the merge changed
  * anything; does not modify the original arrays
  *
@@ -306,7 +364,7 @@ function mergeArrays<T>(
       existingArray,
       newArray
     );
-    return undefined;
+    return existingArray ?? newArray;
   }
   // If the arrays are equal, return one
   if (
@@ -391,6 +449,38 @@ function mergeMarkers(
     markerA.defaultAttribute,
     markerB.defaultAttribute
   );
+
+  // Check textContentAttribute can be merged
+  verifyStringsCanBeMerged(
+    OBJECT_TYPE_MARKER,
+    markerName,
+    'textContentAttribute',
+    defineName,
+    markerA.textContentAttribute,
+    markerB.textContentAttribute
+  );
+
+  // Combine leadingAttributes
+  const mergedLeadingAttributes = mergeArrays(
+    OBJECT_TYPE_MARKER,
+    markerName,
+    'leadingAttributes',
+    defineName,
+    markerA.leadingAttributes,
+    markerB.leadingAttributes
+  );
+  if (mergedLeadingAttributes) mergedMarker.leadingAttributes = mergedLeadingAttributes;
+
+  // Combine descriptions
+  const mergedDescription = mergeStrings(
+    OBJECT_TYPE_MARKER,
+    markerName,
+    'description',
+    defineName,
+    markerA.description,
+    markerB.description
+  );
+  if (mergedDescription) mergedMarker.description = mergedDescription;
 
   // Combine attributeMarkers
   const mergedAttributeMarkers = mergeArrays(
@@ -1696,13 +1786,13 @@ export function transformUsxSchemaToMarkersMap(
   }
   markersMap.markers['usfm'] = mergeMarkers(
     markersMap.markers['usfm'],
-    { type: 'para' },
+    { ...markersMap.markers['usx'], type: 'para' },
     'usfm',
     manualDefineName
   );
   markersMap.markers['USJ'] = mergeMarkers(
     markersMap.markers['USJ'],
-    { type: 'USJ' },
+    { ...markersMap.markers['usx'], textContentAttribute: 'version' },
     'USJ',
     manualDefineName
   );

@@ -3,23 +3,37 @@
 > tsx src/generate-markers-map --schema src/test-data/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/test-data/markers-3.1.json
 
 Warning: could not determine marker type "usx" hasNewlineBefore. In define Peripheral.
+Warning: Marker named "usx" has one definition with a textContentAttribute and one without: undefined, "version". Using the one with the textContentAttribute. In definition: Peripheral (merging extraMarkerInfo into marker to add)
 Warning: could not determine marker type "usx" hasNewlineBefore. In define Scripture.
+Warning: Marker named "usx" has one definition with a textContentAttribute and one without: undefined, "version". Using the one with the textContentAttribute. In definition: Scripture (merging extraMarkerInfo into marker to add)
+Warning: Marker named "id" has one definition with a leadingAttributes and one without: undefined, ["code"]. Using the one with the leadingAttributes. In definition: BookIdentification (merging extraMarkerInfo into marker to add)
+Warning: Marker named "id" has one definition with a leadingAttributes and one without: undefined, ["code"]. Using the one with the leadingAttributes. In definition: PeripheralBookIdentification (merging extraMarkerInfo into marker to add)
+Warning: Marker named "id" has one definition with a leadingAttributes and one without: undefined, ["code"]. Using the one with the leadingAttributes. In definition: PeripheralDividedBookIdentification (merging extraMarkerInfo into marker to add)
+Warning: Marker named "periph" has one definition with a textContentAttribute and one without: undefined, "alt". Using the one with the textContentAttribute. In definition: PeripheralDivision (merging extraMarkerInfo into marker to add)
 Warning: Marker type named "para" has one definition with a skipOutputAttributeToUsfm and one without: undefined, ["vid"]. Using the one with the skipOutputAttributeToUsfm. In definition: Section
 Warning: could not determine marker type "table" hasNewlineBefore. In define Table.
+Warning: Marker named "c" has one definition with a leadingAttributes and one without: undefined, ["number"]. Using the one with the leadingAttributes. In definition: ChapterStart (merging extraMarkerInfo into marker to add)
 Warning: Marker named "c" has one definition with a attributeMarkers and one without: undefined, ["ca","cp"]. Using the one with the attributeMarkers. In definition: ChapterStart (merging extraMarkerInfo into marker to add)
 Warning: Marker named "cp" has one definition with a isAttributeMarkerFor and one without: undefined, ["c"]. Using the one with the isAttributeMarkerFor. In definition: ChapterStart
 Warning: Marker named "cp" has one definition with a attributeMarkerAttributeName and one without: undefined, "pubnumber". Using the one with the attributeMarkerAttributeName. In definition: ChapterStart
 Warning: Marker type named "chapter" has one definition with a skipOutputMarkerToUsfmIfAttributeIsPresent and one without: undefined, ["eid"]. Using the one with the skipOutputMarkerToUsfmIfAttributeIsPresent. In definition: ChapterEnd
 Warning: Marker type named "para" has one definition with a skipOutputAttributeToUsfm and one without: ["vid"], undefined. Using the one with the skipOutputAttributeToUsfm. In definition: BookChapterLabel
+Warning: Marker named "v" has one definition with a leadingAttributes and one without: undefined, ["number"]. Using the one with the leadingAttributes. In definition: VerseStart (merging extraMarkerInfo into marker to add)
 Warning: Marker named "v" has one definition with a attributeMarkers and one without: undefined, ["va","vp"]. Using the one with the attributeMarkers. In definition: VerseStart (merging extraMarkerInfo into marker to add)
 Warning: Marker named "vp" has one definition with a isAttributeMarkerFor and one without: undefined, ["v"]. Using the one with the isAttributeMarkerFor. In definition: VerseStart
 Warning: Marker named "vp" has one definition with a attributeMarkerAttributeName and one without: undefined, "pubnumber". Using the one with the attributeMarkerAttributeName. In definition: VerseStart
 Warning: Marker type named "verse" has one definition with a skipOutputMarkerToUsfmIfAttributeIsPresent and one without: undefined, ["eid"]. Using the one with the skipOutputMarkerToUsfmIfAttributeIsPresent. In definition: VerseEnd
+Warning: Marker named "fe" has one definition with a leadingAttributes and one without: undefined, ["caller"]. Using the one with the leadingAttributes. In definition: Footnote (merging extraMarkerInfo into marker to add)
 Warning: Marker named "fe" has one definition with a attributeMarkers and one without: undefined, ["cat"]. Using the one with the attributeMarkers. In definition: Footnote (merging extraMarkerInfo into marker to add)
+Warning: Marker named "f" has one definition with a leadingAttributes and one without: undefined, ["caller"]. Using the one with the leadingAttributes. In definition: Footnote (merging extraMarkerInfo into marker to add)
 Warning: Marker named "f" has one definition with a attributeMarkers and one without: undefined, ["cat"]. Using the one with the attributeMarkers. In definition: Footnote (merging extraMarkerInfo into marker to add)
+Warning: Marker named "efe" has one definition with a leadingAttributes and one without: undefined, ["caller"]. Using the one with the leadingAttributes. In definition: Footnote (merging extraMarkerInfo into marker to add)
 Warning: Marker named "efe" has one definition with a attributeMarkers and one without: undefined, ["cat"]. Using the one with the attributeMarkers. In definition: Footnote (merging extraMarkerInfo into marker to add)
+Warning: Marker named "ef" has one definition with a leadingAttributes and one without: undefined, ["caller"]. Using the one with the leadingAttributes. In definition: Footnote (merging extraMarkerInfo into marker to add)
 Warning: Marker named "ef" has one definition with a attributeMarkers and one without: undefined, ["cat"]. Using the one with the attributeMarkers. In definition: Footnote (merging extraMarkerInfo into marker to add)
+Warning: Marker named "ex" has one definition with a leadingAttributes and one without: undefined, ["caller"]. Using the one with the leadingAttributes. In definition: CrossReference (merging extraMarkerInfo into marker to add)
 Warning: Marker named "ex" has one definition with a attributeMarkers and one without: undefined, ["cat"]. Using the one with the attributeMarkers. In definition: CrossReference (merging extraMarkerInfo into marker to add)
+Warning: Marker named "x" has one definition with a leadingAttributes and one without: undefined, ["caller"]. Using the one with the leadingAttributes. In definition: CrossReference (merging extraMarkerInfo into marker to add)
 Warning: Marker named "x" has one definition with a attributeMarkers and one without: undefined, ["cat"]. Using the one with the attributeMarkers. In definition: CrossReference (merging extraMarkerInfo into marker to add)
 Warning: Marker named "cat" has two definitions with isAttributeMarkerFor arrays of different lengths: ["fe","f","efe","ef"], ["ex","x"]. Combining them. In definition: CrossReference
 Warning: Marker named "xt" has one definition with a defaultAttribute and one without: "href", undefined. Using the one with the defaultAttribute. In definition: CrossReferenceChar
