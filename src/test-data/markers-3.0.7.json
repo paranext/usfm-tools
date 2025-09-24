@@ -1,6 +1,7 @@
 {
   "version": "3.0.7",
   "commit": "6c490bb5675d281b0fa01876fe67f6e3fd50a4ce",
+  "usfmToolsVersion": "57eb8b5b0f1569e51cc9534851a03fafa9448e92+",
   "markers": {
     "add": {
       "type": "char",

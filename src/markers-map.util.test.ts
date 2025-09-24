@@ -88,7 +88,7 @@ beforeEach(() => {
 });
 
 afterAll(() => {
-  consoleMock.mockRestore()
+  consoleMock.mockRestore();
 });
 
 test('transformUsxSchemaToMarkersMap properly transform usx.rng 3.0.7', () => {
@@ -97,6 +97,7 @@ test('transformUsxSchemaToMarkersMap properly transform usx.rng 3.0.7', () => {
     USX_SCHEMA_3_0_7,
     USFM_MARKERS_MAP_3_0_7.version,
     USFM_MARKERS_MAP_3_0_7.commit,
+    USFM_MARKERS_MAP_3_0_7.usfmToolsVersion,
     skippedDefinitions
   );
 
@@ -111,6 +112,7 @@ test('transformUsxSchemaToMarkersMap properly transform usx.rng 3.1', () => {
     USX_SCHEMA_3_1,
     USFM_MARKERS_MAP_3_1.version,
     USFM_MARKERS_MAP_3_1.commit,
+    USFM_MARKERS_MAP_3_1.usfmToolsVersion,
     skippedDefinitions
   );
 

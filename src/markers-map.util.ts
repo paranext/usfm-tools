@@ -1649,6 +1649,7 @@ export function transformUsxSchemaToMarkersMap(
   usxSchema: string,
   version: string,
   commit: string,
+  usfmToolsVersion: string,
   skippedDefinitions: Set<string> = new Set<string>()
 ): MarkersMap {
   const parser = new DOMParser();
@@ -1657,6 +1658,7 @@ export function transformUsxSchemaToMarkersMap(
   const markersMap: MarkersMap = {
     version,
     commit,
+    usfmToolsVersion,
     markers: {},
     markersRegExp: {},
     markerTypes: {},

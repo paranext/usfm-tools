@@ -303,6 +303,14 @@ export type MarkersMap = {
    */
   commit: string;
   /**
+   * Which tag or commit of `usfm-tools` repo this map is generated from.
+   * 
+   * Contains the output from `git tag --points-at HEAD` or `git rev-parse HEAD`
+   * 
+   * Will also have a `+` at the end if there were working changes when this was generated.
+   */
+  usfmToolsVersion: string;
+  /**
    * Map whose keys are the marker names and whose values are information about that marker
    *
    * If you find the marker name in this map, you do not need to search the `markersRegExp` map.
