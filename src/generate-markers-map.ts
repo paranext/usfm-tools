@@ -59,6 +59,7 @@ import { execCommand } from './command-line.util';
       console.log('Somehow we could not get usfmToolsVersion. Cannot continue');
       process.exit(1);
     }
+    usfmToolsVersion = usfmToolsVersion.trim();
 
     // Check for working changes
     const workingChangesCommand = 'git status --porcelain=v2';
@@ -69,7 +70,18 @@ import { execCommand } from './command-line.util';
       );
       process.exit(1);
     }
-    if (workingChangesResult.stdout) usfmToolsVersion = `${usfmToolsVersion.trim()}+`;
+    if (workingChangesResult.stdout) {
+      // If all working changes are inside the `src/test-data` folder, we can ignore
+      const workingChangesTable = workingChangesResult.stdout
+        .toString()
+        .trim()
+        .split('\n')
+        .map(workingChangeRowString => workingChangeRowString.split(' '));
+
+      // The path (always with forward slashes) is at index 8
+      if (workingChangesTable.some(row => !row[8].startsWith('src/test-data/')))
+        usfmToolsVersion = `${usfmToolsVersion}+`;
+    }
 
     // Read and parse the schema file
     const schemaContent = fs.readFileSync(schemaPath, 'utf-8');

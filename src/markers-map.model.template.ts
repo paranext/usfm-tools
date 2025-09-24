@@ -304,10 +304,11 @@ export type MarkersMap = {
   commit: string;
   /**
    * Which tag or commit of `usfm-tools` repo this map is generated from.
-   * 
+   *
    * Contains the output from `git tag --points-at HEAD` or `git rev-parse HEAD`
-   * 
-   * Will also have a `+` at the end if there were working changes when this was generated.
+   *
+   * Will also have a `+` at the end if there were working changes outside the `src/test-data` folder when
+   * this was generated.
    */
   usfmToolsVersion: string;
   /**
@@ -325,7 +326,7 @@ export type MarkersMap = {
    */
   markersRegExp: Record<string, MarkerInfo>;
   /** Map whose keys are the marker types and whose values are information about that marker type */
-  markerTypes: Record<string, MarkerTypeInfoBase>;
+  markerTypes: Record<string, MarkerTypeInfo>;
 };
 
 /** A map of all USFM/USX/USJ markers and some information about them. Generated from a `usx.rng` file */
