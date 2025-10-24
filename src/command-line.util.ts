@@ -1,7 +1,7 @@
-import { exec, ExecOptions } from "child_process";
-import path from "path";
-import { fileURLToPath } from "url";
-import { promisify } from "util";
+import { exec, ExecOptions } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 

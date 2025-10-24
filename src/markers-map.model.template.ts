@@ -1,12 +1,12 @@
 /**
- * Information about a USFM marker that is just an attribute in USX/USJ. See {@link MarkerInfo} for other
- * kinds of markers.
+ * Information about a USFM marker that is just an attribute in USX/USJ. See {@link MarkerInfo} for
+ * other kinds of markers.
  *
- * An attribute marker is a marker that adds information to a previous marker in USFM and is an attribute
- * on that previous marker instead in USX/USJ.
+ * An attribute marker is a marker that adds information to a previous marker in USFM and is an
+ * attribute on that previous marker instead in USX/USJ.
  *
- * For example, `ca` and `cp` are attribute markers for `c`. `va` and `vp` are attribute markers for `v`.
- * `cat` is an attribute marker for `f`, `esb`, and more.
+ * For example, `ca` and `cp` are attribute markers for `c`. `va` and `vp` are attribute markers for
+ * `v`. `cat` is an attribute marker for `f`, `esb`, and more.
  *
  * Following is an example of using the `ca` and `cp` attribute markers in USFM:
  *
@@ -19,6 +19,7 @@
  * The equivalent in USX would be:
  *
  * ```xml
+ * <!-- prettier-ignore -->
  * <chapter number="1" style="c" altnumber="2" pubnumber="A" sid="GEN 1" />
  * <para style="s1">This is a section header</para>
  * ```
@@ -27,40 +28,41 @@ export type AttributeMarkerInfo = NormalMarkerInfo & {
   /**
    * List of normal marker names for which this marker is an attribute marker.
    *
-   * For example, `ca` and `cp` are attribute markers for `c`. `isAttributeMarkerFor` would be `['c']` for
-   * both `ca` and `cp`.
+   * For example, `ca` and `cp` are attribute markers for `c`. `isAttributeMarkerFor` would be
+   * `['c']` for both `ca` and `cp`.
    */
   isAttributeMarkerFor?: string[];
   /**
    * List of RegExp patterns matching marker names for which this marker is an attribute marker.
    *
-   * For example, pretend `ex1` and `ex2` are attribute markers for markers matching RegExp `/test/`.
-   * `isAttributeMarkerForRegExp` would be `['test']` for
-   * both `ex1` and `ex2`.
+   * For example, pretend `ex1` and `ex2` are attribute markers for markers matching RegExp
+   * `/test/`. `isAttributeMarkerForRegExp` would be `['test']` for both `ex1` and `ex2`.
    */
   isAttributeMarkerForRegExp?: string[];
   /**
    * The name of the USX/USJ attribute this attribute marker represents.
    *
-   * For example, `ca` is an attribute marker for `c` and represents the `altnumber` attribute on the `c`
-   * marker in USX/USJ. `attributeMarkerAttributeName` would be `altnumber` for the `ca` marker.
+   * For example, `ca` is an attribute marker for `c` and represents the `altnumber` attribute on
+   * the `c` marker in USX/USJ. `attributeMarkerAttributeName` would be `altnumber` for the `ca`
+   * marker.
    */
   attributeMarkerAttributeName: string;
   /**
-   * Whether there should be a structural space after the closing marker in output USFM if this marker is
-   * an attribute marker. If this marker is not an attribute marker, it should not have a structural space
-   * after the closing marker.
+   * Whether there should be a structural space after the closing marker in output USFM if this
+   * marker is an attribute marker. If this marker is not an attribute marker, it should not have a
+   * structural space after the closing marker.
    *
-   * This field should be ignored if {@link MarkersMap.isSpaceAfterAttributeMarkersContent}
-   * is `true` because this space is only supposed to be added in contexts in which the
-   * space here is structural. Otherwise we would be mistakenly adding content to the USFM.
+   * This field should be ignored if {@link MarkersMap.isSpaceAfterAttributeMarkersContent} is `true`
+   * because this space is only supposed to be added in contexts in which the space here is
+   * structural. Otherwise we would be mistakenly adding content to the USFM.
    *
-   * Note that, if {@link MarkersMap.isSpaceAfterAttributeMarkersContent} is `true` (which is the case
-   * according to spec), horizontal spaces after attribute markers are always considered structural. This
-   * property only indicates whether there should be a space after the attribute marker when outputting USFM.
+   * Note that, if {@link MarkersMap.isSpaceAfterAttributeMarkersContent} is `true` (which is the
+   * case according to spec), horizontal spaces after attribute markers are always considered
+   * structural. This property only indicates whether there should be a space after the attribute
+   * marker when outputting USFM.
    *
-   * For example, according to specification, the `va` and `vp` attribute markers have a space after their
-   * closing markers:
+   * For example, according to specification, the `va` and `vp` attribute markers have a space after
+   * their closing markers:
    *
    * ```usfm
    * \p \v 10 \va 10 va\va* \vp 10 vp\vp* Some verse text
@@ -68,8 +70,9 @@ export type AttributeMarkerInfo = NormalMarkerInfo & {
    *
    * The verse text in this example is just "Some verse text" without a space at the start.
    *
-   * However, when the `vp` marker is not an attribute marker, such as when it has markers in its contents,
-   * there should not be a structural space after the closing marker, and any space should be considered content:
+   * However, when the `vp` marker is not an attribute marker, such as when it has markers in its
+   * contents, there should not be a structural space after the closing marker, and any space should
+   * be considered content:
    *
    * ```usfm
    * \p \v 10 \va 10 va\va* \vp \+wj 10 vp\+wj*\vp* Some verse text.
@@ -91,12 +94,14 @@ export type AttributeMarkerInfo = NormalMarkerInfo & {
 };
 
 /**
- * Information about a regular USFM/USX/USJ marker. See {@link MarkerInfo} for other kinds of markers.
+ * Information about a regular USFM/USX/USJ marker. See {@link MarkerInfo} for other kinds of
+ * markers.
  */
 export type NormalMarkerInfo = {
   /**
-   * Which marker type the marker is. Determines how the marker is structured in the data such as what kind
-   * of mandatory whitespace is around the marker in USFM. See {@link MarkerTypeInfoBase} for information.
+   * Which marker type the marker is. Determines how the marker is structured in the data such as
+   * what kind of mandatory whitespace is around the marker in USFM. See {@link MarkerTypeInfoBase}
+   * for information.
    */
   type: string;
   /** Explanation of the meaning of this marker */
@@ -106,8 +111,8 @@ export type NormalMarkerInfo = {
    *
    * A marker can have a default attribute only if it has zero or one non-optional attributes.
    *
-   * An attribute can be provided with default syntax in the USFM only if it is the only attribute provided
-   * for the marker.
+   * An attribute can be provided with default syntax in the USFM only if it is the only attribute
+   * provided for the marker.
    *
    * Following is an example of a marker with a default attribute:
    *
@@ -115,7 +120,8 @@ export type NormalMarkerInfo = {
    * \w stuff|thisIsTheLemmaDefaultAttribute\w*
    * ```
    *
-   * Following is an example of a marker with multiple attributes (cannot use default attribute syntax):
+   * Following is an example of a marker with multiple attributes (cannot use default attribute
+   * syntax):
    *
    * ```usfm
    * \w stuff|lemma="thisIsTheLemma" strong="H1234,G1234"\w*
@@ -123,14 +129,14 @@ export type NormalMarkerInfo = {
    */
   defaultAttribute?: string;
   /**
-   * The name of the text content attribute that is present on this marker if this marker has text content
-   * in USFM.
+   * The name of the text content attribute that is present on this marker if this marker has text
+   * content in USFM.
    *
-   * Text content attributes are attributes in USX/USJ that are represented in USFM as the actual text
-   * content of the marker.
+   * Text content attributes are attributes in USX/USJ that are represented in USFM as the actual
+   * text content of the marker.
    *
-   * For example, `alt` is a text content attribute on the `periph` marker. This value would be `alt` for
-   * the `periph` marker.
+   * For example, `alt` is a text content attribute on the `periph` marker. This value would be
+   * `alt` for the `periph` marker.
    *
    * Following is an example of a `periph` marker in USFM:
    *
@@ -142,21 +148,22 @@ export type NormalMarkerInfo = {
    * The equivalent in USX would be:
    *
    * ```xml
-   * <periph alt="Title Page" id="title">
-   *  <para style="p">Some contents of the example peripheral</para>
+   * <!-- prettier-ignore -->
+   * <periph alt="Example Peripheral" id="x-example">
+   *   <para style="p">Some contents of the example peripheral</para>
    * </periph>
    * ```
    */
   textContentAttribute?: string;
   /**
-   * List of leading attributes that must be present on this marker. This list is ordered by the order in
-   * which the attributes should appear.
+   * List of leading attributes that must be present on this marker. This list is ordered by the
+   * order in which the attributes should appear.
    *
-   * Leading attributes are attributes in USJ/USX that are listed in USFM directly after the marker and
-   * separated only by a space.
+   * Leading attributes are attributes in USJ/USX that are listed in USFM directly after the marker
+   * and separated only by a space.
    *
-   * For example, `code` is a leading attribute on the `id` marker. This value would be `['code']` for the
-   * `id` marker.
+   * For example, `code` is a leading attribute on the `id` marker. This value would be `['code']`
+   * for the `id` marker.
    *
    * Following is an example of an `id` marker in USFM:
    *
@@ -167,46 +174,49 @@ export type NormalMarkerInfo = {
    * The equivalent in USX would be:
    *
    * ```xml
+   * <!-- prettier-ignore -->
    * <book code="MAT" style="id">41MATEX.SFM, Example Translation, September 2025</book>
    * ```
    */
   leadingAttributes?: string[];
   /**
-   * List of attribute markers that may be present on this marker. This list is ordered by the order in
-   * which the markers should appear.
+   * List of attribute markers that may be present on this marker. This list is ordered by the order
+   * in which the markers should appear.
    *
-   * An attribute marker is a marker that adds information to a previous marker in USFM and is an attribute
-   * on that previous marker in USX/USJ.
+   * An attribute marker is a marker that adds information to a previous marker in USFM and is an
+   * attribute on that previous marker in USX/USJ.
    *
-   * For example, `ca` and `cp` are attribute markers for `c`. This value would be `['ca', 'cp']` for `c`.
+   * For example, `ca` and `cp` are attribute markers for `c`. This value would be `['ca', 'cp']`
+   * for `c`.
    *
    * Note: the attribute names for attribute markers may be different than the marker names. See
    * {@link AttributeMarkerInfo.attributeMarkerAttributeName} for more information.
    */
   attributeMarkers?: string[];
   /**
-   * Whether the closing marker for this marker is considered optional in USFM. This should always be not
-   * present or `false` if there is no closing marker for the marker type of this marker.
+   * Whether the closing marker for this marker is considered optional in USFM. This should always
+   * be not present or `false` if there is no closing marker for the marker type of this marker.
    *
-   * If this is `false` and a closing marker for this marker in USFM is *not* present, the USX/USJ
+   * If this is `false` and a closing marker for this marker in USFM is _not_ present, the USX/USJ
    * for this marker should have the attribute `closed` set to `false`.
    *
-   * If this is `true`, the `closed` attribute should be present if the presence of a closing marker for
-   * this marker in USFM does not match the assumption implied by
+   * If this is `true`, the `closed` attribute should be present if the presence of a closing marker
+   * for this marker in USFM does not match the assumption implied by
    * {@link MarkersMap.shouldOptionalClosingMarkersBePresent}.
    *
    * If not present, defaults to `false`
    */
   isClosingMarkerOptional?: boolean;
   /**
-   * List of independent closing marker names for this marker in USFM if it has any. If this is defined,
-   * this marker does not have a normal closing marker but rather is closed by a completely separate marker
-   * in USFM. All contents between this marker and the independent closing marker are contents of this
-   * marker. In USX and USJ, this marker is closed normally like any other object because USX and USJ have
-   * clear hierarchical structure.
+   * List of independent closing marker names for this marker in USFM if it has any. If this is
+   * defined, this marker does not have a normal closing marker but rather is closed by a completely
+   * separate marker in USFM. All contents between this marker and the independent closing marker
+   * are contents of this marker. In USX and USJ, this marker is closed normally like any other
+   * object because USX and USJ have clear hierarchical structure.
    *
    * For example, `esb` (a sidebar) is closed by the independent closing marker `esbe`.
-   * `independentClosingMarkers` would be `['esbe']` for `esb`. Following is an example of a sidebar:
+   * `independentClosingMarkers` would be `['esbe']` for `esb`. Following is an example of a
+   * sidebar:
    *
    * ```usfm
    * \esb
@@ -215,67 +225,67 @@ export type NormalMarkerInfo = {
    * \esbe
    * ```
    *
-   * Note that the independent closing marker does not have a `*` at the end because it is not a closing
-   * marker for `esb` but rather a completely separate marker that closes the `esb` marker.
+   * Note that the independent closing marker does not have a `*` at the end because it is not a
+   * closing marker for `esb` but rather a completely separate marker that closes the `esb` marker.
    *
-   * When outputting to USFM, the first independent closing marker listed in this array should be used.
+   * When outputting to USFM, the first independent closing marker listed in this array should be
+   * used.
    */
   independentClosingMarkers?: string[];
   /**
    * List of marker names for which this marker is an independent closing marker. See
-   * {@link NormalMarkerInfo.independentClosingMarker} for more information on independent closing markers
-   * and their syntax.
+   * {@link NormalMarkerInfo.independentClosingMarker} for more information on independent closing
+   * markers and their syntax.
    *
-   * For example, `esbe` is an independent closing marker for `esb`. `isIndependentClosingMarkerFor` would
-   * be `['esb']` for `esbe`.
+   * For example, `esbe` is an independent closing marker for `esb`. `isIndependentClosingMarkerFor`
+   * would be `['esb']` for `esbe`.
    */
   isIndependentClosingMarkerFor?: string[];
   /**
-   * List of RegExp patterns matching marker names for which this marker is an independent closing marker.
-   * See {@link NormalMarkerInfo.independentClosingMarker} for more information on independent closing
-   * markers and their syntax.
+   * List of RegExp patterns matching marker names for which this marker is an independent closing
+   * marker. See {@link NormalMarkerInfo.independentClosingMarker} for more information on
+   * independent closing markers and their syntax.
    *
-   * For example, pretend `ex1` and `ex2` are independent closing markers for markers matching RegExp `/test/`.
-   * `isIndependentClosingMarkerForRegExp` would be `['test']` for both `ex1` and `ex2`.
+   * For example, pretend `ex1` and `ex2` are independent closing markers for markers matching
+   * RegExp `/test/`. `isIndependentClosingMarkerForRegExp` would be `['test']` for both `ex1` and
+   * `ex2`.
    */
   isIndependentClosingMarkerForRegExp?: string[];
 };
 
-/**
- * Information about a USFM/USX/USJ marker that is essential for proper translation between
- * formats
- */
+/** Information about a USFM/USX/USJ marker that is essential for proper translation between formats */
 export type MarkerInfo = NormalMarkerInfo | AttributeMarkerInfo;
 
 /**
- * Information about a USFM/USX/USJ marker type that does not have a closing marker. See {@link MarkerInfo}
- * for other kinds of marker types.
+ * Information about a USFM/USX/USJ marker type that does not have a closing marker. See
+ * {@link MarkerInfo} for other kinds of marker types.
  *
- * For example, `char` marker types such as `nd` markers have closing markers, but `para` markers such
- * as `p` do not:
+ * For example, `char` marker types such as `nd` markers have closing markers, but `para` markers
+ * such as `p` do not:
  *
  * ```usfm
  * \p This is a plain paragraph.
  * \p This is a paragraph \nd with some special text\nd* in it.
  * ```
  *
- * If the marker type has a closing marker but the closing marker is not present in the USFM for a marker
- * with this marker type, the USX/USJ for the marker will have the attribute `closed` set to `false` unless
- * {@link CloseableMarkerTypeInfo.isClosingMarkerOptional} is `true`.
+ * If the marker type has a closing marker but the closing marker is not present in the USFM for a
+ * marker with this marker type, the USX/USJ for the marker will have the attribute `closed` set to
+ * `false` unless {@link CloseableMarkerTypeInfo.isClosingMarkerOptional} is `true`.
  */
 export type CloseableMarkerTypeInfo = MarkerTypeInfoBase & {
   /**
-   * Whether markers of this type have a closing marker in USFM. This property concerns normal closing
-   * markers like `\wj*`, not independent closing markers like
+   * Whether markers of this type have a closing marker in USFM. This property concerns normal
+   * closing markers like `\wj*`, not independent closing markers like
    * {@link NormalMarkerInfo.independentClosingMarkers}, which are completely separate markers.
    *
    * If not present, defaults to `false`
    */
   hasClosingMarker: true;
   /**
-   * Whether the closing marker for markers of this type is "empty" in USFM, meaning the marker name is
-   * absent from the closing marker. This also means that there should not be a structural space between
-   * the opening and the closing markers in USFM if there are no attributes listed on the marker.
+   * Whether the closing marker for markers of this type is "empty" in USFM, meaning the marker name
+   * is absent from the closing marker. This also means that there should not be a structural space
+   * between the opening and the closing markers in USFM if there are no attributes listed on the
+   * marker.
    *
    * For example, markers of type `ms` (such as `qt1-s` and `qt1-e`) have an empty closing marker:
    *
@@ -285,9 +295,11 @@ export type CloseableMarkerTypeInfo = MarkerTypeInfoBase & {
    * \qt1-e\*
    * ```
    *
-   * The closing marker for `qt1-s` is `\*` as opposed to the closing marker for `nd` which is `\nd*`.
+   * The closing marker for `qt1-s` is `\*` as opposed to the closing marker for `nd` which is
+   * `\nd*`.
    *
-   * Note that there is still a structural space after the opening marker if there are attributes present:
+   * Note that there is still a structural space after the opening marker if there are attributes
+   * present:
    *
    * ```usfm
    * \qt1-s |Someone\*
@@ -301,20 +313,20 @@ export type CloseableMarkerTypeInfo = MarkerTypeInfoBase & {
 };
 
 /**
- * Information about a USFM/USX/USJ marker type that does not have a closing marker. See {@link MarkerInfo}
- * for other kinds of marker types.
+ * Information about a USFM/USX/USJ marker type that does not have a closing marker. See
+ * {@link MarkerInfo} for other kinds of marker types.
  *
- * For example, `char` marker types such as `nd` markers have closing markers, but `para` marker types such
- * as `p` do not:
+ * For example, `char` marker types such as `nd` markers have closing markers, but `para` marker
+ * types such as `p` do not:
  *
  * ```usfm
  * \p This is a plain paragraph.
  * \p This is a paragraph \nd with some special text\nd* in it.
  * ```
  *
- * If the marker type has a closing marker but the closing marker is not present in the USFM for a marker
- * with this marker type, the USX/USJ for the marker will have the attribute `closed` set to `false` unless
- * {@link CloseableMarkerTypeInfo.isClosingMarkerOptional} is `true`.
+ * If the marker type has a closing marker but the closing marker is not present in the USFM for a
+ * marker with this marker type, the USX/USJ for the marker will have the attribute `closed` set to
+ * `false` unless {@link CloseableMarkerTypeInfo.isClosingMarkerOptional} is `true`.
  */
 export type NonCloseableMarkerTypeInfo = MarkerTypeInfoBase & {
   /**
@@ -326,8 +338,8 @@ export type NonCloseableMarkerTypeInfo = MarkerTypeInfoBase & {
 };
 
 /**
- * Information about a USFM/USX/USJ marker type that is common to all marker types. See {@link MarkerTypeInfo}
- * for various kinds of marker types.
+ * Information about a USFM/USX/USJ marker type that is common to all marker types. See
+ * {@link MarkerTypeInfo} for various kinds of marker types.
  */
 export type MarkerTypeInfoBase = {
   /**
@@ -341,30 +353,32 @@ export type MarkerTypeInfoBase = {
   /**
    * List of attributes that should not be output to USFM on markers of this type.
    *
-   * This is used for attributes that are not present in USFM. For example, the `sid` attribute on the
-   * `verse` type marker is not present in USFM because it is derived metadata in USX/USJ and is not present in USFM.
+   * This is used for attributes that are not present in USFM. For example, the `sid` attribute on
+   * the `verse` type marker is not present in USFM because it is derived metadata in USX/USJ and is
+   * not present in USFM.
    *
    * This property is not used when converting to USX or USJ.
    */
   skipOutputAttributeToUsfm?: string[];
   /**
-   * List of attributes indicating whether to skip outputting this marker to USFM. If any of the listed
-   * attributes is present on the marker, skip outputting this marker when converting to USFM. Only skip
-   * outputting the opening and closing marker representations, though; the content inside the marker
-   * (if present) should not be skipped.
+   * List of attributes indicating whether to skip outputting this marker to USFM. If any of the
+   * listed attributes is present on the marker, skip outputting this marker when converting to
+   * USFM. Only skip outputting the opening and closing marker representations, though; the content
+   * inside the marker (if present) should not be skipped.
    *
-   * This is used for certain markers that sometimes are normal markers but sometimes are derived metadata
-   * and are not present in USFM. These derived metadata markers are all identified by whether they have
-   * specific attributes on them.
+   * This is used for certain markers that sometimes are normal markers but sometimes are derived
+   * metadata and are not present in USFM. These derived metadata markers are all identified by
+   * whether they have specific attributes on them.
    *
-   * For example, if the `verse` marker has an `eid` attribute, it indicates it is a marker denoting the
-   * end of the verse that is derived metadata in USX/USJ and is not present in USFM. Note that the `verse`
-   * marker does not have the `style="v"` attribute in this situation, so this list of attributes is on the
-   * marker type.
+   * For example, if the `verse` marker has an `eid` attribute, it indicates it is a marker denoting
+   * the end of the verse that is derived metadata in USX/USJ and is not present in USFM. Note that
+   * the `verse` marker does not have the `style="v"` attribute in this situation, so this list of
+   * attributes is on the marker type.
    *
    * Following is an example of a derived metadata `verse` marker in USX:
    *
    * ```xml
+   * <!-- prettier-ignore -->
    * <para style="p">
    *   <verse number="21" style="v" sid="2SA 1:21" />This is verse 21.<verse eid="2SA 1:21" />
    * </para>
@@ -385,6 +399,7 @@ export type MarkerTypeInfoBase = {
    * Following is an example of a generated `ref` in USX:
    *
    * ```xml
+   * <!-- prettier-ignore -->
    * <char style="xt"><ref loc="2SA 1:1" gen="true">2Sam 1:1</ref>; <ref loc="2SA 1:2-3">2Sam 1:2-3</ref>.</char>
    * ```
    *
@@ -398,25 +413,29 @@ export type MarkerTypeInfoBase = {
    */
   skipOutputMarkerToUsfmIfAttributeIsPresent?: string[];
   /**
-   * Whether markers of this type should have a newline ({@link MarkersMap.newlineSequence}) before them in USFM.
+   * Whether markers of this type should have a newline ({@link MarkersMap.newlineSequence}) before
+   * them in USFM.
    *
-   * For example, `para` marker types such as `p` should have a newline, but `char` marker types such as `nd`
-   * markers should not:
+   * For example, `para` marker types such as `p` should have a newline, but `char` marker types
+   * such as `nd` markers should not:
    *
    * ```usfm
    * \p This is a plain paragraph.
    * \p This is a paragraph \nd with some special text\nd* in it.
    * ```
    *
-   * Note that the newline is never strictly necessary, and it is not usually present if the very first marker
-   * in the file (or in examples such as this) should have a newline.
+   * Note that the newline is never strictly necessary, and it is not usually present if the very
+   * first marker in the file (or in examples such as this) should have a newline.
    *
    * If not present, defaults to `false`
    */
   hasNewlineBefore?: boolean;
 };
 
-/** Information about a USFM/USX/USJ marker type that is essential for proper translation between formats */
+/**
+ * Information about a USFM/USX/USJ marker type that is essential for proper translation between
+ * formats
+ */
 export type MarkerTypeInfo = CloseableMarkerTypeInfo | NonCloseableMarkerTypeInfo;
 
 /** A map of all USFM/USX/USJ markers and some information about them */
@@ -424,8 +443,9 @@ export type MarkersMap = {
   /** Which version of USFM/USX/USJ this map represents */
   version: string;
   /**
-   * Which commit this map came from. This is necessary because the schema file seems to be distributed
-   * multiple times in one release version. As such, this specifies the exact version of the schema file.
+   * Which commit this map came from. This is necessary because the schema file seems to be
+   * distributed multiple times in one release version. As such, this specifies the exact version of
+   * the schema file.
    */
   commit: string;
   /**
@@ -433,17 +453,19 @@ export type MarkersMap = {
    *
    * Contains the output from `git tag --points-at HEAD` or `git rev-parse HEAD`
    *
-   * Will also have a `+` at the end if there were working changes outside the `src/test-data` folder when
-   * this was generated.
+   * Will also have a `+` at the end if there were working changes outside the `src/test-data`
+   * folder when this was generated.
    */
   usfmToolsVersion: string;
   /**
-   * Whether any whitespace after attribute markers and before the next content is not just structural but
-   * should actually be considered part of the content of the marker.
+   * Whether any whitespace after attribute markers and before the next content is not just
+   * structural but should actually be considered part of the content of the marker.
    *
-   * According to specification, whitespace after attribute markers is not content but is just structural.
+   * According to specification, whitespace after attribute markers is not content but is just
+   * structural.
    *
-   * According to Paratext 9.4, whitespace after attribute markers is content and is not just structural.
+   * According to Paratext 9.4, whitespace after attribute markers is content and is not just
+   * structural.
    *
    * This setting determines which interpretation to use when converting from USFM to USX/USJ.
    *
@@ -451,28 +473,32 @@ export type MarkersMap = {
    */
   isSpaceAfterAttributeMarkersContent?: boolean;
   /**
-   * Whether markers with optional closing markers (see {@link NormalMarkerInfo.isClosingMarkerOptional})
-   * should still be explicitly closed in USFM. That is, whether markers with optional closing
-   * markers still need the `closed` attribute set to `"false"` in USX/USJ if the closing marker is not
-   * present in USFM.
-   * 
-   * In other words, this setting determines whether markers with optional closing markers should be
-   * assumed to be explicitly closed (meaning the closing marker is present in USFM) when transforming
-   * USX/USJ to USFM unless otherwise indicated by the `closed` attribute.
+   * Whether markers with optional closing markers (see
+   * {@link NormalMarkerInfo.isClosingMarkerOptional}) should still be explicitly closed in USFM.
+   * That is, whether markers with optional closing markers still need the `closed` attribute set to
+   * `"false"` in USX/USJ if the closing marker is not present in USFM.
    *
-   * If this is `true` (matches Paratext 9.4), markers with optional closing markers are treated like
-   * other markers in that they are assumed to be explicitly closed in USFM unless otherwise indicated:
+   * In other words, this setting determines whether markers with optional closing markers should be
+   * assumed to be explicitly closed (meaning the closing marker is present in USFM) when
+   * transforming USX/USJ to USFM unless otherwise indicated by the `closed` attribute.
+   *
+   * If this is `true` (matches Paratext 9.4), markers with optional closing markers are treated
+   * like other markers in that they are assumed to be explicitly closed in USFM unless otherwise
+   * indicated:
+   *
    * - If they are not explicitly closed in USFM, they should have `closed="false"`
    * - If they are explicitly closed in USFM, they do not need `closed="true"`
    *
-   * If this is `false` (matches specification), markers with optional closing markers are assumed not
-   * to be explicitly closed in USFM unless otherwise indicated:
+   * If this is `false` (matches specification), markers with optional closing markers are assumed
+   * not to be explicitly closed in USFM unless otherwise indicated:
+   *
    * - If they are not explicitly closed in USFM, they do not need `closed="false"`
    * - If they are explicitly closed in USFM, they should have `closed="true"`
+   *
    *   - Disclaimer: It is not clear that `closed="true"` should be present in this case according to
-   * `usx.rng`; it seems `usx.rng` indicates that optional closing markers should never be output to USFM.
-   * It is possible that `usx.rng` considers this to be a case where preserving the exact USFM is not
-   * important.
+   *       `usx.rng`; it seems `usx.rng` indicates that optional closing markers should never be
+   *       output to USFM. It is possible that `usx.rng` considers this to be a case where
+   *       preserving the exact USFM is not important.
    *
    * If not present, defaults to `false`.
    */
@@ -484,9 +510,10 @@ export type MarkersMap = {
    */
   markers: Record<string, MarkerInfo | undefined>;
   /**
-   * Map whose keys are string representations of `RegExp` patterns to match against marker names (using
-   * the [test](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) function)
-   * and whose values are information about that marker
+   * Map whose keys are string representations of `RegExp` patterns to match against marker names
+   * (using the
+   * [test](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test)
+   * function) and whose values are information about that marker
    *
    * You do not need to search this map if you found the marker name in the `markers` map.
    */
@@ -495,5 +522,8 @@ export type MarkersMap = {
   markerTypes: Record<string, MarkerTypeInfo | undefined>;
 };
 
-/** A map of all USFM/USX/USJ markers and some information about them. Generated from a `usx.rng` file */
+/**
+ * A map of all USFM/USX/USJ markers and some information about them. Generated from a `usx.rng`
+ * file
+ */
 export const USFM_MARKERS_MAP = '%USFM_MARKERS_MAP_REPLACE_ME%';

@@ -1,5 +1,6 @@
 # usfm-tools
-Scripts and utilities for transforming and preparing US* schemas for use in Platform.Bible and Paratext
+
+Scripts and utilities for transforming and preparing US\* schemas for use in Platform.Bible and Paratext
 
 ## Setup
 
@@ -17,11 +18,12 @@ npm i
 
 ## Generate Markers Map
 
-Generate the markers map by placing the USX RelaxNG Schema file `usx.rng` (download the file on a release branch - [`usx.rng` < 3.1](https://github.com/ubsicap/usx/blob/master/schema/usx.rng) or [`usx.rng` >= 3.1](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng)) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version> --commit <commit-hash>`. Note that the commit hash is the commit hash for the repo where you got `usx.rng`, *not* the commit hash of this repo.
+Generate the markers map by placing the USX RelaxNG Schema file `usx.rng` (download the file on a release branch - [`usx.rng` < 3.1](https://github.com/ubsicap/usx/blob/master/schema/usx.rng) or [`usx.rng` >= 3.1](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng)) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version> --commit <commit-hash>`. Note that the commit hash is the commit hash for the repo where you got `usx.rng`, _not_ the commit hash of this repo.
 
 See the release notes and planned changes for USFM versions [in the Roadmap](https://github.com/usfm-bible/tcdocs/blob/main/docs/USFMTC%20Roadmap.md).
 
 This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `dist/markers.json` and a TypeScript file `dist/markers-map.model.ts` that contain various information for each USFM marker name. `markers.json` will contain an object with:
+
 - information about the generated file (`version`, `commit`)
 - a `markers` property whose value is a map object
   - keys are the marker names
@@ -78,54 +80,56 @@ Following is a simplified example of what you might see in a `markers.json` file
     <summary>Expand to read about how the data in `usx.rng` is transformed into `markers.json`</summary>
 
 The marker names and information about those markers are derived from the `usx.rng` file. This schema file contains information about each valid USFM marker in the various `element` definitions (definition contents other than `element` likely have useful information but do not specifically contain markers):
+
 - The element's `name` is the marker type
 - The marker name comes from one of a number of places:
-    - The `style` attribute may contain the single marker name for that marker type
-    - The `style` attribute may contain a `choice` of all the marker names associated with that marker type
-    - The `style` attribute may contain a `ref` pointing to a `choice` of all the marker names associated with that marker type
-    - If there is not a `style` attribute, the element's `name` is the marker type and the marker name
+  - The `style` attribute may contain the single marker name for that marker type
+  - The `style` attribute may contain a `choice` of all the marker names associated with that marker type
+  - The `style` attribute may contain a `ref` pointing to a `choice` of all the marker names associated with that marker type
+  - If there is not a `style` attribute, the element's `name` is the marker type and the marker name
 - If the marker has a default attribute, it may come from one of two places
-    - The default attribute will be the value of the `usfm:propval` attribute on the `value` tag in the `style` attribute or in the enumeration.
-    - If there is no `usfm:propval` attribute on the `value` tag in the `style` attribute or there is no `style` attribute, the default attribute for a marker will be the first non-optional `attribute` `name` listed in the element other than the list below of attributes to skip or the first optional non-skipped `attribute` `name` if there are no non-optional non-skipped `attribute`s. There is only a default attribute if there are zero or one non-optional non-skipped `attribute`s.
-        - The following attributes should be skipped when determining which attribute is the default attribute:
-            - `version` and `noNamespaceSchemaLocation` on `usx` marker type
-              - `version` is the marker's text content in USFM (has `usfm:match` but not `match="TEXTNOTATTRIB"`. Special case). If this were not considered a `para`, it would be fine to consider it a leading attribute. But this is a `para`, so we will just confuse things if we consider it a leading attribute.
-              - `noNamespaceSchemaLocation` is part of XML spec and is not part of USFM (has `ns` populated on its `name` - is that a good indicator?)
-            - `code` on `book` marker type
-              - `code` is a leading attribute in USFM (has `usfm:match`)
-            - `alt` and `id` on `periph` marker type
-              - `alt` is the marker's text content in USFM (has `usfm:match match="TEXTNOTATTRIB"`)
-              - `id` seems to be an exception. There does not appear to be any particular reason why `id` should not be the default attribute, but it is not. (has `usfm:match` with `beforeout="&#x27;|id=&quot;&#x27;"` because it is hard-coded to be in the USFM and not default)
-            - `style` on any marker type (TODO: do all have `usfm:tag`/`usfm:ptag`? Anything else with `usfm:tag` or `ptag`? `esbe`(has text content), `cat` (attribute), `ref`(doesn't have text content))
-              - `sidebar` has `usfm:ptag` direct child with non-matching text content `esbe` which should be a new marker
-              - `ref` has `usfm:tag` direct child with no text content, so it shouldn't be a new marker
-              - `periph` and `optbreak` have `usfm:match` direct children, but these do not indicate a new marker. Just part of the marker itself
-            - TODO: all of `fig`'s "FigureTwo" deprecated syntax attributes have `usfm:match beforeout="|" match="TEXTNOTATTRIBOPT"`, but none of them are leading attributes or text content.
-            - `vid` on `para` and `table` marker types
-              - `vid` is derived metadata in USX/USJ and is not present in USFM (no obvious indication in `usx.rng`)
-            - `align` and `colspan` on `cell` marker type
-              - These are used in determining which table marker to use in USFM, but they are not paired well enough to the specific markers to do anything with at this time
-            - `number`, `altnumber`, `pubnumber`, `sid`, and `eid` on `chapter` marker type
-              - `number` is a leading attribute in USFM (has `usfm:match`)
-              - `altnumber` is transformed into the text content of a new `ca` marker in USFM (has `usfm:match beforeout="&#x27;\\ca &#x27;"`)
-              - `pubnumber` is transformed into the text content of a new `cp` marker in USFM (has `usfm:match beforeout="&#x27;\n\\cp &#x27;"`)
-              - `sid` is derived metadata in USX/USJ and is not present in USFM (no obvious indication in `usx.rng`)
-              - `eid` is derived metadata in USX/USJ and is not present in USFM. In fact, the `chapter` markers with `eid` is not present in USFM at all (`usfm:ignore="true"` is on the `ref` to `ChapterEnd` in `usx.rng`)
-            - `number`, `altnumber`, `pubnumber`, `sid`, and `eid` on `verse` marker type
-              - `number` is a leading attribute in USFM (has `usfm:match`)
-              - `altnumber` is transformed into the text content of a new `va` marker in USFM (has `usfm:tag` with `dump="true" beforeout="&#x27;\\va &#x27;"`)
-              - `pubnumber` is transformed into the text content of a new `vp` marker in USFM (has `usfm:tag` with `dump="true" beforeout="&#x27;\\vp &#x27;"`)
-              - `sid` is derived metadata in USX/USJ and is not present in USFM (`usfm:ignore="true"` in `usx.rng`)
-              - `eid` is derived metadata in USX/USJ and is not present in USFM. In fact, the `chapter` markers with `eid` is not present in USFM at all (`usfm:ignore="true"` is on the `ref` to `VerseEnd` in `usx.rng`)
-            - `caller` and `category` on `note` marker type
-              - `caller` is a leading attribute in USFM (has `usfm:match`)
-              - `category` is transformed into the text content of a new `cat` marker in USFM (has `usfm:tag` with `dump="true" beforeout="&#x27;\\cat &#x27;"`)
-                - TODO: `category` is in a `ref` and is not actually parsed right now
-            - `category` on `sidebar` marker type
-        - Exception: For `ms` marker types, `who` takes priority over other attributes if it is present.
-        - Exception: `ref` for some reason has `usfm:match` on both its attributes, `loc` and `gen`, though they are both normal attributes. `gen` has no representation in USFM, though, as it indicates the marker should be removed when transforming back to USFM. `loc` has `matchout="&#x27;|&#x27;"`, so I guess it could be differentiated from `periph`'s `id` by checking for more text after the |. `gen` has `usfm:match noout="true"`.
+  - The default attribute will be the value of the `usfm:propval` attribute on the `value` tag in the `style` attribute or in the enumeration.
+  - If there is no `usfm:propval` attribute on the `value` tag in the `style` attribute or there is no `style` attribute, the default attribute for a marker will be the first non-optional `attribute` `name` listed in the element other than the list below of attributes to skip or the first optional non-skipped `attribute` `name` if there are no non-optional non-skipped `attribute`s. There is only a default attribute if there are zero or one non-optional non-skipped `attribute`s.
+    - The following attributes should be skipped when determining which attribute is the default attribute:
+      - `version` and `noNamespaceSchemaLocation` on `usx` marker type
+        - `version` is the marker's text content in USFM (has `usfm:match` but not `match="TEXTNOTATTRIB"`. Special case). If this were not considered a `para`, it would be fine to consider it a leading attribute. But this is a `para`, so we will just confuse things if we consider it a leading attribute.
+        - `noNamespaceSchemaLocation` is part of XML spec and is not part of USFM (has `ns` populated on its `name` - is that a good indicator?)
+      - `code` on `book` marker type
+        - `code` is a leading attribute in USFM (has `usfm:match`)
+      - `alt` and `id` on `periph` marker type
+        - `alt` is the marker's text content in USFM (has `usfm:match match="TEXTNOTATTRIB"`)
+        - `id` seems to be an exception. There does not appear to be any particular reason why `id` should not be the default attribute, but it is not. (has `usfm:match` with `beforeout="&#x27;|id=&quot;&#x27;"` because it is hard-coded to be in the USFM and not default)
+      - `style` on any marker type (TODO: do all have `usfm:tag`/`usfm:ptag`? Anything else with `usfm:tag` or `ptag`? `esbe`(has text content), `cat` (attribute), `ref`(doesn't have text content))
+        - `sidebar` has `usfm:ptag` direct child with non-matching text content `esbe` which should be a new marker
+        - `ref` has `usfm:tag` direct child with no text content, so it shouldn't be a new marker
+        - `periph` and `optbreak` have `usfm:match` direct children, but these do not indicate a new marker. Just part of the marker itself
+      - TODO: all of `fig`'s "FigureTwo" deprecated syntax attributes have `usfm:match beforeout="|" match="TEXTNOTATTRIBOPT"`, but none of them are leading attributes or text content.
+      - `vid` on `para` and `table` marker types
+        - `vid` is derived metadata in USX/USJ and is not present in USFM (no obvious indication in `usx.rng`)
+      - `align` and `colspan` on `cell` marker type
+        - These are used in determining which table marker to use in USFM, but they are not paired well enough to the specific markers to do anything with at this time
+      - `number`, `altnumber`, `pubnumber`, `sid`, and `eid` on `chapter` marker type
+        - `number` is a leading attribute in USFM (has `usfm:match`)
+        - `altnumber` is transformed into the text content of a new `ca` marker in USFM (has `usfm:match beforeout="&#x27;\\ca &#x27;"`)
+        - `pubnumber` is transformed into the text content of a new `cp` marker in USFM (has `usfm:match beforeout="&#x27;\n\\cp &#x27;"`)
+        - `sid` is derived metadata in USX/USJ and is not present in USFM (no obvious indication in `usx.rng`)
+        - `eid` is derived metadata in USX/USJ and is not present in USFM. In fact, the `chapter` markers with `eid` is not present in USFM at all (`usfm:ignore="true"` is on the `ref` to `ChapterEnd` in `usx.rng`)
+      - `number`, `altnumber`, `pubnumber`, `sid`, and `eid` on `verse` marker type
+        - `number` is a leading attribute in USFM (has `usfm:match`)
+        - `altnumber` is transformed into the text content of a new `va` marker in USFM (has `usfm:tag` with `dump="true" beforeout="&#x27;\\va &#x27;"`)
+        - `pubnumber` is transformed into the text content of a new `vp` marker in USFM (has `usfm:tag` with `dump="true" beforeout="&#x27;\\vp &#x27;"`)
+        - `sid` is derived metadata in USX/USJ and is not present in USFM (`usfm:ignore="true"` in `usx.rng`)
+        - `eid` is derived metadata in USX/USJ and is not present in USFM. In fact, the `chapter` markers with `eid` is not present in USFM at all (`usfm:ignore="true"` is on the `ref` to `VerseEnd` in `usx.rng`)
+      - `caller` and `category` on `note` marker type
+        - `caller` is a leading attribute in USFM (has `usfm:match`)
+        - `category` is transformed into the text content of a new `cat` marker in USFM (has `usfm:tag` with `dump="true" beforeout="&#x27;\\cat &#x27;"`)
+          - TODO: `category` is in a `ref` and is not actually parsed right now
+      - `category` on `sidebar` marker type
+    - Exception: For `ms` marker types, `who` takes priority over other attributes if it is present.
+    - Exception: `ref` for some reason has `usfm:match` on both its attributes, `loc` and `gen`, though they are both normal attributes. `gen` has no representation in USFM, though, as it indicates the marker should be removed when transforming back to USFM. `loc` has `matchout="&#x27;|&#x27;"`, so I guess it could be differentiated from `periph`'s `id` by checking for more text after the |. `gen` has `usfm:match noout="true"`.
 
 TODO: Improve wording/list exception cases we don't deal with right now
+
 - `closed` attribute is just gonna be an exception for now: you have to know not to put the closing tag if `closed="false"`
   - also not listing `closed` tag in `skipOutputAttributeToUsfm` because it is always skipped you do something special with it anyway
 - Derived metadata is also gonna be an exception; we aren't going to factor those in right now.
@@ -143,6 +147,7 @@ TODO: Improve wording/list exception cases we don't deal with right now
 - `usfm` marker must be after `id`, but `id` is in `usx` and `USJ` contents
 
 TODO: adjust README based on new changes
+
 - Skip the definition if all `ref`s pointing to it are pointing to it via `usfm:alt` attribute instead of `name` (`FigureTwo`)
 - [markerType] note when the marker shouldn't have a `style` attribute
   - If the element has no `style` attribute, the marker shouldn't either.
@@ -165,7 +170,7 @@ TODO: adjust README based on new changes
   - Do not consider for any special attribute things if it is marked to skip output to USFM because all the special attribute things are related to output to USFM
   - Do not consider for default attribute or special attributes if any `usfm:match` with `beforeout` containing `|<attribute-name>=`. This is here to prevent `id` on `periph` from being default even though it reasonably should be
 - [marker] attribute markers - `ca`, `cp`, `va`, `vp`, `cat`
-  - One `usfm:match` or `usfm:tag` or `usfm:ptag` with  `beforeout` `\\__`
+  - One `usfm:match` or `usfm:tag` or `usfm:ptag` with `beforeout` `\\__`
     - Special case: `version` on `usx` is not an attribute marker (once this script can handle replacement markers, this won't need to be a special case)
   - get marker name from `beforeout`
   - `afterout` will have a space after the marker name like `\\__ ` if there should be a space in the canonical output USFM
@@ -199,6 +204,7 @@ TODO: adjust README based on new changes
 - [marker] comments
 
 TODO: incorporate changes
+
 - Figure out a way to get this to where you can work on the rest of the code
 - Transform 3.1 to 3.0 somehow?
 - Milestones don't have a space after the opening marker if there are no attributes
@@ -215,7 +221,7 @@ TODO: incorporate changes
 - [markerType] note which types should set book, chapter, and verse when tracking verse ref? It's literally just `book`, `chapter`, and `verse`.
 - Extra work later?
   - Do we need to keep track of whether a nested marker that closes has `+` on its markers? Probably, but maybe the plus is on the style in USX
-    - Paratext 9.4 fails to nest markers without the `+`. It doesn't put anything particular if the `+` is present. I guess that means we might just need to track if `+` is present for 
+    - Paratext 9.4 fails to nest markers without the `+`. It doesn't put anything particular if the `+` is present. I guess that means we might just need to track if `+` is present for
   - `cl` and `esbe` both specify `afterout="&#x27;\n&#x27;"` meaning a newline after them. But it seems to get reduced with newlines that come before the stuff after, so I dunno if we really need this. Maybe test P9 putting stuff after these markers and see what happens
     - `book` marker type also has a `usfm:match` in it with `matchout="&#x27;\n&#x27;"`. Thinking this indicates it is a block-level marker, but it's weird because this may be the only one like this. All other block-level markers have `usfm:ptag`. But `id` is always the first line of the file. How should we track this?
     - Actually, it seems `hasNewlineBefore` doesn't line up with block-level marker types for `periph` or `verse` (optional newline) either. Maybe block-level should be its own property on marker types.
@@ -224,6 +230,7 @@ TODO: incorporate changes
     - Probably doesn't matter for our needs because, if a marker is empty, it won't have `contents`. You can tell if there should be a closing marker (like milestones) from other things.
 
 There are also some markers that are not necessarily listed in `usx.rng` but need to be present in `markers.json`:
+
 - [`cat`](https://docs.usfm.bible/usfm/3.1/cat/cat.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
 - [`ca`](https://docs.usfm.bible/usfm/3.1/cv/ca.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
 - [`cp`](https://docs.usfm.bible/usfm/3.1/cv/cp.html) with marker type `para` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
@@ -231,13 +238,12 @@ There are also some markers that are not necessarily listed in `usx.rng` but nee
 - [`vp`](https://docs.usfm.bible/usfm/3.1/cv/vp.html) with marker type `char` and no default attribute. This marker is present in USFM but is an attribute in USX and USJ
 - [`usfm`](https://docs.usfm.bible/usfm/3.1/doc/usfm.html) with marker type `para` and no default attribute. This marker is present in USFM but most of the time is translated into the `usx` marker in USX and the `USJ` marker in USJ
   - Note that `usfm` is a special `para` in that its text content is considered to be `version`, which gets translated to `usx` and `USJ` as an attribute.
-- [`USJ`](https://docs.usfm.bible/usfm/3.1/doc/usfm.html) with marker type `USJ` and no default attribute. This marker is present in USJ but is translated into the `usx` marker in USX` and the `usfm` marker in USFM.
+- [`USJ`](https://docs.usfm.bible/usfm/3.1/doc/usfm.html) with marker type `USJ` and no default attribute. This marker is present in USJ but is translated into the `usx` marker in `USX` and the `usfm` marker in USFM.
 - [`esbe`](https://docs.usfm.bible/usfm/3.1/sbar/esb.html) with marker type `sidebar` and no default attribute. This marker is present in USFM but is a closing tag for `sidebar` in USX
 
 Note: `fig` has an attribute that changes names: in USFM, it is `src`; in USX and USJ, it is `file`.
 
 The definitions `ChapterEnd` and `VerseEnd` need to be skipped as they are not relevant to this map.
-
 
 Following is a snippet from the schema that is an example of one marker name and marker type:
 
@@ -272,11 +278,11 @@ Generating the marker map from only this snippet would result in the following:
 
 ```json
 {
-    "markers": {
-        "id": {
-            "type": "book"
-        }
+  "markers": {
+    "id": {
+      "type": "book"
     }
+  }
 }
 ```
 
@@ -310,17 +316,17 @@ Generating the marker map from only this snippet would result in the following:
 
 ```json
 {
-    "markers": {
-        "f": {
-            "type": "note"
-        },
-        "fe": {
-            "type": "note"
-        },
-        "ef": {
-            "type": "note"
-        }
+  "markers": {
+    "f": {
+      "type": "note"
+    },
+    "fe": {
+      "type": "note"
+    },
+    "ef": {
+      "type": "note"
     }
+  }
 }
 ```
 
@@ -369,26 +375,26 @@ Generating the marker map from only this snippet would result in the following:
 
 ```json
 {
-    "markers": {
-        "mt1": {
-            "type": "para"
-        },
-        "mt2": {
-            "type": "para"
-        },
-        "mt3": {
-            "type": "para"
-        },
-        "mt4": {
-            "type": "para"
-        },
-        "mt": {
-            "type": "para"
-        },
-        "rem": {
-            "type": "para"
-        }
+  "markers": {
+    "mt1": {
+      "type": "para"
+    },
+    "mt2": {
+      "type": "para"
+    },
+    "mt3": {
+      "type": "para"
+    },
+    "mt4": {
+      "type": "para"
+    },
+    "mt": {
+      "type": "para"
+    },
+    "rem": {
+      "type": "para"
     }
+  }
 }
 ```
 
@@ -431,43 +437,43 @@ Generating the marker map from only this snippet would result in the following:
 
 ```json
 {
-    "markers": {
-        "ts-s": {
-            "type": "ms",
-            "defaultAttribute": "sid"
-        },
-        "ts-e": {
-            "type": "ms",
-            "defaultAttribute": "eid"
-        },
-        "ts": {
-            "type": "ms"
-        },
-        "t-s": {
-            "type": "ms",
-            "defaultAttribute": "sid"
-        },
-        "t-e": {
-            "type": "ms",
-            "defaultAttribute": "eid"
-        },
-        "qt1-s": {
-            "type": "ms",
-            "defaultAttribute": "who"
-        },
-        "qt1-e": {
-            "type": "ms",
-            "defaultAttribute": "eid"
-        },
-        "qt2-s": {
-            "type": "ms",
-            "defaultAttribute": "who"
-        },
-        "qt2-e": {
-            "type": "ms",
-            "defaultAttribute": "eid"
-        }
+  "markers": {
+    "ts-s": {
+      "type": "ms",
+      "defaultAttribute": "sid"
+    },
+    "ts-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "ts": {
+      "type": "ms"
+    },
+    "t-s": {
+      "type": "ms",
+      "defaultAttribute": "sid"
+    },
+    "t-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt1-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt1-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt2-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt2-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
     }
+  }
 }
 ```
 
@@ -513,12 +519,12 @@ Generating the marker map from only this snippet would result in the following:
 
 ```json
 {
-    "markers": {
-        "ref": {
-            "type": "ref",
-            "defaultAttribute": "loc"
-        }
+  "markers": {
+    "ref": {
+      "type": "ref",
+      "defaultAttribute": "loc"
     }
+  }
 }
 ```
 
@@ -567,11 +573,11 @@ Generating the marker map from only this snippet would result in the following:
 
 ```json
 {
-    "markersRegExp": {
-      "t[hc][rc]?\d+(-\d+)?": {
-        "type": "cell"
-      }
+  "markersRegExp": {
+    "t[hc][rc]?\d+(-\d+)?": {
+      "type": "cell"
     }
+  }
 }
 ```
 

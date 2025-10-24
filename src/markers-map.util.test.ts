@@ -14,12 +14,16 @@ const testDataPath = path.resolve(dirPath, 'test-data');
 // #region load test data files
 
 /**
- * Regular expression to extract the console log and skipped definitions from the stdout test data files
+ * Regular expression to extract the console log and skipped definitions from the stdout test data
+ * files
  *
- * (?:>.*\n)+ gets past the npm logs like > npm run generate-markers-map ...
- * \n((?:.*\n)+) captures the console log output
- * Skipped definitions:\n matches the literal text
- * ((?:.*\n)+) captures the skipped definitions list
+ * `(?:>.*\n)+` gets past the npm logs like > npm run generate-markers-map ...
+ *
+ * `\n((?:.*\n)+)` captures the console log output
+ *
+ * `Skipped definitions:\n` matches the literal text
+ *
+ * `((?:.*\n)+)` captures the skipped definitions list
  */
 const STDOUT_REGEXP =
   /(?:>.*\n)+\n((?:.*\n)+)Generated markers.json successfully\n\nSkipped definitions:\n((?:.*\n)+)/;

@@ -16,6 +16,7 @@ const OBJECT_TYPE_MARKER_TYPE = 'Marker type';
  * marker.
  *
  * Matches:
+ *
  * - 0: the whole string
  * - 1: `\n` if there is one before the marker; `undefined` otherwise
  * - 2: the marker name
@@ -138,7 +139,9 @@ function getFirstChildWithTagName(element: Element, tagName: string, defineName:
 }
 
 /**
- * Helper function to get an element's name from either its attribute or its direct child name element
+ * Helper function to get an element's name from either its attribute or its direct child name
+ * element
+ *
  * @param element The element to get the name from
  * @param defineName The name of the definition containing the element (for error messages)
  * @returns The element name or undefined if not found
@@ -179,12 +182,12 @@ function getDefineElementForRef(
 /**
  * Log an error that something went wrong while merging two objects
  *
- * @param objectType type of object e.g. "marker"
- * @param objectName name of object e.g. "esb"
- * @param propertyName name of property that had the conflict e.g. "default attribute"
- * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
- * @param existingValue existing property value
- * @param newValue new property value that is causing the conflict
+ * @param objectType Type of object e.g. "marker"
+ * @param objectName Name of object e.g. "esb"
+ * @param propertyName Name of property that had the conflict e.g. "default attribute"
+ * @param defineName Name of `define` tag that is the source of this object e.g. "Sidebar"
+ * @param existingValue Existing property value
+ * @param newValue New property value that is causing the conflict
  */
 function logObjectMergeConflictError(
   objectType: string,
@@ -201,15 +204,15 @@ function logObjectMergeConflictError(
 }
 
 /**
- * Log a warning while merging two objects that one object had a property and the other did not and that
- * the merge will use the present property value
+ * Log a warning while merging two objects that one object had a property and the other did not and
+ * that the merge will use the present property value
  *
- * @param objectType type of object e.g. "marker"
- * @param objectName name of object e.g. "esb"
- * @param propertyName name of property that had the conflict e.g. "default attribute"
- * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
- * @param existingValue existing property value
- * @param newValue new value for the property
+ * @param objectType Type of object e.g. "marker"
+ * @param objectName Name of object e.g. "esb"
+ * @param propertyName Name of property that had the conflict e.g. "default attribute"
+ * @param defineName Name of `define` tag that is the source of this object e.g. "Sidebar"
+ * @param existingValue Existing property value
+ * @param newValue New value for the property
  */
 function logObjectUseOnePropertyWarning(
   objectType: string,
@@ -233,12 +236,12 @@ function logObjectUseOnePropertyWarning(
  *
  * This confirms that the strings can be merged using `{ ...a, ...b }` without conflicts.
  *
- * @param objectType type of object e.g. "marker"
- * @param objectName name of object e.g. "esb"
- * @param propertyName name of property that is being merged e.g. "default attribute"
- * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
- * @param existingString existing string
- * @param newString new string to merge into the existing string
+ * @param objectType Type of object e.g. "marker"
+ * @param objectName Name of object e.g. "esb"
+ * @param propertyName Name of property that is being merged e.g. "default attribute"
+ * @param defineName Name of `define` tag that is the source of this object e.g. "Sidebar"
+ * @param existingString Existing string
+ * @param newString New string to merge into the existing string
  */
 function verifyStringsCanBeMerged(
   objectType: string,
@@ -277,16 +280,16 @@ function verifyStringsCanBeMerged(
 /**
  * Merge two strings, deduplicating and concatenating the strings with `\n` between.
  *
- *
- * @param objectType type of object e.g. "marker"
- * @param objectName name of object e.g. "esb"
- * @param propertyName name of property that is being merged e.g. "default attribute"
- * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
- * @param existingString existing string
- * @param newString new string to merge into the existing string
- * @param shouldWarn `true` if we should warn if only one string is defined or if both strings are defined and get combined
- * @returns string consisting of both passed in strings concatenated or `undefined` if there was no
- * string passed in
+ * @param objectType Type of object e.g. "marker"
+ * @param objectName Name of object e.g. "esb"
+ * @param propertyName Name of property that is being merged e.g. "default attribute"
+ * @param defineName Name of `define` tag that is the source of this object e.g. "Sidebar"
+ * @param existingString Existing string
+ * @param newString New string to merge into the existing string
+ * @param shouldWarn `true` if we should warn if only one string is defined or if both strings are
+ *   defined and get combined
+ * @returns String consisting of both passed in strings concatenated or `undefined` if there was no
+ *   string passed in
  */
 function mergeStrings(
   objectType: string,
@@ -336,13 +339,13 @@ function mergeStrings(
  * Merge two arrays, combining and deduplicating contents. Returns a new array if the merge changed
  * anything; does not modify the original arrays
  *
- * @param objectType type of object e.g. "marker"
- * @param objectName name of object e.g. "esb"
- * @param propertyName name of property that is being merged e.g. "default attribute"
- * @param defineName name of `define` tag that is the source of this object e.g. "Sidebar"
- * @param existingArray existing array
- * @param newArray new array to merge into the existing array
- * @returns array with merged contents or `undefined` if there was no array
+ * @param objectType Type of object e.g. "marker"
+ * @param objectName Name of object e.g. "esb"
+ * @param propertyName Name of property that is being merged e.g. "default attribute"
+ * @param defineName Name of `define` tag that is the source of this object e.g. "Sidebar"
+ * @param existingArray Existing array
+ * @param newArray New array to merge into the existing array
+ * @returns Array with merged contents or `undefined` if there was no array
  */
 function mergeArrays<T>(
   objectType: string,
@@ -388,13 +391,14 @@ function mergeArrays<T>(
 }
 
 /**
- * Verify that two markers with the same name are similar enough that they can merge, then merge them
+ * Verify that two markers with the same name are similar enough that they can merge, then merge
+ * them
  *
  * @param markerA Existing marker info
  * @param markerB New marker info
  * @param markerName Name of marker being compared (for error messages)
  * @param defineName Name of definition adding the new marker (for error messages)
- * @returns merged marker info with markerA properties combined with markerB properties
+ * @returns Merged marker info with markerA properties combined with markerB properties
  */
 function mergeMarkers(
   markerA: MarkerInfo | undefined,
@@ -575,13 +579,14 @@ function mergeMarkers(
 }
 
 /**
- * Verify that two marker types with the same name are similar enough that they can merge, then merge them
+ * Verify that two marker types with the same name are similar enough that they can merge, then
+ * merge them
  *
  * @param markerTypeA Existing marker type info
  * @param markerTypeB New marker type info
  * @param markerTypeName Name of marker type being compared (for error messages)
  * @param defineName Name of definition adding the new marker type (for error messages)
- * @returns merged marker type info with markerTypeA properties combined with markerTypeB properties
+ * @returns Merged marker type info with markerTypeA properties combined with markerTypeB properties
  */
 function mergeMarkerTypes(
   markerTypeA: MarkerTypeInfo | undefined,
@@ -687,21 +692,21 @@ function mergeMarkerTypes(
 // #region processing usx.rng data
 
 /**
- * Create a list of all USFM-style (not XML) attributes for the marker an element represents. Also gather
- * some information about those attributes.
+ * Create a list of all USFM-style (not XML) attributes for the marker an element represents. Also
+ * gather some information about those attributes.
  *
  * These attributes are children of the element and attributes found in refs in the element.
  *
- * The information returned alongside the attributes in this function is only the information about attributes
- * that is gathered differently based on if the attribute is a child of the element or if the attribute is
- * found through a ref in the element. Plus some derived data that will also be used to determine information
- * that is gathered the same way for all attributes.
+ * The information returned alongside the attributes in this function is only the information about
+ * attributes that is gathered differently based on if the attribute is a child of the element or if
+ * the attribute is found through a ref in the element. Plus some derived data that will also be
+ * used to determine information that is gathered the same way for all attributes.
  *
- * @param element the XML element that represents the marker being processed
- * @param markerType type of the marker being processed
+ * @param element The XML element that represents the marker being processed
+ * @param markerType Type of the marker being processed
  * @param defineElements The collection of all define elements (for reference lookups)
  * @param defineName Name of `define` containing this `element` (for error messages)
- * @returns array of objects containing the attribute and some info about that attribute
+ * @returns Array of objects containing the attribute and some info about that attribute
  */
 function collectAttributesForElement(
   element: Element,
@@ -854,16 +859,16 @@ function collectAttributesForElement(
 /**
  * Determine if the XML element indicates that the marker type has a newline before it in USFM.
  *
- * This XML element may be a `style` attribute, an `element` element representing a marker
- * type, or a "`usfm:tag`-like" element (`usfm:tag`, `usfm:ptag`, `usfm:match`)
+ * This XML element may be a `style` attribute, an `element` element representing a marker type, or
+ * a "`usfm:tag`-like" element (`usfm:tag`, `usfm:ptag`, `usfm:match`)
  *
  * @param element XML element to check
- * @param elementType what kind of element this is (for logging)
- * @param markerType which marker type this is (for logging)
+ * @param elementType What kind of element this is (for logging)
+ * @param markerType Which marker type this is (for logging)
  * @param defineName Name of `define` containing this XML element (for error messages)
- * @returns `true` if the element indicates the marker type has a newline before it in USFM,
- * `false` if the element indicates the marker type does not have a newline before it in USFM,
- * and `undefined` if the element doesn't have any indication either way.
+ * @returns `true` if the element indicates the marker type has a newline before it in USFM, `false`
+ *   if the element indicates the marker type does not have a newline before it in USFM, and
+ *   `undefined` if the element doesn't have any indication either way.
  */
 function determineHasNewlineBeforeForElement(
   element: Element,
@@ -911,8 +916,8 @@ function determineHasNewlineBeforeForElement(
 /**
  * Get the `usfm:endtag` element associated with a marker type `element` if one exists.
  *
- * @param element marker type `element`
- * @param markerType which marker type this is (for logging)
+ * @param element Marker type `element`
+ * @param markerType Which marker type this is (for logging)
  * @param defineName Name of `define` containing this XML element (for error messages)
  * @returns `usfm:endtag` element for this marker type `element` or `undefined` if one was not found
  */
@@ -986,11 +991,11 @@ function getUsfmEndTagForElement(element: Element, markerType: string, defineNam
  * @param defineElements The collection of all define elements (for reference lookups)
  * @param markersMap The markers map to populate
  * @param skippedDefinitions Set to populate with names of definitions that were skipped
- * @param skipOutputMarkerToUsfmDefineNames array of names of `define` elements whose marker
- * definitions describe markers that should not be exported to USFM (e.g. which attributes
- * indicate that the marker should not be exported to USFM)
- * @param isVersion3_1OrHigher whether the `usx.rng` file is from 3.1+. 3.1+ has much more
- * information that we can use
+ * @param skipOutputMarkerToUsfmDefineNames Array of names of `define` elements whose marker
+ *   definitions describe markers that should not be exported to USFM (e.g. which attributes
+ *   indicate that the marker should not be exported to USFM)
+ * @param isVersion3_1OrHigher Whether the `usx.rng` file is from 3.1+. 3.1+ has much more
+ *   information that we can use
  */
 function processDefineElement(
   defineElement: Element,
@@ -1645,7 +1650,8 @@ function processDefineElement(
         if (markerNamesToAdd.length > 0)
           independentClosingMarkerExtraInfo.isIndependentClosingMarkerFor = markerNamesToAdd;
         if (markerNamesToAddRegExp.length > 0)
-          independentClosingMarkerExtraInfo.isIndependentClosingMarkerForRegExp = markerNamesToAddRegExp;
+          independentClosingMarkerExtraInfo.isIndependentClosingMarkerForRegExp =
+            markerNamesToAddRegExp;
 
         const updatedMarkerInfo =
           Object.keys(independentClosingMarkerExtraInfo).length > 0
@@ -1711,8 +1717,8 @@ function processDefineElement(
  * @param usxSchema USX RelaxNG schema
  * @param version Which USX version this schema represents
  * @param commit Commit hash of the USX schema file
- * @param skippedDefinitions Optional set to populate with names of definitions that did not result in
- * adding any markers to the map. This Set is transformed in place and is not returned
+ * @param skippedDefinitions Optional set to populate with names of definitions that did not result
+ *   in adding any markers to the map. This Set is transformed in place and is not returned
  * @returns The generated markers map
  */
 export function transformUsxSchemaToMarkersMap(
