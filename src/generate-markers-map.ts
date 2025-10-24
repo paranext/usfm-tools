@@ -110,8 +110,8 @@ import { execCommand } from './command-line.util';
     const markersMapModelPath = path.resolve(__dirname, 'markers-map.model.template.ts');
     const markersMapModelContent = fs.readFileSync(markersMapModelPath, 'utf-8');
     const updatedMarkersMapModelContent = markersMapModelContent.replace(
-      " = '%USFM_MARKERS_MAP_REPLACE_ME%'",
-      `: MarkersMap = ${JSON.stringify(markersMap, null, 2)}`
+      "JSON.parse('%USFM_MARKERS_MAP_REPLACE_ME%')",
+      `${JSON.stringify(markersMap, null, 2)}`
     );
     fs.writeFileSync('dist/markers-map.model.ts', updatedMarkersMapModelContent, 'utf-8');
 

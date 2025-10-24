@@ -522,8 +522,39 @@ export type MarkersMap = {
   markerTypes: Record<string, MarkerTypeInfo | undefined>;
 };
 
+// This function should safely freeze anything, but TypeScript doesn't understand.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function deepFreeze(o: any) {
+  Object.freeze(o);
+  if (o === undefined || o === null) {
+    return o;
+  }
+
+  Object.getOwnPropertyNames(o).forEach(function (prop) {
+    if (
+      o[prop] !== null &&
+      (typeof o[prop] === 'object' || typeof o[prop] === 'function') &&
+      !Object.isFrozen(o[prop])
+    ) {
+      deepFreeze(o[prop]);
+    }
+  });
+
+  return o;
+}
+
 /**
  * A map of all USFM/USX/USJ markers and some information about them. Generated from a `usx.rng`
  * file
  */
-export const USFM_MARKERS_MAP = '%USFM_MARKERS_MAP_REPLACE_ME%';
+export const USFM_MARKERS_MAP: MarkersMap = deepFreeze(JSON.parse('%USFM_MARKERS_MAP_REPLACE_ME%'));
+
+/**
+ * A map of all USFM/USX/USJ markers and some information about them. Generated from a `usx.rng`
+ * file and adjusted to reflect the way Paratext handles USFM.
+ */
+export const USFM_MARKERS_MAP_PARATEXT = Object.freeze({
+  ...USFM_MARKERS_MAP,
+  isSpaceAfterAttributeMarkersContent: true,
+  shouldOptionalClosingMarkersBePresent: true,
+});
