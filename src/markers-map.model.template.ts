@@ -449,6 +449,11 @@ export type MarkersMap = {
    */
   commit: string;
   /**
+   * Which version of the markers map types this markers map conforms to. Follows [Semantic
+   * versioning](https://semver.org/); the same major version contains no breaking changes.
+   */
+  markersMapVersion: `1.${number}.${number}${string}`;
+  /**
    * Which tag or commit of `usfm-tools` repo this map is generated from.
    *
    * Contains the output from `git tag --points-at HEAD` or `git rev-parse HEAD`
@@ -526,12 +531,16 @@ export type MarkersMap = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function deepFreeze(o: any) {
   Object.freeze(o);
+  // Don't want to crash out on null
+  // eslint-disable-next-line no-null/no-null
   if (o === undefined || o === null) {
     return o;
   }
 
-  Object.getOwnPropertyNames(o).forEach(function (prop) {
+  Object.getOwnPropertyNames(o).forEach(function freezeProperty(prop) {
     if (
+      // Need to make sure to avoid null, which is an object type
+      // eslint-disable-next-line no-null/no-null
       o[prop] !== null &&
       (typeof o[prop] === 'object' || typeof o[prop] === 'function') &&
       !Object.isFrozen(o[prop])
@@ -553,7 +562,7 @@ export const USFM_MARKERS_MAP: MarkersMap = deepFreeze(JSON.parse('%USFM_MARKERS
  * A map of all USFM/USX/USJ markers and some information about them. Generated from a `usx.rng`
  * file and adjusted to reflect the way Paratext handles USFM.
  */
-export const USFM_MARKERS_MAP_PARATEXT = Object.freeze({
+export const USFM_MARKERS_MAP_PARATEXT: MarkersMap = Object.freeze({
   ...USFM_MARKERS_MAP,
   isSpaceAfterAttributeMarkersContent: true,
   shouldOptionalClosingMarkersBePresent: true,

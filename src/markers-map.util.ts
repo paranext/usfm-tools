@@ -1734,6 +1734,7 @@ export function transformUsxSchemaToMarkersMap(
   const markersMap: MarkersMap = {
     version,
     commit,
+    markersMapVersion: '1.0.0',
     usfmToolsVersion,
     markers: {},
     markersRegExp: {},
