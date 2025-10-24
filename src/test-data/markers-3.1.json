@@ -1,7 +1,7 @@
 {
   "version": "3.1",
   "commit": "50f2a6ac3fc1d867d906df28bc00fcff729a7b76",
-  "usfmToolsVersion": "820a437fc1e71103a3a5ec219c0b9280769b13f8",
+  "usfmToolsVersion": "ed48bc011e1b9f1a402d23e49edf2db6c6d69728+",
   "markers": {
     "add": {
       "type": "char",
@@ -42,7 +42,8 @@
       "attributeMarkerAttributeName": "altnumber",
       "isAttributeMarkerFor": [
         "c"
-      ]
+      ],
+      "hasStructuralSpaceAfterCloseAttributeMarker": true
     },
     "cat": {
       "type": "char",
@@ -115,12 +116,18 @@
     },
     "esb": {
       "type": "sidebar",
+      "independentClosingMarkers": [
+        "esbe"
+      ],
       "attributeMarkers": [
         "cat"
       ]
     },
     "esbe": {
-      "type": "sidebar"
+      "type": "sidebar",
+      "isIndependentClosingMarkerFor": [
+        "esb"
+      ]
     },
     "ex": {
       "type": "note",
@@ -935,7 +942,7 @@
       "textContentAttribute": "version"
     },
     "USJ": {
-      "type": "usx",
+      "type": "USJ",
       "textContentAttribute": "version"
     },
     "usx": {
@@ -957,7 +964,8 @@
       "attributeMarkerAttributeName": "altnumber",
       "isAttributeMarkerFor": [
         "v"
-      ]
+      ],
+      "hasStructuralSpaceAfterCloseAttributeMarker": true
     },
     "vp": {
       "type": "char",
@@ -965,7 +973,8 @@
       "attributeMarkerAttributeName": "pubnumber",
       "isAttributeMarkerFor": [
         "v"
-      ]
+      ],
+      "hasStructuralSpaceAfterCloseAttributeMarker": true
     },
     "w": {
       "type": "char",
@@ -1052,7 +1061,6 @@
   "markerTypes": {
     "book": {},
     "cell": {
-      "hasNewlineBefore": true,
       "skipOutputAttributeToUsfm": [
         "align"
       ]
@@ -1095,7 +1103,7 @@
     "ref": {
       "hasClosingMarker": true,
       "hasStyleAttribute": false,
-      "skipOutputAttributeToUsfm": [
+      "skipOutputMarkerToUsfmIfAttributeIsPresent": [
         "gen"
       ]
     },

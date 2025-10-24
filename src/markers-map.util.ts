@@ -19,8 +19,9 @@ const OBJECT_TYPE_MARKER_TYPE = 'Marker type';
  * - 0: the whole string
  * - 1: `\n` if there is one before the marker; `undefined` otherwise
  * - 2: the marker name
+ * - 3: a space after the marker if there is one; `undefined` otherwise
  */
-const BEFORE_OUT_MARKER_NAME_REGEXP = /(\\n)?\\\\(\S+)/;
+const BEFORE_OUT_MARKER_NAME_REGEXP = /(\\n)?\\\\(\S+)( ?)/;
 
 // #region misc helpful functions
 
@@ -522,6 +523,25 @@ function mergeMarkers(
   if (mergedIsAttributeMarkerForRegExp)
     attributeMergedMarker.isAttributeMarkerForRegExp = mergedIsAttributeMarkerForRegExp;
 
+  // If hasStructuralSpaceAfterClosingMarker is not `undefined` and is being changed, that's an error
+  // The data seems too sparse to be able to confidently say if the boolean ever changes, it's
+  // an error
+  if (
+    attributeMarkerA.hasStructuralSpaceAfterCloseAttributeMarker !== undefined &&
+    attributeMarkerA.hasStructuralSpaceAfterCloseAttributeMarker !==
+      attributeMarkerB.hasStructuralSpaceAfterCloseAttributeMarker
+  ) {
+    logObjectMergeConflictError(
+      OBJECT_TYPE_MARKER_TYPE,
+      markerName,
+      'hasStructuralSpaceAfterCloseAttributeMarker',
+      defineName,
+      attributeMarkerA.hasStructuralSpaceAfterCloseAttributeMarker,
+      attributeMarkerB.hasStructuralSpaceAfterCloseAttributeMarker
+    );
+    process.exit(1);
+  }
+
   // Check attributeMarkerAttributeName can be merged
   verifyStringsCanBeMerged(
     OBJECT_TYPE_MARKER,
@@ -806,12 +826,6 @@ function collectAttributesForElement(
 
     // Skip output attribute may have `usfm:ignore="true"` directly on it
     if (!skipOutputToUsfm) skipOutputToUsfm = attribute.getAttribute('usfm:ignore') === 'true';
-    // Skip output attribute may have `usfm:match` with `noout="true"`
-    if (!skipOutputToUsfm) {
-      skipOutputToUsfm = usfmMatchElements.some(
-        usfmMatch => usfmMatch.getAttribute('noout') === 'true'
-      );
-    }
     // Skip output attribute may have child `name` element with `ns` attribute set to XML schema
     if (!skipOutputToUsfm) {
       const nameElement = getFirstChildWithTagName(attribute, 'name', defineName);
@@ -857,6 +871,11 @@ function determineHasNewlineBeforeForElement(
   markerType: string,
   defineName: string
 ) {
+  // Exception: cell has `usfm:ptag` though it doesn't have a newline after it. I think this
+  // is an error in `usx.rng`
+  // If the error is fixed, this should be removed
+  if (markerType === 'cell') return false;
+
   const isElementUsfmTagLike =
     element.tagName === 'usfm:tag' ||
     element.tagName === 'usfm:ptag' ||
@@ -1009,9 +1028,8 @@ function processDefineElement(
     // we find an element-wide default attribute before adding the markers to the main map
     const markersToAdd: Record<string, MarkerInfo> = {};
     const markersRegExpToAdd: Record<string, MarkerInfo> = {};
-    // There will be some markers we want to add without adding extra marker info based on what is in the
-    // element
-    const plainMarkersToAdd: Record<string, MarkerInfo> = {};
+    // There may be independent closing markers for these markers
+    const independentClosingMarkersToAdd: Record<string, MarkerInfo> = {};
     // Just modify the existing marker type if this marker just has information about skipping
     // it. These markers to skip don't have much information in them
     // Need the type assertion here because TypeScript gets ahead of itself otherwise and implies this
@@ -1226,19 +1244,18 @@ function processDefineElement(
       }
     }
 
-    // Determine if there are additional plain markers in the element that should be recorded
+    // Determine if there is an independent closing marker for these markers in the element
     const elementUsfmTagElements = getChildElementsByTagName(element, 'usfm:tag').concat(
       getChildElementsByTagName(element, 'usfm:ptag')
     );
     elementUsfmTagElements.forEach(usfmTagElement => {
       const markerName = getTextContent(usfmTagElement);
 
-      // If the usfm:tag or usfm:ptag is empty, it seems to be representing this marker and
+      // If the usfm:tag or usfm:ptag is empty, it seems to be representing this opening marker and
       // will be covered below
       if (!markerName) return;
 
-      // Not much information about this additional marker, but we can tell if it should have
-      // a newline
+      // Determine if the independent closing marker should have a newline
       const additionalMarkerHasNewline = determineHasNewlineBeforeForElement(
         usfmTagElement,
         `additional marker "${markerName}"`,
@@ -1257,10 +1274,12 @@ function processDefineElement(
         process.exit(1);
       }
 
+      // Just set up a simple marker for now; we will add the connections between this closing marker
+      // and the new markers from this element later when we have all of them
       const markerInfo: MarkerInfo = { type: markerType };
 
-      plainMarkersToAdd[markerName] = mergeMarkers(
-        plainMarkersToAdd[markerName],
+      independentClosingMarkersToAdd[markerName] = mergeMarkers(
+        independentClosingMarkersToAdd[markerName],
         markerInfo,
         markerName,
         defineName
@@ -1285,9 +1304,11 @@ function processDefineElement(
 
     const markerNamesToAdd = Object.keys(markersToAdd);
     const markerNamesToAddRegExp = Object.keys(markersRegExpToAdd);
-    const plainMarkerNamesToAdd = Object.keys(plainMarkersToAdd);
+    const independentClosingMarkerNamesToAdd = Object.keys(independentClosingMarkersToAdd);
     const totalNumberOfMarkersAdded =
-      markerNamesToAdd.length + markerNamesToAddRegExp.length + plainMarkerNamesToAdd.length;
+      markerNamesToAdd.length +
+      markerNamesToAddRegExp.length +
+      independentClosingMarkerNamesToAdd.length;
 
     if (!hasStyle && totalNumberOfMarkersAdded > 1) {
       console.log(
@@ -1321,6 +1342,23 @@ function processDefineElement(
       // to put on each marker for this marker type
       const extraMarkerInfo: Partial<MarkerInfo> = {};
 
+      // If there are independent closing markers, add them to the marker info for each marker
+      if (independentClosingMarkerNamesToAdd.length > 0) {
+        // Check that we don't have both normal closing marker and independent closing markers because
+        // we have not necessarily perfectly factored this possibility into the markers map
+        if (markerTypeToAdd.hasClosingMarker) {
+          console.log(
+            `Warn: Marker type "${
+              markerType
+            }" has both a normal closing marker and independent closing markers ${JSON.stringify(
+              independentClosingMarkerNamesToAdd
+            )}. This markers map currently does not expect both to be present, so there could be issues; please investigate. In define ${defineName}`
+          );
+        }
+
+        extraMarkerInfo.independentClosingMarkers = independentClosingMarkerNamesToAdd;
+      }
+
       // Determine if the end tag is optional for all markers created by this element
       if (usfmEndTagElement?.getAttribute('noout') === 'true')
         extraMarkerInfo.isClosingMarkerOptional = true;
@@ -1347,13 +1385,18 @@ function processDefineElement(
         // in the future
         if (attributeName === 'closed') continue;
         // Exception case - `colspan` is an attribute that gets incorporated into the marker
-        // name. But it isn't marked in any specialway in `usx.rng`. And we're not handling
+        // name. But it isn't marked in any special way in `usx.rng`. And we're not handling
         // tables yet anyway. Just skip this attribute until something changes.
         if (markerType === 'cell' && attributeName === 'colspan') continue;
 
-        // If this `define` is a marker that should not be output to USFM, put this attribute in the
-        // list of marker skip attributes and continue to the next attribute
-        if (skipOutputMarkerToUsfm) {
+        // Put this attribute in the list of marker skip attributes and continue to the next
+        // attribute if any of the following are true:
+        //   - This `define` is a marker that should not be output to USFM
+        //   - Attribute has `usfm:match` with `noout="true"`
+        if (
+          skipOutputMarkerToUsfm ||
+          usfmMatchElements.some(usfmMatch => usfmMatch.getAttribute('noout') === 'true')
+        ) {
           if (!markerTypeToAdd.skipOutputMarkerToUsfmIfAttributeIsPresent)
             markerTypeToAdd.skipOutputMarkerToUsfmIfAttributeIsPresent = [];
           markerTypeToAdd.skipOutputMarkerToUsfmIfAttributeIsPresent.push(attributeName);
@@ -1460,6 +1503,12 @@ function processDefineElement(
               // If the `beforeout` has `\n`, it is a paragraph marker
               isParagraphMarkerType = !!beforeOutMatches[1];
 
+            // If the closing tag has a space after it, this is a structural space
+            const afterOutMatches = BEFORE_OUT_MARKER_NAME_REGEXP.exec(
+              matchLikeElement.getAttribute('afterout') ?? ''
+            );
+            const hasStructuralSpaceAfterClosingMarker = !!afterOutMatches?.[3];
+
             // Create the attribute marker info and set it up to be added to the markers map
             const attributeMarkerInfo: MarkerInfo = {
               type: isParagraphMarkerType ? 'para' : 'char',
@@ -1470,6 +1519,9 @@ function processDefineElement(
               attributeMarkerInfo.isAttributeMarkerFor = markerNamesToAdd;
             if (markerNamesToAddRegExp.length > 0)
               attributeMarkerInfo.isAttributeMarkerForRegExp = markerNamesToAddRegExp;
+            if (hasStructuralSpaceAfterClosingMarker)
+              attributeMarkerInfo.hasStructuralSpaceAfterCloseAttributeMarker =
+                hasStructuralSpaceAfterClosingMarker;
 
             attributeMarkersToAdd[attributeMarkerName] = mergeMarkers(
               attributeMarkersToAdd[attributeMarkerName],
@@ -1585,11 +1637,29 @@ function processDefineElement(
         );
       }
 
-      // Add all collected plain markers to the main markers map, not applying the extra marker info
-      for (const [markerName, markerInfo] of Object.entries(plainMarkersToAdd)) {
+      // Add all collected independent closing markers to the main markers map without the extra info
+      // because it doesn't apply to them
+      for (const [markerName, markerInfo] of Object.entries(independentClosingMarkersToAdd)) {
+        const independentClosingMarkerExtraInfo: Partial<MarkerInfo> = {};
+
+        if (markerNamesToAdd.length > 0)
+          independentClosingMarkerExtraInfo.isIndependentClosingMarkerFor = markerNamesToAdd;
+        if (markerNamesToAddRegExp.length > 0)
+          independentClosingMarkerExtraInfo.isIndependentClosingMarkerForRegExp = markerNamesToAddRegExp;
+
+        const updatedMarkerInfo =
+          Object.keys(independentClosingMarkerExtraInfo).length > 0
+            ? mergeMarkers(
+                markerInfo,
+                { ...markerInfo, ...independentClosingMarkerExtraInfo },
+                markerName,
+                `${defineName} (merging independentClosingMarkerExtraInfo into marker to add)`
+              )
+            : markerInfo;
+
         markersMap.markers[markerName] = mergeMarkers(
           markersMap.markers[markerName],
-          markerInfo,
+          updatedMarkerInfo,
           markerName,
           defineName
         );
@@ -1794,7 +1864,7 @@ export function transformUsxSchemaToMarkersMap(
   );
   markersMap.markers['USJ'] = mergeMarkers(
     markersMap.markers['USJ'],
-    { ...markersMap.markers['usx'], textContentAttribute: 'version' },
+    { ...markersMap.markers['usx'], type: 'USJ', textContentAttribute: 'version' },
     'USJ',
     manualDefineName
   );
@@ -1805,20 +1875,22 @@ export function transformUsxSchemaToMarkersMap(
     manualDefineName
   );
 
-  // In 3.0.8, `link-href` is not set default where it should be, but we need it in a couple
-  // spots. Add it in there if it's missing. It should just be `href` in 3.1+, but we will
-  // trust that it is properly set in 3.1+ schemas.
-  if (markersMap.markers['jmp'] && !markersMap.markers['jmp'].defaultAttribute) {
-    console.log(
-      'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
-    );
-    markersMap.markers['jmp'].defaultAttribute = 'link-href';
-  }
-  if (markersMap.markers['xt'] && !markersMap.markers['xt'].defaultAttribute) {
-    console.log(
-      'Warning: Setting default attribute for xt to link-href because defaultAttribute was not set'
-    );
-    markersMap.markers['xt'].defaultAttribute = 'link-href';
+  if (!isVersion3_1OrHigher) {
+    // In 3.0.8, `link-href` is not set default where it should be, but we need it in a couple
+    // spots. Add it in there if it's missing. It should just be `href` in 3.1+, but we will
+    // trust that it is properly set in 3.1+ schemas.
+    if (markersMap.markers['jmp'] && !markersMap.markers['jmp'].defaultAttribute) {
+      console.log(
+        'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
+      );
+      markersMap.markers['jmp'].defaultAttribute = 'link-href';
+    }
+    if (markersMap.markers['xt'] && !markersMap.markers['xt'].defaultAttribute) {
+      console.log(
+        'Warning: Setting default attribute for xt to link-href because defaultAttribute was not set'
+      );
+      markersMap.markers['xt'].defaultAttribute = 'link-href';
+    }
   }
 
   // Sort the markers, marker types, and `isAttributeMarkerFor`s
@@ -1840,7 +1912,7 @@ export function transformUsxSchemaToMarkersMap(
   Object.values(markersMap.markers)
     .concat(Object.values(markersMap.markersRegExp))
     .forEach(markerInfo => {
-      if (!('attributeMarkerAttributeName' in markerInfo)) return;
+      if (!markerInfo || !('attributeMarkerAttributeName' in markerInfo)) return;
 
       markerInfo.isAttributeMarkerFor?.sort(compareStringsInvariantCaseInsensitive);
       markerInfo.isAttributeMarkerForRegExp?.sort(compareStringsInvariantCaseInsensitive);

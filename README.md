@@ -19,6 +19,8 @@ npm i
 
 Generate the markers map by placing the USX RelaxNG Schema file `usx.rng` (download the file on a release branch - [`usx.rng` < 3.1](https://github.com/ubsicap/usx/blob/master/schema/usx.rng) or [`usx.rng` >= 3.1](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng)) in the root of this repo and running `npm run generate-markers-map -- --schema usx.rng --version <schema-version> --commit <commit-hash>`. Note that the commit hash is the commit hash for the repo where you got `usx.rng`, *not* the commit hash of this repo.
 
+See the release notes and planned changes for USFM versions [in the Roadmap](https://github.com/usfm-bible/tcdocs/blob/main/docs/USFMTC%20Roadmap.md).
+
 This script reads the USX RelaxNG Schema file [`usx.rng`](https://github.com/usfm-bible/tcdocs/blob/main/grammar/usx.rng) and generates a JSON file `dist/markers.json` and a TypeScript file `dist/markers-map.model.ts` that contain various information for each USFM marker name. `markers.json` will contain an object with:
 - information about the generated file (`version`, `commit`)
 - a `markers` property whose value is a map object
@@ -147,9 +149,11 @@ TODO: adjust README based on new changes
     - Do not consider the marker type to have no `style` attribute if all `ref`s pointing to it have `usfm:ignore="true"`, meaning it is just listing attributes that indicate the whole marker should not be output to USFM
 - Need to look in `ref` tags in `element` and check if `define` has first child `attribute` or `optional` then `attribute` (`category`, `closed`)
 - [marker] ignore when translating to USFM
-  - If all `ref`s pointing to it have `usfm:ignore="true"`, ignore the entire marker when translating to usfm if `attribute`s listed in the `markerType` are present (chapter and verse `eid`)
+  - Ignore the opening and closing markers when translating to usfm (but keep the contents of the marker) if `attribute`s listed in the `markerType` are present if any of the following are true:
+    - If all `ref`s pointing to the `define` have `usfm:ignore="true"` (chapter and verse `eid`)
+    - If any `usfm:match` in the attribute has `noout="true"` attribute on it (ref `gen`)
   - If `attribute` `name` has `ns="http://www.w3.org/2001/XMLSchema-instance"` on it or name starts with `xsi:` (these attributes are not related to Scripture data and should not be exported to USFM)
-  - If its `attribute` has `usfm:ignore="true"` or any `usfm:match` in the attribute has `noout="true"` attribute on it (`attribute` - chapter and verse `sid`, `closed`)
+  - If its `attribute` has `usfm:ignore="true"` (`attribute` - chapter and verse `sid`, `closed`)
   - If it is `vid` on `para` or `table` (probably should have `usfm:ignore` set)
   - If it's `sid` in `chapter` (probably should have `usfm:ignore` set)
   - `align` and `colspan` attributes in `cell` marker type
@@ -164,6 +168,7 @@ TODO: adjust README based on new changes
   - One `usfm:match` or `usfm:tag` or `usfm:ptag` with  `beforeout` `\\__`
     - Special case: `version` on `usx` is not an attribute marker (once this script can handle replacement markers, this won't need to be a special case)
   - get marker name from `beforeout`
+  - `afterout` will have a space after the marker name like `\\__ ` if there should be a space in the canonical output USFM
   - `para` if `usfm:ptag` or `beforeout` has `\n`; `char` otherwise
   - `isAttributeMarker` on the attribute-created marker
   - `attributeMarkers` list on the parent marker
@@ -196,6 +201,10 @@ TODO: adjust README based on new changes
 TODO: incorporate changes
 - Figure out a way to get this to where you can work on the rest of the code
 - Transform 3.1 to 3.0 somehow?
+- Milestones don't have a space after the opening marker if there are no attributes
+  - `usfm:tag` `afterout` is completely empty
+    - attribute markers also have `afterout` but it's different in most cases
+    - `cat` has empty `afterout`, but it also has `usfm:endtag` with non-empty `afterout`
 - Do some work to encode that the `usx`, `usfm`, and `USJ` markers are different in each standard
 - TODO: Should all the special attribute stuff be on `markerType` instead? Some risk in that `cat` is a marker attribute on all `note` marker types, but maybe that's coincidence
 - Explain how the terms I am using from XML sorta map to the USFM concepts but aren't exact one-to-one equals
@@ -203,6 +212,7 @@ TODO: incorporate changes
   - Improve accuracy: if the `element` has no `style` attribute and has direct child `usfm:tag` (`ref`), `usfm:ptag` (none - `sidebar` is closest), or `usfm:match` (`periph` and `optbreak`), no `style` attribute. If doesn't have one of these direct children (`table`, `usx`), the marker shouldn't be output to USFM at all. Or at least it indicates a very special case. Maybe not handling this yet is why `usx` considers `usfm` to be a leading attribute in the `usx.rng` but we don't. And `table`
   - `usx` doesn't have `usfm:tag` or `usfm:ptag` and its attribute has `beforeout` with `\\__`. Could use those two indicators to determine it should be replaced with `usfm` in output. But then this still doesn't cover moving `usfm` under `id`
 - Figure out how to determine when to close these long-running markers with their own content hierarchies - `usx`, `table`, `periph`, `esb`, others?
+- [markerType] note which types should set book, chapter, and verse when tracking verse ref? It's literally just `book`, `chapter`, and `verse`.
 - Extra work later?
   - Do we need to keep track of whether a nested marker that closes has `+` on its markers? Probably, but maybe the plus is on the style in USX
     - Paratext 9.4 fails to nest markers without the `+`. It doesn't put anything particular if the `+` is present. I guess that means we might just need to track if `+` is present for 
