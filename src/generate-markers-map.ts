@@ -104,14 +104,14 @@ import { execCommand } from './command-line.util';
     }
 
     // Write the output markers JSON file
-    fs.writeFileSync(outJSONPath, JSON.stringify(markersMap, null, 2), 'utf-8');
+    fs.writeFileSync(outJSONPath, JSON.stringify(markersMap, undefined, 2), 'utf-8');
 
     // Read the markers map model file, replace the placeholder with the generated map, and write it to dist
     const markersMapModelPath = path.resolve(__dirname, 'markers-map.model.template.ts');
     const markersMapModelContent = fs.readFileSync(markersMapModelPath, 'utf-8');
     const updatedMarkersMapModelContent = markersMapModelContent.replace(
       "JSON.parse('%USFM_MARKERS_MAP_REPLACE_ME%')",
-      `${JSON.stringify(markersMap, null, 2)}`
+      `${JSON.stringify(markersMap, undefined, 2)}`
     );
     fs.writeFileSync('dist/markers-map.model.ts', updatedMarkersMapModelContent, 'utf-8');
 

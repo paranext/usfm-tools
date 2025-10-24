@@ -2,7 +2,7 @@
   "version": "3.0.7",
   "commit": "6c490bb5675d281b0fa01876fe67f6e3fd50a4ce",
   "markersMapVersion": "1.0.0",
-  "usfmToolsVersion": "4b02700d8f440d34673aa1e69578c0fd59366f54+",
+  "usfmToolsVersion": "6cedb55c00d9b70145f76d0f0b4d49431a22cbe8+",
   "markers": {
     "add": {
       "type": "char",
