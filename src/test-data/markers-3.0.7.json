@@ -2,7 +2,7 @@
   "version": "3.0.7",
   "commit": "6c490bb5675d281b0fa01876fe67f6e3fd50a4ce",
   "markersMapVersion": "1.0.0",
-  "usfmToolsVersion": "1d89fd74f9275abb4fa5831c82637caea44a2e3a+",
+  "usfmToolsVersion": "bb5d8dbffd924fe874263c1102e5cbb13d6237be+",
   "markers": {
     "add": {
       "type": "char",
@@ -35,15 +35,36 @@
     },
     "c": {
       "type": "chapter",
-      "defaultAttribute": "number"
+      "leadingAttributes": [
+        "number"
+      ],
+      "attributeMarkers": [
+        "ca",
+        "cp"
+      ]
     },
     "ca": {
       "type": "char",
+      "attributeMarkerAttributeName": "altnumber",
+      "isAttributeMarkerFor": [
+        "c"
+      ],
+      "hasStructuralSpaceAfterCloseAttributeMarker": true,
       "description": "Second (alternate) chapter number",
       "defaultAttribute": "link-href"
     },
     "cat": {
       "type": "char",
+      "attributeMarkerAttributeName": "category",
+      "isAttributeMarkerFor": [
+        "ef",
+        "efe",
+        "esb",
+        "ex",
+        "f",
+        "fe",
+        "x"
+      ],
       "description": "Note category (study Bible)",
       "defaultAttribute": "link-href"
     },
@@ -61,7 +82,11 @@
     },
     "cp": {
       "type": "para",
-      "description": "Published chapter number"
+      "description": "Published chapter number",
+      "attributeMarkerAttributeName": "pubnumber",
+      "isAttributeMarkerFor": [
+        "c"
+      ]
     },
     "d": {
       "type": "para",
@@ -74,7 +99,23 @@
     },
     "ef": {
       "type": "note",
-      "defaultAttribute": "caller"
+      "description": "Study note",
+      "leadingAttributes": [
+        "caller"
+      ],
+      "attributeMarkers": [
+        "cat"
+      ]
+    },
+    "efe": {
+      "type": "note",
+      "description": "Extended study endnote",
+      "leadingAttributes": [
+        "caller"
+      ],
+      "attributeMarkers": [
+        "cat"
+      ]
     },
     "efm": {
       "type": "char",
@@ -88,9 +129,11 @@
     },
     "esb": {
       "type": "sidebar",
-      "defaultAttribute": "category",
       "independentClosingMarkers": [
         "esbe"
+      ],
+      "attributeMarkers": [
+        "cat"
       ]
     },
     "esbe": {
@@ -101,20 +144,39 @@
     },
     "ex": {
       "type": "note",
-      "defaultAttribute": "caller"
+      "description": "Extended cross reference",
+      "leadingAttributes": [
+        "caller"
+      ],
+      "attributeMarkers": [
+        "cat"
+      ]
     },
     "f": {
       "type": "note",
-      "defaultAttribute": "caller"
+      "description": "Footnote",
+      "leadingAttributes": [
+        "caller"
+      ],
+      "attributeMarkers": [
+        "cat"
+      ]
     },
     "fdc": {
       "type": "char",
       "description": "Footnote text, applies to Deuterocanon only (DEPRECATED - use char@style dc)",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "fe": {
       "type": "note",
-      "defaultAttribute": "caller"
+      "description": "Endnote",
+      "leadingAttributes": [
+        "caller"
+      ],
+      "attributeMarkers": [
+        "cat"
+      ]
     },
     "fig": {
       "type": "figure"
@@ -122,11 +184,13 @@
     "fk": {
       "type": "char",
       "description": "A footnote keyword",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "fl": {
       "type": "char",
       "description": "A footnote label text item, for marking or \"labelling\" the type or alternate translation being provided in the note.",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "fm": {
@@ -137,26 +201,31 @@
     "fp": {
       "type": "char",
       "description": "A Footnote additional paragraph marker",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "fq": {
       "type": "char",
       "description": "A footnote scripture quote or alternate rendering",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "fqa": {
       "type": "char",
       "description": "A footnote alternate rendering for a portion of scripture text",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "fr": {
       "type": "char",
       "description": "The origin reference for the footnote",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "ft": {
       "type": "char",
       "description": "Footnote text, Protocanon",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "fv": {
@@ -167,6 +236,7 @@
     "fw": {
       "type": "char",
       "description": "A footnote witness list, for distinguishing a list of sigla representing witnesses in critical editions.",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "h": {
@@ -191,7 +261,9 @@
     },
     "id": {
       "type": "book",
-      "defaultAttribute": "code"
+      "leadingAttributes": [
+        "code"
+      ]
     },
     "ide": {
       "type": "para",
@@ -343,13 +415,13 @@
     },
     "jmp": {
       "type": "char",
-      "description": "For associating linking attributes to a span of text",
-      "defaultAttribute": "link-href"
+      "defaultAttribute": "link-href",
+      "description": "For associating linking attributes to a span of text"
     },
     "k": {
       "type": "char",
-      "description": "For a keyword",
-      "defaultAttribute": "link-href"
+      "defaultAttribute": "link-href",
+      "description": "For a keyword"
     },
     "k1": {
       "type": "para",
@@ -409,7 +481,8 @@
       "description": "An embedded list entry, level 3"
     },
     "lim4": {
-      "type": "para"
+      "type": "para",
+      "description": "An embedded list entry, level 4"
     },
     "lit": {
       "type": "para",
@@ -447,6 +520,7 @@
     },
     "liv5": {
       "type": "char",
+      "description": "Structured list entry value 5 content",
       "defaultAttribute": "link-href"
     },
     "m": {
@@ -558,7 +632,7 @@
     },
     "periph": {
       "type": "periph",
-      "defaultAttribute": "id"
+      "textContentAttribute": "alt"
     },
     "ph": {
       "type": "para",
@@ -698,6 +772,54 @@
       "description": "For Old Testament quoted text appearing in the New Testament",
       "defaultAttribute": "link-href"
     },
+    "qt-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt1-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt1-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt2-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt2-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt3-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt3-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt4-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt4-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
+    "qt5-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "qt5-s": {
+      "type": "ms",
+      "defaultAttribute": "who"
+    },
     "r": {
       "type": "para",
       "description": "Parallel reference(s)"
@@ -786,9 +908,22 @@
       "type": "para",
       "description": "A section division references range heading"
     },
+    "sts": {
+      "type": "para",
+      "description": "Status\nRemark"
+    },
     "sup": {
       "type": "char",
+      "description": "A character style, for superscript text. Typically for use in critical edition footnotes.",
       "defaultAttribute": "link-href"
+    },
+    "t-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "t-s": {
+      "type": "ms",
+      "defaultAttribute": "sid"
     },
     "table": {
       "type": "table"
@@ -827,8 +962,16 @@
       "description": "Table row"
     },
     "ts": {
-      "type": "para",
+      "type": "ms",
       "description": "Translator's chunk (to identify chunks of text suitable for translating at one time)"
+    },
+    "ts-e": {
+      "type": "ms",
+      "defaultAttribute": "eid"
+    },
+    "ts-s": {
+      "type": "ms",
+      "defaultAttribute": "sid"
     },
     "usfm": {
       "type": "para",
@@ -843,16 +986,33 @@
       "textContentAttribute": "version"
     },
     "v": {
-      "type": "verse"
+      "type": "verse",
+      "leadingAttributes": [
+        "number"
+      ],
+      "attributeMarkers": [
+        "va",
+        "vp"
+      ]
     },
     "va": {
       "type": "char",
+      "attributeMarkerAttributeName": "altnumber",
+      "isAttributeMarkerFor": [
+        "v"
+      ],
+      "hasStructuralSpaceAfterCloseAttributeMarker": true,
       "description": "Second (alternate) verse number (for coding dual numeration in Psalms; see also NRSV Exo 22.1-4)",
       "defaultAttribute": "link-href"
     },
     "vp": {
       "type": "char",
       "description": "Published verse marker - this is a verse marking that would be used in the published text",
+      "attributeMarkerAttributeName": "pubnumber",
+      "isAttributeMarkerFor": [
+        "v"
+      ],
+      "hasStructuralSpaceAfterCloseAttributeMarker": true,
       "defaultAttribute": "link-href"
     },
     "w": {
@@ -881,50 +1041,66 @@
     },
     "x": {
       "type": "note",
-      "defaultAttribute": "caller"
+      "description": "Cross reference",
+      "leadingAttributes": [
+        "caller"
+      ],
+      "attributeMarkers": [
+        "cat"
+      ]
     },
     "xdc": {
       "type": "char",
+      "description": "Cross-reference target reference(s), Deuterocanon only (DEPRECATED - use char@style dc)",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "xk": {
       "type": "char",
       "description": "A cross reference keyword",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "xnt": {
       "type": "char",
       "description": "Cross-reference target reference(s), New Testament only",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "xo": {
       "type": "char",
       "description": "The cross reference origin reference",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "xop": {
       "type": "char",
       "description": "Published cross reference origin text (origin reference that should appear in the published text)",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "xot": {
       "type": "char",
       "description": "Cross-reference target reference(s), Old Testament only",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "xq": {
       "type": "char",
       "description": "A cross-reference quotation from the scripture text",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     },
     "xt": {
       "type": "char",
+      "defaultAttribute": "link-href",
       "description": "A target reference(s)\nA cross reference target reference(s)\nThe cross reference target reference(s), protocanon only",
-      "defaultAttribute": "link-href"
+      "isClosingMarkerOptional": true
     },
     "xta": {
       "type": "char",
       "description": "Cross reference target references added text",
+      "isClosingMarkerOptional": true,
       "defaultAttribute": "link-href"
     }
   },
@@ -953,6 +1129,7 @@
       ]
     },
     "chapter": {
+      "hasNewlineBefore": true,
       "skipOutputAttributeToUsfm": [
         "sid"
       ],
@@ -960,14 +1137,24 @@
         "eid"
       ]
     },
-    "char": {},
-    "figure": {},
-    "ms": {},
-    "note": {},
+    "char": {
+      "hasClosingMarker": true
+    },
+    "figure": {
+      "hasClosingMarker": true
+    },
+    "ms": {
+      "hasClosingMarker": true,
+      "isClosingMarkerEmpty": true
+    },
+    "note": {
+      "hasClosingMarker": true
+    },
     "optbreak": {
       "hasStyleAttribute": false
     },
     "para": {
+      "hasNewlineBefore": true,
       "skipOutputAttributeToUsfm": [
         "vid"
       ]
@@ -977,10 +1164,18 @@
       "hasStyleAttribute": false
     },
     "ref": {
-      "hasStyleAttribute": false
+      "hasClosingMarker": true,
+      "hasStyleAttribute": false,
+      "skipOutputMarkerToUsfmIfAttributeIsPresent": [
+        "gen"
+      ]
     },
-    "row": {},
-    "sidebar": {},
+    "row": {
+      "hasNewlineBefore": true
+    },
+    "sidebar": {
+      "hasNewlineBefore": true
+    },
     "table": {
       "hasStyleAttribute": false,
       "skipOutputAttributeToUsfm": [
@@ -997,6 +1192,10 @@
       ]
     },
     "verse": {
+      "hasNewlineBefore": true,
+      "skipOutputAttributeToUsfm": [
+        "sid"
+      ],
       "skipOutputMarkerToUsfmIfAttributeIsPresent": [
         "eid"
       ]

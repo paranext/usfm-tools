@@ -1887,7 +1887,35 @@ export function transformUsxSchemaToMarkersMap(
 
   // Add the required markers that might not be in the schema
   const manualDefineName = 'added manually';
+  markersMap.markers['usfm'] = mergeMarkers(
+    markersMap.markers['usfm'],
+    { ...markersMap.markers['usx'], type: 'para' },
+    'usfm',
+    manualDefineName
+  );
+  markersMap.markers['USJ'] = mergeMarkers(
+    markersMap.markers['USJ'],
+    { ...markersMap.markers['usx'], type: 'USJ' },
+    'USJ',
+    manualDefineName
+  );
+  markersMap.markerTypes['USJ'] = mergeMarkerTypes(
+    markersMap.markerTypes['USJ'],
+    { hasStyleAttribute: false },
+    'USJ',
+    manualDefineName
+  );
+
+  // Fix some inaccuracies in less than 3.1
   if (!isVersion3_1OrAbove) {
+    // periph does not have a default attribute. `id` looks like it is default, but it always uses
+    // non-default syntax for some reason
+    if (markersMap.markers['periph']?.defaultAttribute === 'id')
+      delete markersMap.markers['periph'].defaultAttribute;
+
+    // `ts` seems to be misidentified as `para`, but it is a milestone
+    if (markersMap.markers['ts']?.type === 'para') markersMap.markers['ts'].type = 'ms';
+
     // Add `fig` which seems to be mistakenly missing style in less than 3.1 and therefore doesn't get
     // included
     markersMap.markers['fig'] = mergeMarkers(
@@ -1916,37 +1944,161 @@ export function transformUsxSchemaToMarkersMap(
       'esbe',
       manualDefineName
     );
+
+    // Less than 3.1 seems to be missing `sts` marker
+    markersMap.markers['sts'] = mergeMarkers(
+      markersMap.markers['sts'],
+      { type: 'para' },
+      'sts',
+      manualDefineName
+    );
+
+    // Less than 3.1 seems to be missing `efe` marker
+    markersMap.markers['efe'] = mergeMarkers(
+      markersMap.markers['efe'],
+      { type: 'note' },
+      'efe',
+      manualDefineName
+    );
+
+    // Less than 3.1 has a bunch of problems with milestone default attributes
+    markersMap.markers['qt-s'] = mergeMarkers(
+      markersMap.markers['qt-s'],
+      { type: 'ms', defaultAttribute: 'who' },
+      'qt-s',
+      manualDefineName
+    );
+    markersMap.markers['qt1-s'] = mergeMarkers(
+      markersMap.markers['qt1-s'],
+      { type: 'ms', defaultAttribute: 'who' },
+      'qt1-s',
+      manualDefineName
+    );
+    markersMap.markers['qt2-s'] = mergeMarkers(
+      markersMap.markers['qt2-s'],
+      { type: 'ms', defaultAttribute: 'who' },
+      'qt2-s',
+      manualDefineName
+    );
+    markersMap.markers['qt3-s'] = mergeMarkers(
+      markersMap.markers['qt3-s'],
+      { type: 'ms', defaultAttribute: 'who' },
+      'qt3-s',
+      manualDefineName
+    );
+    markersMap.markers['qt4-s'] = mergeMarkers(
+      markersMap.markers['qt4-s'],
+      { type: 'ms', defaultAttribute: 'who' },
+      'qt4-s',
+      manualDefineName
+    );
+    markersMap.markers['qt5-s'] = mergeMarkers(
+      markersMap.markers['qt5-s'],
+      { type: 'ms', defaultAttribute: 'who' },
+      'qt5-s',
+      manualDefineName
+    );
+    markersMap.markers['qt-e'] = mergeMarkers(
+      markersMap.markers['qt-e'],
+      { type: 'ms', defaultAttribute: 'eid' },
+      'qt-e',
+      manualDefineName
+    );
+    markersMap.markers['qt1-e'] = mergeMarkers(
+      markersMap.markers['qt1-e'],
+      { type: 'ms', defaultAttribute: 'eid' },
+      'qt1-e',
+      manualDefineName
+    );
+    markersMap.markers['qt2-e'] = mergeMarkers(
+      markersMap.markers['qt2-e'],
+      { type: 'ms', defaultAttribute: 'eid' },
+      'qt2-e',
+      manualDefineName
+    );
+    markersMap.markers['qt3-e'] = mergeMarkers(
+      markersMap.markers['qt3-e'],
+      { type: 'ms', defaultAttribute: 'eid' },
+      'qt3-e',
+      manualDefineName
+    );
+    markersMap.markers['qt4-e'] = mergeMarkers(
+      markersMap.markers['qt4-e'],
+      { type: 'ms', defaultAttribute: 'eid' },
+      'qt4-e',
+      manualDefineName
+    );
+    markersMap.markers['qt5-e'] = mergeMarkers(
+      markersMap.markers['qt5-e'],
+      { type: 'ms', defaultAttribute: 'eid' },
+      'qt5-e',
+      manualDefineName
+    );
+    markersMap.markers['t-s'] = mergeMarkers(
+      markersMap.markers['t-s'],
+      { type: 'ms', defaultAttribute: 'sid' },
+      't-s',
+      manualDefineName
+    );
+    markersMap.markers['t-e'] = mergeMarkers(
+      markersMap.markers['t-e'],
+      { type: 'ms', defaultAttribute: 'eid' },
+      't-e',
+      manualDefineName
+    );
+    markersMap.markers['ts-s'] = mergeMarkers(
+      markersMap.markers['ts-s'],
+      { type: 'ms', defaultAttribute: 'sid' },
+      'ts-s',
+      manualDefineName
+    );
+    markersMap.markers['ts-e'] = mergeMarkers(
+      markersMap.markers['ts-e'],
+      { type: 'ms', defaultAttribute: 'eid' },
+      'ts-e',
+      manualDefineName
+    );
   }
-  markersMap.markers['usfm'] = mergeMarkers(
-    markersMap.markers['usfm'],
-    { ...markersMap.markers['usx'], type: 'para' },
-    'usfm',
-    manualDefineName
-  );
-  markersMap.markers['USJ'] = mergeMarkers(
-    markersMap.markers['USJ'],
-    { ...markersMap.markers['usx'], type: 'USJ' },
-    'USJ',
-    manualDefineName
-  );
-  markersMap.markerTypes['USJ'] = mergeMarkerTypes(
-    markersMap.markerTypes['USJ'],
-    { hasStyleAttribute: false },
-    'USJ',
-    manualDefineName
-  );
 
   // Fill in missing information from the base markers map
   if (baseMarkersMap) {
     Object.entries(markersMap.markers).forEach(([markerName, markerInfo]) => {
-      if (!markerInfo) return [markerName, markerInfo];
+      const baseMarkerInfo = baseMarkersMap.markers[markerName];
+      if (!markerInfo || !baseMarkerInfo) return [markerName, markerInfo];
 
-      // If default attribute is already somewhere in base, remove it because it was mis-labeled
+      // If default attribute is already somewhere in base marker's attributes, remove it
+      // because it was mis-labeled because there wasn't enough info to know what it was
+      if (markerInfo.defaultAttribute) {
+        // Collect all attribute names
+        const baseMarkerAttributeNames = [
+          ...(baseMarkerInfo.leadingAttributes ?? []),
+          baseMarkerInfo.textContentAttribute,
+        ];
+        if (baseMarkerInfo.textContentAttribute)
+          baseMarkerAttributeNames.push(baseMarkerInfo.textContentAttribute);
+        if (baseMarkerInfo.attributeMarkers) {
+          baseMarkerInfo.attributeMarkers.forEach(attributeMarkerName => {
+            const attributeMarker = baseMarkersMap.markers[attributeMarkerName];
+            if (!attributeMarker || !('attributeMarkerAttributeName' in attributeMarker)) return;
+            baseMarkerAttributeNames.push(attributeMarker.attributeMarkerAttributeName);
+          });
+        }
+
+        // If the default attribute is found in the base attributes, get rid of it
+        if (baseMarkerAttributeNames.includes(markerInfo.defaultAttribute))
+          delete markerInfo.defaultAttribute;
+      }
 
       // Fill in all information from base
+      markersMap.markers[markerName] = { ...baseMarkerInfo, ...markerInfo };
     });
 
-    // Add markers from base that are independent closing markers for present markers in the main map
+    Object.entries(markersMap.markerTypes).forEach(([markerType, markerTypeInfo]) => {
+      const baseMarkerTypeInfo = baseMarkersMap.markerTypes[markerType];
+      if (!markerTypeInfo || !baseMarkerTypeInfo) return [markerType, markerTypeInfo];
+      // Fill in all information from base
+      markersMap.markerTypes[markerType] = { ...baseMarkerTypeInfo, ...markerTypeInfo };
+    });
   }
 
   // Sort the markers, marker types, and `isAttributeMarkerFor`s

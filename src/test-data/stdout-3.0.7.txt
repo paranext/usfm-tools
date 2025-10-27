@@ -97,8 +97,8 @@ Warning: Marker named "xdc" has one definition with a defaultAttribute and one w
 Warning: Marker named "esb" has one definition with a defaultAttribute and one without: undefined, "category". Using the one with the defaultAttribute. In definition: Sidebar (merging extraMarkerInfo into marker to add)
 Warning: Style attribute in definition "Figure" has no value or param pattern elements. Skipping.
 Warning: Marker named "ref" has one definition with a defaultAttribute and one without: undefined, "loc". Using the one with the defaultAttribute. In definition: Reference (merging extraMarkerInfo into marker to add)
-Warning: Marker named "esb" has one definition with a defaultAttribute and one without: "category", undefined. Using the one with the defaultAttribute. In definition: added manually
 Warning: Marker named "usfm" has one definition with a textContentAttribute and one without: undefined, "version". Using the one with the textContentAttribute. In definition: added manually
+Warning: Marker named "esb" has one definition with a defaultAttribute and one without: "category", undefined. Using the one with the defaultAttribute. In definition: added manually
 Generated markers.json successfully
 
 Skipped definitions:
