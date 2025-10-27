@@ -33,13 +33,15 @@ const STDOUT_REGEXP =
 // 2. Run the generate-markers-map script with the appropriate arguments and redirect stdout to a file
 // For example, to generate 3.0.7 and 3.1 files, I used the following commands in bash:
 //   npm run generate-markers-map -- --schema src/test-data/usx-3.0.7.rng --version 3.0.7 --commit 6c490bb5675d281b0fa01876fe67f6e3fd50a4ce --outJSON src/test-data/markers-3.0.7.json > src/test-data/stdout-3.0.7.txt
-//   npm run generate-markers-map -- --schema src/test-data/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/test-data/markers-3.1.json > src/test-data/stdout-3.1.txt
+//   npm run generate-markers-map -- --schema src/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json > src/test-data/stdout-3.1.txt
 //
 // This can be approximated in powershell, but please do not commit this as it puts a BOM at the start of the file that will cause git file churn:
 //   npm run generate-markers-map -- --schema src/test-data/usx-3.0.7.rng --version 3.0.7 --commit 6c490bb5675d281b0fa01876fe67f6e3fd50a4ce --outJSON src/test-data/markers-3.0.7.json | out-file -encoding utf8 src/test-data/stdout-3.0.7.txt
-//   npm run generate-markers-map -- --schema src/test-data/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/test-data/markers-3.1.json | out-file -encoding utf8 src/test-data/stdout-3.1.txt
+//   npm run generate-markers-map -- --schema src/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json | out-file -encoding utf8 src/test-data/stdout-3.1.txt
 //
-// Then moved dist/markers.json to src/test-data/markers-3.0.7.json and markers-3.1.json respectively
+// Note: The 3.1 markers map is used as a base from which to generate older versions, so it is stored in
+// src/ instead of src/test-data. usx.rng 3.1 seems to be stable as of writing this, so this file will
+// hopefully never need to be updated. It is copied in this repo for convenience.
 
 const USX_SCHEMA_3_0_7 = fs.readFileSync(path.resolve(testDataPath, 'usx-3.0.7.rng'), 'utf-8');
 const USX_SCHEMA_3_1 = fs.readFileSync(path.resolve(testDataPath, 'usx-3.1.rng'), 'utf-8');

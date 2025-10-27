@@ -2,7 +2,7 @@ import { program } from 'commander';
 import fs from 'fs';
 import path from 'path';
 import { MarkersMap } from './markers-map.model.template';
-import { transformUsxSchemaToMarkersMap } from './markers-map.util';
+import { isVersion3_1OrHigher, transformUsxSchemaToMarkersMap } from './markers-map.util';
 import { execCommand } from './command-line.util';
 
 (async () => {
@@ -86,6 +86,11 @@ import { execCommand } from './command-line.util';
     // Read and parse the schema file
     const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
 
+    // Get the 3.1 markers map to fill in missing information on the less-than-3.1 maps
+    const baseMarkersMap: MarkersMap | undefined = isVersion3_1OrHigher(schemaVersion)
+      ? undefined
+      : JSON.parse(fs.readFileSync('src/markers-3.1.json', 'utf-8'));
+
     // Track which definitions are skipped
     const skippedDefinitions = new Set<string>();
 
@@ -95,7 +100,8 @@ import { execCommand } from './command-line.util';
       schemaVersion,
       commit,
       usfmToolsVersion,
-      skippedDefinitions
+      skippedDefinitions,
+      baseMarkersMap,
     );
 
     // Create the dist directory if it doesn't exist

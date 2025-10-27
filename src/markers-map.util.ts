@@ -731,6 +731,12 @@ function collectAttributesForElement(
     skipOutputToUsfm?: boolean;
   }[] = [];
 
+  // ENHANCE: This would best be improved by properly walking through the `attribute` and `ref` tags in
+  // their encountered order so we can properly determine the order for default attribute, but right now
+  // we are looking at all `attribute` tags first then `ref` tags after. Luckily, it doesn't matter right
+  // now for determining default attribute. It very well may never matter as this way of determining
+  // attribute order is mostly limited to less-than-3.1 (though it is used in a couple places in 3.1+).
+
   // Look through child attributes of the element
   const childAttributes = element.getElementsByTagName('attribute');
   for (let i = 0; i < childAttributes.length; i++) {
@@ -769,13 +775,17 @@ function collectAttributesForElement(
       continue;
     }
 
-    // Check to make sure this ref is a direct child or a child of an optional of the element.
-    // If not, skip it
+    // Check to make sure this ref is a direct child or a child of an optional of the element or child
+    // under group. If not, skip it
     let isRefOptional = false;
     let parent = ref.parentNode;
     if (!parent) continue;
     if (parent.nodeName === 'optional') {
       isRefOptional = true;
+      parent = parent.parentNode;
+      if (!parent) continue;
+    }
+    if (parent.nodeName === 'group') {
       parent = parent.parentNode;
       if (!parent) continue;
     }
@@ -852,6 +862,32 @@ function collectAttributesForElement(
 
     return { ...elementAttribute, skipOutputToUsfm, usfmMatchElements };
   });
+
+  // Put link-href, link-title, and link-id last
+  const linkHrefIndex = finalElementAttributes.findIndex(
+    ({ attributeName }) => attributeName === 'link-href'
+  );
+  if (linkHrefIndex >= 0) {
+    const linkHrefAttribute = finalElementAttributes[linkHrefIndex];
+    finalElementAttributes.splice(linkHrefIndex, 1);
+    finalElementAttributes.push(linkHrefAttribute);
+  }
+  const linkTitleIndex = finalElementAttributes.findIndex(
+    ({ attributeName }) => attributeName === 'link-title'
+  );
+  if (linkTitleIndex >= 0) {
+    const linkTitleAttribute = finalElementAttributes[linkTitleIndex];
+    finalElementAttributes.splice(linkTitleIndex, 1);
+    finalElementAttributes.push(linkTitleAttribute);
+  }
+  const linkIdIndex = finalElementAttributes.findIndex(
+    ({ attributeName }) => attributeName === 'link-id'
+  );
+  if (linkIdIndex >= 0) {
+    const linkIdAttribute = finalElementAttributes[linkIdIndex];
+    finalElementAttributes.splice(linkIdIndex, 1);
+    finalElementAttributes.push(linkIdAttribute);
+  }
 
   return finalElementAttributes;
 }
@@ -994,7 +1030,7 @@ function getUsfmEndTagForElement(element: Element, markerType: string, defineNam
  * @param skipOutputMarkerToUsfmDefineNames Array of names of `define` elements whose marker
  *   definitions describe markers that should not be exported to USFM (e.g. which attributes
  *   indicate that the marker should not be exported to USFM)
- * @param isVersion3_1OrHigher Whether the `usx.rng` file is from 3.1+. 3.1+ has much more
+ * @param isVersion3_1OrAbove Whether the `usx.rng` file is from 3.1+. 3.1+ has much more
  *   information that we can use
  */
 function processDefineElement(
@@ -1003,7 +1039,7 @@ function processDefineElement(
   markersMap: MarkersMap,
   skippedDefinitions: Set<string>,
   skipOutputMarkerToUsfmDefineNames: Set<string>,
-  isVersion3_1OrHigher: boolean
+  isVersion3_1OrAbove: boolean
 ) {
   const defineName = defineElement.getAttribute('name');
   if (!defineName) {
@@ -1079,7 +1115,7 @@ function processDefineElement(
         markerType,
         defineName
       );
-      if (isVersion3_1OrHigher && styleHasNewlineBefore === undefined)
+      if (isVersion3_1OrAbove && styleHasNewlineBefore === undefined)
         console.log(
           `Warning: Style attribute for marker type "${
             markerType
@@ -1227,7 +1263,7 @@ function processDefineElement(
     // Set hasNewlineBefore on marker type if applicable
     if (hasNewlineBefore === undefined) {
       // Only 3.1+ has this data, and it's not really expected that skip output markers will have it
-      if (isVersion3_1OrHigher && !skipOutputMarkerToUsfm) {
+      if (isVersion3_1OrAbove && !skipOutputMarkerToUsfm) {
         console.log(
           `Warning: could not determine marker type "${
             markerType
@@ -1712,6 +1748,23 @@ function processDefineElement(
 // #endregion processing usx.rng data
 
 /**
+ * Determine if the version provided is 3.1 or higher. This is important for many reasons:
+ *
+ * - 3.1 and up is generated pretty much completely separately from less than 3.1, so they have many
+ *   differences in common with other versions in the same group
+ * - Both groups have separate problems, things missing, etc. that need to be adjusted
+ * - Both groups have some slight differences in how to handle them
+ * - 3.1 and up has a lot more necessary information than less than 3.1, so less than 3.1 needs to
+ *   build on a base generated from 3.1 or higher
+ *
+ * @param version Which `usx.rng` version this markers map is generated from
+ * @returns `true` if 3.1 or higher; `false` otherwise
+ */
+export function isVersion3_1OrHigher(version: string): boolean {
+  return version >= '3.1' && version !== 'master';
+}
+
+/**
  * Transform a USX RelaxNG schema into a markers map
  *
  * @param usxSchema USX RelaxNG schema
@@ -1719,6 +1772,9 @@ function processDefineElement(
  * @param commit Commit hash of the USX schema file
  * @param skippedDefinitions Optional set to populate with names of definitions that did not result
  *   in adding any markers to the map. This Set is transformed in place and is not returned
+ * @param baseMarkersMap Optional map to use to fill in missing marker information on the maps that
+ *   are version less than 3.1. The `usx.rng` files below 3.1 do not have some necessary
+ *   information.
  * @returns The generated markers map
  */
 export function transformUsxSchemaToMarkersMap(
@@ -1726,7 +1782,8 @@ export function transformUsxSchemaToMarkersMap(
   version: string,
   commit: string,
   usfmToolsVersion: string,
-  skippedDefinitions: Set<string> = new Set<string>()
+  skippedDefinitions: Set<string> = new Set<string>(),
+  baseMarkersMap?: MarkersMap
 ): MarkersMap {
   const parser = new DOMParser();
   const doc = parser.parseFromString(usxSchema, 'text/xml');
@@ -1809,10 +1866,9 @@ export function transformUsxSchemaToMarkersMap(
     defineElements.splice(referredDefineElementIndex, 1);
   });
 
-  const isVersion3_1OrHigher = version >= '3.1' && version !== 'master';
+  const isVersion3_1OrAbove = isVersion3_1OrHigher(version);
   // Set some specific exceptions for 3.0.x because it doesn't have some info present in 3.1
-  // TODO: set these in a smarter way once we have a better system for adding 3.1 info to 3.0.x
-  if (!isVersion3_1OrHigher) {
+  if (!isVersion3_1OrAbove) {
     referredIgnoreDefines.add('ChapterEnd');
     referredIgnoreDefines.add('VerseEnd');
   }
@@ -1825,41 +1881,39 @@ export function transformUsxSchemaToMarkersMap(
       markersMap,
       skippedDefinitions,
       referredIgnoreDefines,
-      isVersion3_1OrHigher
+      isVersion3_1OrAbove
     );
   }
 
   // Add the required markers that might not be in the schema
   const manualDefineName = 'added manually';
-  if (!isVersion3_1OrHigher) {
-    markersMap.markers['cat'] = mergeMarkers(
-      markersMap.markers['cat'],
-      { type: 'char' },
-      'cat',
+  if (!isVersion3_1OrAbove) {
+    // Add `fig` which seems to be mistakenly missing style in less than 3.1 and therefore doesn't get
+    // included
+    markersMap.markers['fig'] = mergeMarkers(
+      markersMap.markers['fig'],
+      { type: 'figure' },
+      'fig',
       manualDefineName
     );
-    markersMap.markers['ca'] = mergeMarkers(
-      markersMap.markers['ca'],
-      { type: 'char' },
-      'ca',
+    markersMap.markerTypes['figure'] = mergeMarkerTypes(
+      markersMap.markerTypes['figure'],
+      {},
+      'figure',
       manualDefineName
     );
-    markersMap.markers['cp'] = mergeMarkers(
-      markersMap.markers['cp'],
-      { type: 'para' },
-      'cp',
+
+    // Less than 3.1 doesn't have `esbe`, the end marker for `esb`, because it only has USX information
+    markersMap.markers['esb'] = mergeMarkers(
+      markersMap.markers['esb'],
+      { type: 'sidebar', independentClosingMarkers: ['esbe'] },
+      'esb',
       manualDefineName
     );
-    markersMap.markers['va'] = mergeMarkers(
-      markersMap.markers['va'],
-      { type: 'char' },
-      'va',
-      manualDefineName
-    );
-    markersMap.markers['vp'] = mergeMarkers(
-      markersMap.markers['vp'],
-      { type: 'char' },
-      'vp',
+    markersMap.markers['esbe'] = mergeMarkers(
+      markersMap.markers['esbe'],
+      { type: 'sidebar', isIndependentClosingMarkerFor: ['esb'] },
+      'esbe',
       manualDefineName
     );
   }
@@ -1871,7 +1925,7 @@ export function transformUsxSchemaToMarkersMap(
   );
   markersMap.markers['USJ'] = mergeMarkers(
     markersMap.markers['USJ'],
-    { ...markersMap.markers['usx'], type: 'USJ', textContentAttribute: 'version' },
+    { ...markersMap.markers['usx'], type: 'USJ' },
     'USJ',
     manualDefineName
   );
@@ -1882,22 +1936,17 @@ export function transformUsxSchemaToMarkersMap(
     manualDefineName
   );
 
-  if (!isVersion3_1OrHigher) {
-    // In 3.0.8, `link-href` is not set default where it should be, but we need it in a couple
-    // spots. Add it in there if it's missing. It should just be `href` in 3.1+, but we will
-    // trust that it is properly set in 3.1+ schemas.
-    if (markersMap.markers['jmp'] && !markersMap.markers['jmp'].defaultAttribute) {
-      console.log(
-        'Warning: Setting default attribute for jmp to link-href because defaultAttribute was not set'
-      );
-      markersMap.markers['jmp'].defaultAttribute = 'link-href';
-    }
-    if (markersMap.markers['xt'] && !markersMap.markers['xt'].defaultAttribute) {
-      console.log(
-        'Warning: Setting default attribute for xt to link-href because defaultAttribute was not set'
-      );
-      markersMap.markers['xt'].defaultAttribute = 'link-href';
-    }
+  // Fill in missing information from the base markers map
+  if (baseMarkersMap) {
+    Object.entries(markersMap.markers).forEach(([markerName, markerInfo]) => {
+      if (!markerInfo) return [markerName, markerInfo];
+
+      // If default attribute is already somewhere in base, remove it because it was mis-labeled
+
+      // Fill in all information from base
+    });
+
+    // Add markers from base that are independent closing markers for present markers in the main map
   }
 
   // Sort the markers, marker types, and `isAttributeMarkerFor`s

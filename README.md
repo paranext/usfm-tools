@@ -131,7 +131,7 @@ The marker names and information about those markers are derived from the `usx.r
 TODO: Improve wording/list exception cases we don't deal with right now
 
 - `closed` attribute is just gonna be an exception for now: you have to know not to put the closing tag if `closed="false"`
-  - also not listing `closed` tag in `skipOutputAttributeToUsfm` because it is always skipped you do something special with it anyway
+  - also not listing `closed` tag in `skipOutputAttributeToUsfm` because it is always skipped; you do something special with it anyway
 - Derived metadata is also gonna be an exception; we aren't going to factor those in right now.
   - `vid` on `para` and `table`
   - `sid` and `eid` on `chapter` and `verse`
@@ -142,8 +142,8 @@ TODO: Improve wording/list exception cases we don't deal with right now
   - `cell` -> `table:cell` in USJ
   - `colspan` on `cell` gets put in the marker name in USFM
 - `optbreak` is pretty exceptional or at least will be until otherwise
-- Determining when to close certain markers that have lots of content like `periph`, `esb`, `table`, `usx`
-  - There are specific rules for how to know when these should be closed. This is not covered in the marker data at this time
+- Determining when to close certain markers that have multiple paragraphs of content like `periph`, `esb`, `table`, `usx`
+  - There are specific rules for how to know when these should be closed. This is not covered in the marker map data at this time
 - `usfm` marker must be after `id`, but `id` is in `usx` and `USJ` contents
 
 TODO: adjust README based on new changes
@@ -152,7 +152,8 @@ TODO: adjust README based on new changes
 - [markerType] note when the marker shouldn't have a `style` attribute
   - If the element has no `style` attribute, the marker shouldn't either.
     - Do not consider the marker type to have no `style` attribute if all `ref`s pointing to it have `usfm:ignore="true"`, meaning it is just listing attributes that indicate the whole marker should not be output to USFM
-- Need to look in `ref` tags in `element` and check if `define` has first child `attribute` or `optional` then `attribute` (`category`, `closed`)
+- Need to look in `ref` tags in `element` and check if `define` has first child `attribute` or `optional` then `attribute` (`category`, `closed`, `link-href`, `link-title`, `link-id`)
+  - Put `link-href`, `link-title`, and `link-id` at the end of the list of attributes to consider for default attribute. They are weird attributes that can be on any character marker in spec under 3.1, but `link-href` is only default if there is not another attribute other than these that is eligible for default even though it is listed first in most cases.
 - [marker] ignore when translating to USFM
   - Ignore the opening and closing markers when translating to usfm (but keep the contents of the marker) if `attribute`s listed in the `markerType` are present if any of the following are true:
     - If all `ref`s pointing to the `define` have `usfm:ignore="true"` (chapter and verse `eid`)
