@@ -465,6 +465,16 @@ function mergeMarkers(
     markerB.textContentAttribute
   );
 
+  // Check parseUsfmInstructions can be merged
+  verifyStringsCanBeMerged(
+    OBJECT_TYPE_MARKER,
+    markerName,
+    'parseUsfmInstructions',
+    defineName,
+    markerA.parseUsfmInstructions,
+    markerB.parseUsfmInstructions
+  );
+
   // Combine leadingAttributes
   const mergedLeadingAttributes = mergeArrays(
     OBJECT_TYPE_MARKER,
@@ -638,6 +648,26 @@ function mergeMarkerTypes(
     );
     process.exit(1);
   }
+
+  // Check outputToUsfmInstructions can be merged
+  verifyStringsCanBeMerged(
+    OBJECT_TYPE_MARKER,
+    markerTypeName,
+    'outputToUsfmInstructions',
+    defineName,
+    markerTypeA.outputToUsfmInstructions,
+    markerTypeB.outputToUsfmInstructions
+  );
+
+  // Check parseUsfmInstructions can be merged
+  verifyStringsCanBeMerged(
+    OBJECT_TYPE_MARKER,
+    markerTypeName,
+    'parseUsfmInstructions',
+    defineName,
+    markerTypeA.parseUsfmInstructions,
+    markerTypeB.parseUsfmInstructions
+  );
 
   // Combine skipOutputAttributeToUsfm
   const mergedSkipOutputAttributeToUsfm = mergeArrays(
@@ -853,7 +883,7 @@ function collectAttributesForElement(
     // Skip output attribute name starts with `xsi:` (also indicates it is XML schema-related)
     if (!skipOutputToUsfm && attributeName.startsWith('xsi:')) skipOutputToUsfm = true;
 
-    // Some exception cases for skipping output to USFM - I think these are errors in `usx.rng`
+    // Special case: some exceptions for skipping output to USFM - I think these are errors in `usx.rng`
     // If the errors are fixed, these should be removed
     if ((markerType === 'para' || markerType === 'table') && attributeName === 'vid')
       skipOutputToUsfm = true;
@@ -912,10 +942,18 @@ function determineHasNewlineBeforeForElement(
   markerType: string,
   defineName: string
 ) {
-  // Exception: cell has `usfm:ptag` though it doesn't have a newline after it. I think this
+  // Special case: cell has `usfm:ptag` though it doesn't have a newline after it. I think this
   // is an error in `usx.rng`
   // If the error is fixed, this should be removed
   if (markerType === 'cell') return false;
+  // Special case: periph has `usfm:match` though it doesn't have a newline in it. I think this
+  // is an error in `usx.rng`
+  // If the error is fixed, this should be removed
+  if (markerType === 'periph') return true;
+  // Special case: usx has `usfm:match` though it doesn't have a newline in it. I think this
+  // is an error in `usx.rng`
+  // If the error is fixed, this should be removed
+  if (markerType === 'usx') return true;
 
   const isElementUsfmTagLike =
     element.tagName === 'usfm:tag' ||
@@ -1237,16 +1275,12 @@ function processDefineElement(
     }
 
     // Determine if there should be a newline before the marker based on the element
-    let elementHasNewlineBefore = determineHasNewlineBeforeForElement(
+    const elementHasNewlineBefore = determineHasNewlineBeforeForElement(
       element,
       'Element',
       markerType,
       defineName
     );
-
-    // An exception case for newline before - I think this is an error in `usx.rng`
-    // If the error is fixed, this should be removed
-    if (markerType === 'periph') elementHasNewlineBefore = true;
 
     if (elementHasNewlineBefore !== undefined) {
       if (hasNewlineBefore !== undefined && hasNewlineBefore !== elementHasNewlineBefore) {
@@ -1421,13 +1455,12 @@ function processDefineElement(
         // Always skip style attribute because it is not like other attributes and should not
         // be considered in this area
         if (attributeName === 'style') continue;
-        // Exception case - always skip closed attribute for now because it's a really weird
+        // Special case: always skip closed attribute for now because it's a really weird
         // attribute that we have to do manual things with. Maybe we will handle this better
         // in the future
         if (attributeName === 'closed') continue;
         // Exception case - `colspan` is an attribute that gets incorporated into the marker
-        // name. But it isn't marked in any special way in `usx.rng`. And we're not handling
-        // tables yet anyway. Just skip this attribute until something changes.
+        // name. But it isn't marked in any special way in `usx.rng`.
         if (markerType === 'cell' && attributeName === 'colspan') continue;
 
         // Put this attribute in the list of marker skip attributes and continue to the next
@@ -1867,7 +1900,7 @@ export function transformUsxSchemaToMarkersMap(
   });
 
   const isVersion3_1OrAbove = isVersion3_1OrHigher(version);
-  // Set some specific exceptions for 3.0.x because it doesn't have some info present in 3.1
+  // Special case: set some specific exceptions for 3.0.x because it doesn't have some info present in 3.1
   if (!isVersion3_1OrAbove) {
     referredIgnoreDefines.add('ChapterEnd');
     referredIgnoreDefines.add('VerseEnd');
@@ -1885,28 +1918,176 @@ export function transformUsxSchemaToMarkersMap(
     );
   }
 
-  // Add the required markers that might not be in the schema
+  // Special case: Fill in some stuff that isn't quite right in the schema:
+  // - Add the required markers that might not be in the schema
+  // - Add some one-off instructions for outputting to USFM in a particularly challenging way
+  // - Add some extra information to some existing markers
   const manualDefineName = 'added manually';
+  // Create `usfm` marker based on `usx` marker but with some differences
   markersMap.markers['usfm'] = mergeMarkers(
     markersMap.markers['usfm'],
-    { ...markersMap.markers['usx'], type: 'para' },
+    {
+      ...markersMap.markers['usx'],
+      type: 'para',
+      parseUsfmInstructions:
+        "If this marker is directly after the first id marker, this marker's version attribute should determine the version attribute of the usx or USJ marker at the top of the USX or USJ document, then this marker should be removed.",
+    },
     'usfm',
     manualDefineName
   );
+  const usxAndUsjOutputInstructions =
+    "If this marker is the top-level marker containing all other markers in this document, it should not be directly output to USFM. Instead, if this marker's version attribute is other than 3.0, a new usfm marker with this version attribute needs to be added after the id marker if one is present in the USFM.";
+  // Add output instructions to `usx` marker type
+  markersMap.markerTypes['usx'] = mergeMarkerTypes(
+    markersMap.markerTypes['usx'],
+    {
+      // Add the existing properties of usx marker type so we don't have conflicts merging types
+      ...markersMap.markerTypes['usx'],
+      outputToUsfmInstructions: usxAndUsjOutputInstructions,
+    },
+    'usx',
+    manualDefineName
+  );
+  // Add usfm output marker name to usx marker
+  markersMap.markers['usx'] = mergeMarkers(
+    markersMap.markers['usx'],
+    {
+      // Need type so it passes TypeScript type checking
+      type: 'usx',
+      markerUsfm: 'usfm',
+    },
+    'usx',
+    manualDefineName
+  );
+  // Create USJ marker based on usx marker
   markersMap.markers['USJ'] = mergeMarkers(
     markersMap.markers['USJ'],
     { ...markersMap.markers['usx'], type: 'USJ' },
     'USJ',
     manualDefineName
   );
+  // Create USJ marker type based on usx marker type
   markersMap.markerTypes['USJ'] = mergeMarkerTypes(
     markersMap.markerTypes['USJ'],
-    { hasStyleAttribute: false },
+    { ...markersMap.markerTypes['usx'], outputToUsfmInstructions: usxAndUsjOutputInstructions },
     'USJ',
     manualDefineName
   );
+  // Create unmatched marker type to handle Paratext output with unmatched closing markers
+  // Putting this in both spec and Paratext markers maps because spec seems to be silent regarding what
+  // to do about unknown markers, and this is enough of a known case that it seems reasonable to preserve
+  // it anyway. The markers map is not for validating USJ/USFM but rather for translating it, so this
+  // seems reasonable enough to do.
+  markersMap.markerTypes['unmatched'] = mergeMarkerTypes(
+    markersMap.markerTypes['unmatched'],
+    {
+      description:
+        'Paratext uses this type for closing markers that it cannot find opening markers for. They are treated like char markers but have no contents, no closing markers, and no space after the marker.',
+      outputToUsfmInstructions: 'Do not output a structural space after the opening marker for markers with unmatched type.',
+      parseUsfmInstructions:
+        'If a closing marker occurs but does not seem to have a matching opening marker, create an unmatched-type marker. There is no structural space after the unmatched-type marker; its end is determined by the asterisk at the end of the marker.',
+    },
+    'unmatched',
+    manualDefineName
+  );
+  // Add parse/output instructions to cell
+  markersMap.markerTypes['cell'] = mergeMarkerTypes(
+    markersMap.markerTypes['cell'],
+    {
+      outputToUsfmInstructions:
+        "If this marker has a colspan attribute, the USFM marker name should be this marker's name plus hyphen (-) plus the marker's final column number (first column number found in the marker name plus colspan minus 1). Then the colspan attribute should not be output as a USFM attribute.",
+      parseUsfmInstructions:
+        "If this marker's name has a hyphen (-) and a number after the marker, the USX/USJ marker name should be just the portion of the marker name before the hyphen, and it should have the colspan attribute which is the number of columns spanned by the marker (second column number plus 1 minus first column number).",
+    },
+    'cell',
+    manualDefineName
+  );
+  // Set up the USJ marker type names for table content marker types row and cell
+  const rowTypeNoAlternateTypes = { ...markersMap.markerTypes['row'] };
+  const rowUsjType = 'table:row';
+  markersMap.markerTypes['row'] = mergeMarkerTypes(
+    markersMap.markerTypes['row'],
+    {
+      // Add the existing properties of row marker type so we don't have conflicts merging types
+      ...markersMap.markerTypes['row'],
+      markerTypeUsj: rowUsjType,
+    },
+    'row',
+    manualDefineName
+  );
+  markersMap.markerTypes[rowUsjType] = mergeMarkerTypes(
+    rowTypeNoAlternateTypes,
+    {
+      // Add the existing properties of row marker type so we don't have conflicts merging types
+      ...markersMap.markerTypes['row'],
+      markerTypeUsfm: 'row',
+      markerTypeUsx: 'row',
+    },
+    rowUsjType,
+    manualDefineName
+  );
+  const cellTypeNoAlternateTypes = { ...markersMap.markerTypes['cell'] };
+  const cellUsjType = 'table:cell';
+  markersMap.markerTypes['cell'] = mergeMarkerTypes(
+    markersMap.markerTypes['cell'],
+    {
+      // Add the existing properties of cell marker type so we don't have conflicts merging types
+      ...markersMap.markerTypes['cell'],
+      markerTypeUsj: cellUsjType,
+    },
+    'cell',
+    manualDefineName
+  );
+  markersMap.markerTypes[cellUsjType] = mergeMarkerTypes(
+    cellTypeNoAlternateTypes,
+    {
+      // Add the existing properties of cell marker type so we don't have conflicts merging types
+      ...markersMap.markerTypes['cell'],
+      markerTypeUsfm: 'cell',
+      markerTypeUsx: 'cell',
+    },
+    cellUsjType,
+    manualDefineName
+  );
+  // Add the nested prefix + to char marker. This is technically in `usx.rng` 3.1+, but it's quite
+  // strange and probably not worth deriving as we are phasing nested prefixes out anyway.
+  markersMap.markerTypes['char'] = mergeMarkerTypes(
+    markersMap.markerTypes['char'],
+    {
+      // Add the existing properties of char marker type so we don't have conflicts merging types
+      ...markersMap.markerTypes['char'],
+      nestedPrefix: '+',
+    },
+    'char',
+    manualDefineName
+  );
+  // Add instructions for converting figure attribute between USFM src and USX/USJ file
+  markersMap.markerTypes['figure'] = mergeMarkerTypes(
+    markersMap.markerTypes['figure'],
+    {
+      // Add the existing properties of figure marker type so we don't have conflicts merging types
+      ...markersMap.markerTypes['figure'],
+      outputToUsfmInstructions: 'The USX/USJ file attribute needs its name changed to src in USFM',
+      parseUsfmInstructions: 'The USFM src attribute needs its name changed to file in USX/USJ',
+    },
+    'figure',
+    manualDefineName
+  );
+  // Indicate table-type markers should be removed outputting to USFM. Probably would be best for
+  // `usx.rng` to have something indicating this because this may not be the case in v3.2 or v4.
+  // See https://github.com/usfm-bible/tcdocs/blob/main/proposals/2025/U25003%20Lists%20and%20Tables.md
+  markersMap.markerTypes['table'] = mergeMarkerTypes(
+    markersMap.markerTypes['table'],
+    {
+      // Add the existing properties of table marker type so we don't have conflicts merging types
+      ...markersMap.markerTypes['table'],
+      skipOutputMarkerToUsfm: true,
+    },
+    'table',
+    manualDefineName
+  );
 
-  // Fix some inaccuracies in less than 3.1
+  // Special case: Fix some inaccuracies in less than 3.1
   if (!isVersion3_1OrAbove) {
     // periph does not have a default attribute. `id` looks like it is default, but it always uses
     // non-default syntax for some reason
@@ -1917,17 +2098,11 @@ export function transformUsxSchemaToMarkersMap(
     if (markersMap.markers['ts']?.type === 'para') markersMap.markers['ts'].type = 'ms';
 
     // Add `fig` which seems to be mistakenly missing style in less than 3.1 and therefore doesn't get
-    // included
+    // included. (`figure` type is being added in section above)
     markersMap.markers['fig'] = mergeMarkers(
       markersMap.markers['fig'],
       { type: 'figure' },
       'fig',
-      manualDefineName
-    );
-    markersMap.markerTypes['figure'] = mergeMarkerTypes(
-      markersMap.markerTypes['figure'],
-      {},
-      'figure',
       manualDefineName
     );
 
@@ -1958,6 +2133,20 @@ export function transformUsxSchemaToMarkersMap(
       markersMap.markers['efe'],
       { type: 'note' },
       'efe',
+      manualDefineName
+    );
+
+    // Indicate ref-type markers should be removed outputting to USFM in less than 3.1 because ref was
+    // introduced into the standard in 3.1, but Paratext generates ref when transforming from USFM to
+    // USX even in 3.0.
+    markersMap.markerTypes['ref'] = mergeMarkerTypes(
+      markersMap.markerTypes['ref'],
+      {
+        // Add the existing properties of ref marker type so we don't have conflicts merging types
+        ...markersMap.markerTypes['ref'],
+        skipOutputMarkerToUsfm: true,
+      },
+      'ref',
       manualDefineName
     );
 

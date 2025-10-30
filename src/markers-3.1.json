@@ -2,7 +2,7 @@
   "version": "3.1",
   "commit": "50f2a6ac3fc1d867d906df28bc00fcff729a7b76",
   "markersMapVersion": "1.0.0",
-  "usfmToolsVersion": "bb5d8dbffd924fe874263c1102e5cbb13d6237be+",
+  "usfmToolsVersion": "06981ba849b742d51d80cafb715f60ba166433c5+",
   "markers": {
     "add": {
       "type": "char",
@@ -940,15 +940,18 @@
     },
     "usfm": {
       "type": "para",
-      "textContentAttribute": "version"
+      "textContentAttribute": "version",
+      "parseUsfmInstructions": "If this marker is directly after the first id marker, this marker's version attribute should determine the version attribute of the usx or USJ marker at the top of the USX or USJ document, then this marker should be removed."
     },
     "USJ": {
       "type": "USJ",
-      "textContentAttribute": "version"
+      "textContentAttribute": "version",
+      "markerUsfm": "usfm"
     },
     "usx": {
       "type": "usx",
-      "textContentAttribute": "version"
+      "textContentAttribute": "version",
+      "markerUsfm": "usfm"
     },
     "v": {
       "type": "verse",
@@ -1064,7 +1067,10 @@
     "cell": {
       "skipOutputAttributeToUsfm": [
         "align"
-      ]
+      ],
+      "outputToUsfmInstructions": "If this marker has a colspan attribute, the USFM marker name should be this marker's name plus hyphen (-) plus the marker's final column number (first column number found in the marker name plus colspan minus 1). Then the colspan attribute should not be output as a USFM attribute.",
+      "parseUsfmInstructions": "If this marker's name has a hyphen (-) and a number after the marker, the USX/USJ marker name should be just the portion of the marker name before the hyphen, and it should have the colspan attribute which is the number of columns spanned by the marker (second column number plus 1 minus first column number).",
+      "markerTypeUsj": "table:cell"
     },
     "chapter": {
       "hasNewlineBefore": true,
@@ -1076,10 +1082,13 @@
       ]
     },
     "char": {
-      "hasClosingMarker": true
+      "hasClosingMarker": true,
+      "nestedPrefix": "+"
     },
     "figure": {
-      "hasClosingMarker": true
+      "hasClosingMarker": true,
+      "outputToUsfmInstructions": "The USX/USJ file attribute needs its name changed to src in USFM",
+      "parseUsfmInstructions": "The USFM src attribute needs its name changed to file in USX/USJ"
     },
     "ms": {
       "hasClosingMarker": true,
@@ -1109,7 +1118,8 @@
       ]
     },
     "row": {
-      "hasNewlineBefore": true
+      "hasNewlineBefore": true,
+      "markerTypeUsj": "table:row"
     },
     "sidebar": {
       "hasNewlineBefore": true
@@ -1118,16 +1128,45 @@
       "hasStyleAttribute": false,
       "skipOutputAttributeToUsfm": [
         "vid"
-      ]
+      ],
+      "skipOutputMarkerToUsfm": true
+    },
+    "table:cell": {
+      "skipOutputAttributeToUsfm": [
+        "align"
+      ],
+      "outputToUsfmInstructions": "If this marker has a colspan attribute, the USFM marker name should be this marker's name plus hyphen (-) plus the marker's final column number (first column number found in the marker name plus colspan minus 1). Then the colspan attribute should not be output as a USFM attribute.",
+      "parseUsfmInstructions": "If this marker's name has a hyphen (-) and a number after the marker, the USX/USJ marker name should be just the portion of the marker name before the hyphen, and it should have the colspan attribute which is the number of columns spanned by the marker (second column number plus 1 minus first column number).",
+      "markerTypeUsj": "table:cell",
+      "markerTypeUsfm": "cell",
+      "markerTypeUsx": "cell"
+    },
+    "table:row": {
+      "hasNewlineBefore": true,
+      "markerTypeUsj": "table:row",
+      "markerTypeUsfm": "row",
+      "markerTypeUsx": "row"
+    },
+    "unmatched": {
+      "description": "Paratext uses this type for closing markers that it cannot find opening markers for. They are treated like char markers but have no contents, no closing markers, and no space after the marker.",
+      "outputToUsfmInstructions": "Do not output a structural space after the opening marker for markers with unmatched type.",
+      "parseUsfmInstructions": "If a closing marker occurs but does not seem to have a matching opening marker, create an unmatched-type marker. There is no structural space after the unmatched-type marker; its end is determined by the asterisk at the end of the marker."
     },
     "USJ": {
-      "hasStyleAttribute": false
-    },
-    "usx": {
+      "hasNewlineBefore": true,
       "hasStyleAttribute": false,
       "skipOutputAttributeToUsfm": [
         "noNamespaceSchemaLocation"
-      ]
+      ],
+      "outputToUsfmInstructions": "If this marker is the top-level marker containing all other markers in this document, it should not be directly output to USFM. Instead, if this marker's version attribute is other than 3.0, a new usfm marker with this version attribute needs to be added after the id marker if one is present in the USFM."
+    },
+    "usx": {
+      "hasNewlineBefore": true,
+      "hasStyleAttribute": false,
+      "skipOutputAttributeToUsfm": [
+        "noNamespaceSchemaLocation"
+      ],
+      "outputToUsfmInstructions": "If this marker is the top-level marker containing all other markers in this document, it should not be directly output to USFM. Instead, if this marker's version attribute is other than 3.0, a new usfm marker with this version attribute needs to be added after the id marker if one is present in the USFM."
     },
     "verse": {
       "hasNewlineBefore": true,

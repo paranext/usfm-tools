@@ -2,9 +2,7 @@
 > usfm-tools@1.0.0 generate-markers-map
 > tsx src/generate-markers-map --schema src/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json
 
-Warning: could not determine marker type "usx" hasNewlineBefore. In define Peripheral.
 Warning: Marker named "usx" has one definition with a textContentAttribute and one without: undefined, "version". Using the one with the textContentAttribute. In definition: Peripheral (merging extraMarkerInfo into marker to add)
-Warning: could not determine marker type "usx" hasNewlineBefore. In define Scripture.
 Warning: Marker named "usx" has one definition with a textContentAttribute and one without: undefined, "version". Using the one with the textContentAttribute. In definition: Scripture (merging extraMarkerInfo into marker to add)
 Warning: Marker named "id" has one definition with a leadingAttributes and one without: undefined, ["code"]. Using the one with the leadingAttributes. In definition: BookIdentification (merging extraMarkerInfo into marker to add)
 Warning: Marker named "id" has one definition with a leadingAttributes and one without: undefined, ["code"]. Using the one with the leadingAttributes. In definition: PeripheralBookIdentification (merging extraMarkerInfo into marker to add)
@@ -41,6 +39,13 @@ Warning: Marker named "esb" has one definition with a attributeMarkers and one w
 Warning: Marker named "cat" has two definitions with isAttributeMarkerFor arrays of different lengths: ["fe","f","efe","ef","ex","x"], ["esb"]. Combining them. In definition: Sidebar
 Warning: Attribute "loc" on marker type "ref" has multiple usfm:match tags. It will not be considered for special attribute properties like leading attribute. In define Reference
 Warning: Marker named "ref" has one definition with a defaultAttribute and one without: undefined, "loc". Using the one with the defaultAttribute. In definition: Reference (merging extraMarkerInfo into marker to add)
+Warning: Marker named "usx" has one definition with a outputToUsfmInstructions and one without: undefined, "If this marker is the top-level marker containing all other markers in this document, it should not be directly output to USFM. Instead, if this marker's version attribute is other than 3.0, a new usfm marker with this version attribute needs to be added after the id marker if one is present in the USFM.". Using the one with the outputToUsfmInstructions. In definition: added manually
+Warning: Marker named "usx" has one definition with a textContentAttribute and one without: "version", undefined. Using the one with the textContentAttribute. In definition: added manually
+Warning: Marker named "cell" has one definition with a outputToUsfmInstructions and one without: undefined, "If this marker has a colspan attribute, the USFM marker name should be this marker's name plus hyphen (-) plus the marker's final column number (first column number found in the marker name plus colspan minus 1). Then the colspan attribute should not be output as a USFM attribute.". Using the one with the outputToUsfmInstructions. In definition: added manually
+Warning: Marker named "cell" has one definition with a parseUsfmInstructions and one without: undefined, "If this marker's name has a hyphen (-) and a number after the marker, the USX/USJ marker name should be just the portion of the marker name before the hyphen, and it should have the colspan attribute which is the number of columns spanned by the marker (second column number plus 1 minus first column number).". Using the one with the parseUsfmInstructions. In definition: added manually
+Warning: Marker type named "cell" has one definition with a skipOutputAttributeToUsfm and one without: ["align"], undefined. Using the one with the skipOutputAttributeToUsfm. In definition: added manually
+Warning: Marker named "figure" has one definition with a outputToUsfmInstructions and one without: undefined, "The USX/USJ file attribute needs its name changed to src in USFM". Using the one with the outputToUsfmInstructions. In definition: added manually
+Warning: Marker named "figure" has one definition with a parseUsfmInstructions and one without: undefined, "The USFM src attribute needs its name changed to file in USX/USJ". Using the one with the parseUsfmInstructions. In definition: added manually
 Generated markers.json successfully
 
 Skipped definitions:

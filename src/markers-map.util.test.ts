@@ -44,13 +44,13 @@ const STDOUT_REGEXP =
 // hopefully never need to be updated. It is copied in this repo for convenience.
 
 const USX_SCHEMA_3_0_7 = fs.readFileSync(path.resolve(testDataPath, 'usx-3.0.7.rng'), 'utf-8');
-const USX_SCHEMA_3_1 = fs.readFileSync(path.resolve(testDataPath, 'usx-3.1.rng'), 'utf-8');
+const USX_SCHEMA_3_1 = fs.readFileSync(path.resolve(dirPath, 'usx-3.1.rng'), 'utf-8');
 
 const USFM_MARKERS_MAP_3_0_7: MarkersMap = JSON.parse(
   fs.readFileSync(path.resolve(testDataPath, 'markers-3.0.7.json'), 'utf-8')
 );
 const USFM_MARKERS_MAP_3_1: MarkersMap = JSON.parse(
-  fs.readFileSync(path.resolve(testDataPath, 'markers-3.1.json'), 'utf-8')
+  fs.readFileSync(path.resolve(dirPath, 'markers-3.1.json'), 'utf-8')
 );
 
 const STDOUT_3_0_7 = fs
@@ -104,7 +104,8 @@ test('transformUsxSchemaToMarkersMap properly transform usx.rng 3.0.7', () => {
     USFM_MARKERS_MAP_3_0_7.version,
     USFM_MARKERS_MAP_3_0_7.commit,
     USFM_MARKERS_MAP_3_0_7.usfmToolsVersion,
-    skippedDefinitions
+    skippedDefinitions,
+    USFM_MARKERS_MAP_3_1
   );
 
   expect(markersMap).toEqual(USFM_MARKERS_MAP_3_0_7);
