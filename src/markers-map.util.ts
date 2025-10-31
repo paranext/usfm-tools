@@ -893,32 +893,6 @@ function collectAttributesForElement(
     return { ...elementAttribute, skipOutputToUsfm, usfmMatchElements };
   });
 
-  // Put link-href, link-title, and link-id last
-  const linkHrefIndex = finalElementAttributes.findIndex(
-    ({ attributeName }) => attributeName === 'link-href'
-  );
-  if (linkHrefIndex >= 0) {
-    const linkHrefAttribute = finalElementAttributes[linkHrefIndex];
-    finalElementAttributes.splice(linkHrefIndex, 1);
-    finalElementAttributes.push(linkHrefAttribute);
-  }
-  const linkTitleIndex = finalElementAttributes.findIndex(
-    ({ attributeName }) => attributeName === 'link-title'
-  );
-  if (linkTitleIndex >= 0) {
-    const linkTitleAttribute = finalElementAttributes[linkTitleIndex];
-    finalElementAttributes.splice(linkTitleIndex, 1);
-    finalElementAttributes.push(linkTitleAttribute);
-  }
-  const linkIdIndex = finalElementAttributes.findIndex(
-    ({ attributeName }) => attributeName === 'link-id'
-  );
-  if (linkIdIndex >= 0) {
-    const linkIdAttribute = finalElementAttributes[linkIdIndex];
-    finalElementAttributes.splice(linkIdIndex, 1);
-    finalElementAttributes.push(linkIdAttribute);
-  }
-
   return finalElementAttributes;
 }
 
@@ -1487,9 +1461,19 @@ function processDefineElement(
 
         // Determine if this attribute is hard-coded into the USFM attributes list and specifically not
         // default attribute
-        const isInAttributesListNotDefault = usfmMatchElements.some(usfmMatchElement =>
+        let isInAttributesListNotDefault = usfmMatchElements.some(usfmMatchElement =>
           usfmMatchElement.getAttribute('beforeout')?.includes(`|${attributeName}=`)
         );
+
+        // Special case: in less than 3.1, the `link-__` attributes are first, but they should not be default
+        // in most cases. There's not enough info for those special cases. Just say they can't be default.
+        if (
+          !isVersion3_1OrAbove &&
+          (attributeName === 'link-href' ||
+            attributeName === 'link-title' ||
+            attributeName === 'link-id')
+        )
+          isInAttributesListNotDefault = true;
 
         // Determine if this meets the generic conditions to be a special type of attribute
         // - Attributes skipped when output to USFM are never special attributes becuase all special
@@ -1983,7 +1967,8 @@ export function transformUsxSchemaToMarkersMap(
     {
       description:
         'Paratext uses this type for closing markers that it cannot find opening markers for. They are treated like char markers but have no contents, no closing markers, and no space after the marker.',
-      outputToUsfmInstructions: 'Do not output a structural space after the opening marker for markers with unmatched type.',
+      outputToUsfmInstructions:
+        'Do not output a structural space after the opening marker for markers with unmatched type.',
       parseUsfmInstructions:
         'If a closing marker occurs but does not seem to have a matching opening marker, create an unmatched-type marker. There is no structural space after the unmatched-type marker; its end is determined by the asterisk at the end of the marker.',
     },
@@ -2150,6 +2135,26 @@ export function transformUsxSchemaToMarkersMap(
       manualDefineName
     );
 
+    // Less than 3.1 has link-href as first attribute in too many places. Just hard-code for these two
+    markersMap.markers['jmp'] = mergeMarkers(
+      markersMap.markers['jmp'],
+      {
+        type: 'char',
+        defaultAttribute: 'link-href',
+      },
+      'jmp',
+      manualDefineName
+    );
+    markersMap.markers['xt'] = mergeMarkers(
+      markersMap.markers['xt'],
+      {
+        type: 'char',
+        defaultAttribute: 'link-href',
+      },
+      'xt',
+      manualDefineName
+    );
+
     // Less than 3.1 has a bunch of problems with milestone default attributes
     markersMap.markers['qt-s'] = mergeMarkers(
       markersMap.markers['qt-s'],
@@ -2252,7 +2257,7 @@ export function transformUsxSchemaToMarkersMap(
   // Fill in missing information from the base markers map
   if (baseMarkersMap) {
     Object.entries(markersMap.markers).forEach(([markerName, markerInfo]) => {
-      const baseMarkerInfo = baseMarkersMap.markers[markerName];
+      let baseMarkerInfo = baseMarkersMap.markers[markerName];
       if (!markerInfo || !baseMarkerInfo) return [markerName, markerInfo];
 
       // If default attribute is already somewhere in base marker's attributes, remove it
@@ -2276,6 +2281,12 @@ export function transformUsxSchemaToMarkersMap(
         // If the default attribute is found in the base attributes, get rid of it
         if (baseMarkerAttributeNames.includes(markerInfo.defaultAttribute))
           delete markerInfo.defaultAttribute;
+      }
+
+      // Special case: `k`'s default attribute was introduced in 3.1
+      if (!isVersion3_1OrAbove && markerName === 'k') {
+        baseMarkerInfo = { ...baseMarkerInfo };
+        delete baseMarkerInfo.defaultAttribute;
       }
 
       // Fill in all information from base
