@@ -1,8 +1,9 @@
 {
   "version": "3.1",
-  "commit": "50f2a6ac3fc1d867d906df28bc00fcff729a7b76",
+  "schemaRepo": "https://github.com/usfm-bible/tcdocs.git",
+  "schemaCommit": "50f2a6ac3fc1d867d906df28bc00fcff729a7b76",
   "markersMapVersion": "1.0.0",
-  "usfmToolsVersion": "ae9638198010c096952be96e49711033e4633796+",
+  "usfmToolsCommit": "39dc10f26a33da0de4eb5b269f5bba1f2fd35c48+",
   "markers": {
     "add": {
       "type": "char",

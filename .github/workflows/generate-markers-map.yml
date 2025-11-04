@@ -35,6 +35,7 @@ jobs:
             git checkout "usx${{ steps.inputs.outputs.schemaVersion }}"
           fi
           mv schema/usx.rng ../usfm-tools/usx.rng
+          echo "USX_REPO=https://github.com/ubsicap/usx.git" >> "$GITHUB_ENV"
           echo "USX_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Clone `usfm-bible/tcdocs` and checkout the right branch, and move `usx.rng` to root
@@ -46,6 +47,7 @@ jobs:
             git checkout "${{ steps.inputs.outputs.schemaVersion }}"
           fi
           mv grammar/usx.rng ../usfm-tools/usx.rng
+          echo "USX_REPO=https://github.com/usfm-bible/tcdocs.git" >> "$GITHUB_ENV"
           echo "USX_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Setup Node.js
@@ -58,7 +60,7 @@ jobs:
         run: npm ci
 
       - name: Generate markers map
-        run: npm run generate-markers-map -- --schema usx.rng --version "${{ steps.inputs.outputs.schemaVersion }}" --commit "${{ env.USX_COMMIT }}"
+        run: npm run generate-markers-map -- --schema usx.rng --version "${{ steps.inputs.outputs.schemaVersion }}" --repo "${{ env.USX_REPO }}" --commit "${{ env.USX_COMMIT }}"
 
       - name: Upload Markers Map
         uses: actions/upload-artifact@v4

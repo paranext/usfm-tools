@@ -11,6 +11,7 @@ import { execCommand } from './command-line.util';
     program
       .option('--schema <path>', 'Path to the USX RelaxNG schema file relative to repo root')
       .option('--version <version>', 'Schema version to include in output')
+      .option('--repo <repo>', 'URL of the git repo the schema file is from to include in output')
       .option('--commit <commit>', 'Commit hash the schema file is from to include in output')
       .option(
         '--outJSON <outJSON>',
@@ -21,18 +22,19 @@ import { execCommand } from './command-line.util';
 
     const options = program.opts();
 
-    if (!options.schema || !options.version || !options.commit) {
-      console.error('Error: --schema, --version, and --commit arguments are required');
+    if (!options.schema || !options.version || !options.repo || !options.commit) {
+      console.error('Error: --schema, --version, --repo, and --commit arguments are required');
       process.exit(1);
     }
 
     const schemaPath = path.resolve(options.schema);
     const schemaVersion = options.version;
+    const repo = options.repo;
     const commit = options.commit;
     const outJSONPath = path.resolve(options.outJSON);
 
     // Get the current tag or commit for this repo
-    let usfmToolsVersion = '';
+    let usfmToolsCommit = '';
     const tagCommand = 'git tag --points-at HEAD';
     const tagResult = await execCommand(tagCommand, { quiet: true });
     if (tagResult.stderr) {
@@ -43,7 +45,7 @@ import { execCommand } from './command-line.util';
       );
       process.exit(1);
     }
-    if (tagResult.stdout) usfmToolsVersion = tagResult.stdout.toString();
+    if (tagResult.stdout) usfmToolsCommit = tagResult.stdout.toString();
     else {
       const commitCommand = 'git rev-parse HEAD';
       const commitResult = await execCommand(commitCommand, { quiet: true });
@@ -53,13 +55,13 @@ import { execCommand } from './command-line.util';
         );
         process.exit(1);
       }
-      if (commitResult.stdout) usfmToolsVersion = commitResult.stdout.toString();
+      if (commitResult.stdout) usfmToolsCommit = commitResult.stdout.toString();
     }
-    if (!usfmToolsVersion) {
+    if (!usfmToolsCommit) {
       console.log('Somehow we could not get usfmToolsVersion. Cannot continue');
       process.exit(1);
     }
-    usfmToolsVersion = usfmToolsVersion.trim();
+    usfmToolsCommit = usfmToolsCommit.trim();
 
     // Check for working changes
     const workingChangesCommand = 'git status --porcelain=v2';
@@ -80,7 +82,7 @@ import { execCommand } from './command-line.util';
 
       // The path (always with forward slashes) is at index 8
       if (workingChangesTable.some(row => !row[8].startsWith('src/test-data/')))
-        usfmToolsVersion = `${usfmToolsVersion}+`;
+        usfmToolsCommit = `${usfmToolsCommit}+`;
     }
 
     // Read and parse the schema file
@@ -98,10 +100,11 @@ import { execCommand } from './command-line.util';
     const markersMap: MarkersMap = transformUsxSchemaToMarkersMap(
       schemaContent,
       schemaVersion,
+      repo,
       commit,
-      usfmToolsVersion,
+      usfmToolsCommit,
       skippedDefinitions,
-      baseMarkersMap,
+      baseMarkersMap
     );
 
     // Create the dist directory if it doesn't exist
@@ -126,5 +129,6 @@ import { execCommand } from './command-line.util';
     console.log(Array.from(skippedDefinitions).sort().join('\n'));
   } catch (e) {
     console.error(`Uncaught error in generate-markers-map async IIFE: ${e}`);
+    process.exit(1);
   }
 })();

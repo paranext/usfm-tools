@@ -7,6 +7,9 @@ import {
   MarkerTypeInfo,
 } from './markers-map.model.template';
 
+/** Which version of the markers map we are generating */
+const MARKERS_MAP_VERSION = '1.0.0';
+
 /** Name of object representing a marker - for use in logging */
 const OBJECT_TYPE_MARKER = 'Marker';
 /** Name of object representing a marker type - for use in logging */
@@ -23,6 +26,14 @@ const OBJECT_TYPE_MARKER_TYPE = 'Marker type';
  * - 3: a space after the marker if there is one; `undefined` otherwise
  */
 const BEFORE_OUT_MARKER_NAME_REGEXP = /(\\n)?\\\\(\S+)( ?)/;
+
+/** XML node types. These are built into the browser, but they are not defined in Node.js */
+enum NODE_TYPE {
+  /** Node.ELEMENT_NODE */
+  ELEMENT = 1,
+  /** Node.COMMENT_NODE */
+  COMMENT = 8,
+}
 
 // #region misc helpful functions
 
@@ -64,7 +75,7 @@ function getNextElementSibling(element: Element): Element | undefined {
     }
 
     // Child is not an element node, so skip
-    if (sibling.nodeType !== 1 /* Node.ELEMENT_NODE - not defined in Node.js */) continue;
+    if (sibling.nodeType !== NODE_TYPE.ELEMENT) continue;
 
     return sibling as Element;
   }
@@ -92,11 +103,7 @@ function getNextCommentSibling(element: Element): ChildNode | undefined {
     }
 
     // Child is not an `a:documentation` node or a `Comment` node, so skip
-    if (
-      sibling.nodeName !== 'a:documentation' &&
-      sibling.nodeType !== 8 /* Node.COMMENT_NODE - not defined in Node.js */
-    )
-      continue;
+    if (sibling.nodeName !== 'a:documentation' && sibling.nodeType !== NODE_TYPE.COMMENT) continue;
 
     return sibling;
   }
@@ -109,11 +116,13 @@ function getChildElementsByTagName(parent: Element, tagName: string): Element[] 
   const elements: Element[] = [];
   for (let i = 0; i < parent.childNodes.length; i++) {
     // Child is not an element node, so skip
-    if (parent.childNodes[i].nodeType !== 1 /* Node.ELEMENT_NODE - not defined in Node.js */)
-      continue;
+    if (parent.childNodes[i].nodeType !== NODE_TYPE.ELEMENT) continue;
 
     const child = parent.childNodes[i] as Element;
-    if (child.nodeType === 1 && child.tagName.toLowerCase() === tagName.toLowerCase()) {
+    if (
+      child.nodeType === NODE_TYPE.ELEMENT &&
+      child.tagName.toLowerCase() === tagName.toLowerCase()
+    ) {
       elements.push(child);
     }
   }
@@ -1786,7 +1795,10 @@ export function isVersion3_1OrHigher(version: string): boolean {
  *
  * @param usxSchema USX RelaxNG schema
  * @param version Which USX version this schema represents
- * @param commit Commit hash of the USX schema file
+ * @param repo Repo where the USX schema file is from
+ * @param commit Hash of the commit at which the USX schema file was retrieved in the specified repo
+ * @param usfmToolsCommit Git tag or hash of the commit at which the markers map is being generated
+ *   in this usfm-tools repo
  * @param skippedDefinitions Optional set to populate with names of definitions that did not result
  *   in adding any markers to the map. This Set is transformed in place and is not returned
  * @param baseMarkersMap Optional map to use to fill in missing marker information on the maps that
@@ -1797,8 +1809,9 @@ export function isVersion3_1OrHigher(version: string): boolean {
 export function transformUsxSchemaToMarkersMap(
   usxSchema: string,
   version: string,
+  repo: string,
   commit: string,
-  usfmToolsVersion: string,
+  usfmToolsCommit: string,
   skippedDefinitions: Set<string> = new Set<string>(),
   baseMarkersMap?: MarkersMap
 ): MarkersMap {
@@ -1807,9 +1820,10 @@ export function transformUsxSchemaToMarkersMap(
 
   const markersMap: MarkersMap = {
     version,
-    commit,
-    markersMapVersion: '1.0.0',
-    usfmToolsVersion,
+    schemaRepo: repo,
+    schemaCommit: commit,
+    markersMapVersion: MARKERS_MAP_VERSION,
+    usfmToolsCommit: usfmToolsCommit,
     markers: {},
     markersRegExp: {},
     markerTypes: {},

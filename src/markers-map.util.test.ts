@@ -32,12 +32,14 @@ const STDOUT_REGEXP =
 // 1. Put the desired usx.rng file(s) in src/test-data/
 // 2. Run the generate-markers-map script with the appropriate arguments and redirect stdout to a file
 // For example, to generate 3.0.7 and 3.1 files, I used the following commands in bash:
-//   npm run generate-markers-map -- --schema src/test-data/usx-3.0.7.rng --version 3.0.7 --commit 6c490bb5675d281b0fa01876fe67f6e3fd50a4ce --outJSON src/test-data/markers-3.0.7.json > src/test-data/stdout-3.0.7.txt
-//   npm run generate-markers-map -- --schema src/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json > src/test-data/stdout-3.1.txt
+//   npm run generate-markers-map -- --schema src/test-data/usx-3.0.7.rng --version 3.0.7 --repo https://github.com/ubsicap/usx.git --commit 6c490bb5675d281b0fa01876fe67f6e3fd50a4ce --outJSON src/test-data/markers-3.0.7.json > src/test-data/stdout-3.0.7.txt
+//   npm run generate-markers-map -- --schema src/usx-3.1.rng --version 3.1 --repo https://github.com/usfm-bible/tcdocs.git --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json > src/test-data/stdout-3.1.txt
+//
+// These can be run using `npm run bash-generate-test-maps`
 //
 // This can be approximated in powershell, but please do not commit this as it puts a BOM at the start of the file that will cause git file churn:
-//   npm run generate-markers-map -- --schema src/test-data/usx-3.0.7.rng --version 3.0.7 --commit 6c490bb5675d281b0fa01876fe67f6e3fd50a4ce --outJSON src/test-data/markers-3.0.7.json | out-file -encoding utf8 src/test-data/stdout-3.0.7.txt
-//   npm run generate-markers-map -- --schema src/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json | out-file -encoding utf8 src/test-data/stdout-3.1.txt
+//   npm run generate-markers-map -- --schema src/test-data/usx-3.0.7.rng --version 3.0.7 --repo https://github.com/ubsicap/usx.git --commit 6c490bb5675d281b0fa01876fe67f6e3fd50a4ce --outJSON src/test-data/markers-3.0.7.json | out-file -encoding utf8 src/test-data/stdout-3.0.7.txt
+//   npm run generate-markers-map -- --schema src/usx-3.1.rng --version 3.1 --repo https://github.com/usfm-bible/tcdocs.git --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json | out-file -encoding utf8 src/test-data/stdout-3.1.txt
 //
 // Note: The 3.1 markers map is used as a base from which to generate older versions, so it is stored in
 // src/ instead of src/test-data. usx.rng 3.1 seems to be stable as of writing this, so this file will
@@ -102,8 +104,9 @@ test('transformUsxSchemaToMarkersMap properly transform usx.rng 3.0.7', () => {
   const markersMap = transformUsxSchemaToMarkersMap(
     USX_SCHEMA_3_0_7,
     USFM_MARKERS_MAP_3_0_7.version,
-    USFM_MARKERS_MAP_3_0_7.commit,
-    USFM_MARKERS_MAP_3_0_7.usfmToolsVersion,
+    USFM_MARKERS_MAP_3_0_7.schemaRepo,
+    USFM_MARKERS_MAP_3_0_7.schemaCommit,
+    USFM_MARKERS_MAP_3_0_7.usfmToolsCommit,
     skippedDefinitions,
     USFM_MARKERS_MAP_3_1
   );
@@ -118,8 +121,9 @@ test('transformUsxSchemaToMarkersMap properly transform usx.rng 3.1', () => {
   const markersMap = transformUsxSchemaToMarkersMap(
     USX_SCHEMA_3_1,
     USFM_MARKERS_MAP_3_1.version,
-    USFM_MARKERS_MAP_3_1.commit,
-    USFM_MARKERS_MAP_3_1.usfmToolsVersion,
+    USFM_MARKERS_MAP_3_1.schemaRepo,
+    USFM_MARKERS_MAP_3_1.schemaCommit,
+    USFM_MARKERS_MAP_3_1.usfmToolsCommit,
     skippedDefinitions
   );
 

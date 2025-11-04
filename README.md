@@ -16,6 +16,34 @@ Then install dependencies:
 npm i
 ```
 
+## Terminology
+
+In this repo, there are some terms used that are rather precise and specific to USFM and others that do not necessarily match with official terminology (including some newly coined terms where there are not known terms). There is lots of documentation in `src/markers-map.model.template.ts`. Here is a short list of terms and definitions for clarity:
+
+- Attributes - key/value pairs (or, in some cases in USFM, just values because the key is implied via USFM syntax) on a marker that provide some information about that marker
+  - USFM attributes - key/value pairs or values whose keys are implied that add information to markers but are not essential information about how to represent a marker in USFM. For example, `caller`, `lemma`, and `code` are USFM attributes, but `style` (the marker name in USX) and `closed` (a USX attribute and USJ property that indicates whether the marker has a closing marker in USFM) are not USFM attributes but are only found in other formats and are used to represent the marker itself in USFM.
+  - USX/XML attributes - [XML attributes](https://www.geeksforgeeks.org/software-engineering/xml-attributes/) on an XML element. Some of these (like `caller` or `lemma`) are USFM attributes while others (like `style` or `closed`) are other kinds of information that are not represented as attributes in USFM
+  - USJ/JSON properties/attributes - a term sometimes used for each key/value pair in [JSON objects](https://json-schema.org/understanding-json-schema/reference/object). Some of these (like `caller` or `lemma`) are USX attributes and USFM attributes. Others (like `style` in USX, which equates to `marker` in USJ, and `closed`) are USX attributes but are not USFM attributes. Others (like `content`) are other kinds of information that are not represented as attributes in USFM or USX.
+- `usx.rng` `attribute` - XML elements with tag name `attribute` in `usx.rng`. These are not like the attributes described above because these are XML elements in [RelaxNG specification](https://relaxng.org/spec-20011203.html) that describe USX attributes.
+- USFM Attribute types - different ways attributes are represented in USFM. Each USFM attribute has its own attribute type, and these types do not apply to USX or USJ (they are all normal USX attributes and USJ properties).
+  - Closing marker attributes - attributes that are listed attached to the closing marker e.g. `lemma` on `w` marker. These look like `\marker content|attributeKey="attributeValue" otherAttributeKey="otherAttributeValue"\marker*`
+    - Default attribute - an attribute that, if it is the only closing marker attribute for a marker, can be listed without the attribute key e.g. `gloss` on `rb`. These look like `\marker content|defaultAttributeValue\marker*`
+  - Special attribute types - attributes in USX/USJ that are not just listed on the closing marker but are represented in some other way in USFM. None of these have the attribute key listed in USFM.
+    - Attribute marker - separate markers that appear after the marker they describe in USFM e.g. `altnumber` on `c` is `ca`. These look like `\marker content \attributeMarker attributeValue`
+    - Text content attribute - the actual text content of the marker in USFM. e.g. `alt` on `periph`. These look like `\marker content`.
+    - Leading attribute - text that is added right after the opening marker and before the text content of the marker e.g. `caller` on `f`. These look like `\marker leadingAttribute content`
+- `usx.rng` `element` - XML elements with tag name `element` in `usx.rng`. These XML elements are from [RelaxNG specification](https://relaxng.org/spec-20011203.html) and are used to describe markers and/or marker types.
+- `usx.rng` `define` - XML elements with tag name `define` in `usx.rng`. These XML elements are from [RelaxNG specification](https://relaxng.org/spec-20011203.html) and are used to describe some set of information that is referred to somewhere else in `usx.rng`. Usually, these `define`s contain one or more `element`s, so they describe one or more markers and/or marker types.
+- Closing marker - the USFM representation of the end of a marker. USX and USJ markers just use their equivalent XML/JSON syntax for the closing of an element/object.
+  - Normal closing marker - a closing marker that uses the same marker name as the opening marker and just have an asterisk at the end e.g. `\nd*` for `nd`. These look like `\marker*`.
+  - Independent closing marker - a closing marker that uses a different marker name than the opening marker and does not have an asterisk added at the end e.g. `\esbe` for `esb`. These look like `\closingMarker`.
+- Specification/spec - the official ruling about how USFM/USX/USJ should look. This is found at https://docs.usfm.bible/usfm/3.1/index.html
+- [Whitespace](https://en.wikipedia.org/wiki/Whitespace_character)
+  - Structural whitespace - whitespace in USFM that is required part of the USFM syntax and delimits different things e.g. normal space after opening markers. This looks like `\marker content`
+  - Content whitespace - whitespace in USFM that is part of the actual Scripture text or the "content" of the marker. This looks like `\marker here is some content with content whitespace in it`
+  - Normalization - the process of transforming USFM with any whitespace into USFM with specific whitespace based on a set of rules. Many different USFM representations of the same Scripture content should be able to be normalized into the same USFM string. Paratext has its own rules for normalizing whitespace, and the specification has its own rules that result in the canonical form.
+  - Canonical form - the official representation of how USFM should look based on the rules described by the specification. The whitespace should be [normalized or "reduced" according to the rules in the specification](https://docs.usfm.bible/usfm/3.1/whitespace.html#ws-reducing).
+
 ## Markers Map
 
 The markers map is a JSON file that contains information for each USFM marker and marker type. It aims to include all necessary marker-specific information for translating from USJ to USFM that is not about the generic syntax of USFM.

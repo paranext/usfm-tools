@@ -1,8 +1,9 @@
 {
   "version": "3.0.7",
-  "commit": "6c490bb5675d281b0fa01876fe67f6e3fd50a4ce",
+  "schemaRepo": "https://github.com/ubsicap/usx.git",
+  "schemaCommit": "6c490bb5675d281b0fa01876fe67f6e3fd50a4ce",
   "markersMapVersion": "1.0.0",
-  "usfmToolsVersion": "ae9638198010c096952be96e49711033e4633796+",
+  "usfmToolsCommit": "39dc10f26a33da0de4eb5b269f5bba1f2fd35c48+",
   "markers": {
     "add": {
       "type": "char",

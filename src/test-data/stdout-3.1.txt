@@ -1,6 +1,6 @@
 
 > usfm-tools@1.0.0 generate-markers-map
-> tsx src/generate-markers-map --schema src/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json
+> tsx src/generate-markers-map --schema src/usx-3.1.rng --version 3.1 --repo https://github.com/usfm-bible/tcdocs.git --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json
 
 Warning: Marker named "usx" has one definition with a textContentAttribute and one without: undefined, "version". Using the one with the textContentAttribute. In definition: Peripheral (merging extraMarkerInfo into marker to add)
 Warning: Marker named "usx" has one definition with a textContentAttribute and one without: undefined, "version". Using the one with the textContentAttribute. In definition: Scripture (merging extraMarkerInfo into marker to add)

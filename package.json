@@ -2,13 +2,12 @@
   "name": "usfm-tools",
   "version": "1.0.0",
   "description": "Scripts and utilities for transforming and preparing US* schemas for use in Platform.Bible and Paratext",
-  "main": "src/transform.ts",
   "scripts": {
     "format": "prettier --write .",
     "generate-markers-map": "tsx src/generate-markers-map",
     "lint": "eslint src/*.ts --cache .",
-    "bash-generate-3.0.7-map": "npm run generate-markers-map -- --schema src/test-data/usx-3.0.7.rng --version 3.0.7 --commit 6c490bb5675d281b0fa01876fe67f6e3fd50a4ce --outJSON src/test-data/markers-3.0.7.json > src/test-data/stdout-3.0.7.txt",
-    "bash-generate-3.1-map": "npm run generate-markers-map -- --schema src/usx-3.1.rng --version 3.1 --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json > src/test-data/stdout-3.1.txt",
+    "bash-generate-3.0.7-map": "npm run generate-markers-map -- --schema src/test-data/usx-3.0.7.rng --version 3.0.7 --repo https://github.com/ubsicap/usx.git --commit 6c490bb5675d281b0fa01876fe67f6e3fd50a4ce --outJSON src/test-data/markers-3.0.7.json > src/test-data/stdout-3.0.7.txt",
+    "bash-generate-3.1-map": "npm run generate-markers-map -- --schema src/usx-3.1.rng --version 3.1 --repo https://github.com/usfm-bible/tcdocs.git --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json > src/test-data/stdout-3.1.txt",
     "bash-generate-test-maps": "npm run bash-generate-3.1-map && npm run bash-generate-3.0.7-map",
     "test": "vitest"
   },
