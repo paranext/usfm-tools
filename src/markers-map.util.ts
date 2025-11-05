@@ -58,7 +58,8 @@ function getTextContent(element: ChildNode): string {
 
 /**
  * Helper function to get next child element of this element's parent. Almost the exact same as
- * `element.nextElementSibling`, but this returns `undefined` because `null` is dumb
+ * `element.nextElementSibling` (which is not available in Node), but this returns `undefined`
+ * because `null` is dumb
  */
 function getNextElementSibling(element: Element): Element | undefined {
   const parent = element.parentNode;
@@ -330,7 +331,7 @@ function mergeStrings(
   // If the new string is one of any in the string split by \n, just return the existing one
   if (existingString.split('\n').includes(newString)) return existingString;
 
-  // Both arrays are defined but don't match, so concat them
+  // Both strings are defined but don't match, so concat them
   if (shouldWarn) {
     console.log(
       `Warning: ${objectType} named "${

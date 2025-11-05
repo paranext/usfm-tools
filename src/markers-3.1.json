@@ -3,7 +3,7 @@
   "schemaRepo": "https://github.com/usfm-bible/tcdocs.git",
   "schemaCommit": "50f2a6ac3fc1d867d906df28bc00fcff729a7b76",
   "markersMapVersion": "1.0.0",
-  "usfmToolsCommit": "39dc10f26a33da0de4eb5b269f5bba1f2fd35c48+",
+  "usfmToolsCommit": "7f7d781a0da0001f61892d134a2c923496a310c9",
   "markers": {
     "add": {
       "type": "char",

@@ -177,7 +177,7 @@ The marker names and information about those markers are mostly derived from the
     - The `style` attribute may contain a `choice` of all the marker names associated with that marker type
     - The `style` attribute may contain a `ref` pointing to a `choice` of all the marker names associated with that marker type
     - If there is not a `style` attribute, the element's `name` is the marker type and the marker name
-  - (`marker.isIndependentClosingMarkerFor`; `marker.independentClosingMarkers`) additional independent closing marker that goes with another other marker
+  - (`marker.isIndependentClosingMarkerFor`; `marker.independentClosingMarkers`) additional independent closing marker that goes with another marker
     - Check for marker type element direct children `usfm:ptag` or `usfm:tag` with text content and create a simple marker (no attributes or whatnot from the other markers of this marker type) whose name is the text content of the tag. Like `esbe` in `sidebar` marker type
   - (`marker.isClosingMarkerOptional`) closing marker should not usually be output to USFM if the `usfm:endtag` has `noout="true"`
   - (`marker.description`) get comments of what the marker represents from `a:documentation` right after the `style` attribute or from an XML comment right after the `style` attribute
@@ -190,7 +190,7 @@ The marker names and information about those markers are mostly derived from the
       - Do not consider `colspan` attribute on `cell` as a normal attribute as it is incorporated into the marker name and is not a USFM attribute
     - There are many kinds of special attribute types in USFM representation. One attribute cannot be multiple types of special attribute. Check if an attribute is a special type in this listed order:
       - Attributes should not be considered for being a special attribute type in any of the following circumstances:
-        - the `attribute` tag has are multiple `usfm:match` tags
+        - the `attribute` tag has multiple `usfm:match` tags
         - name is `style` since that attribute is always the marker name in USFM
         - the attribute is listed in `markerType.skipOutputAttributeToUsfm` because these special attribute types are related to USFM output
         - the attribute is listed in `markerType.skipOutputMarkerToUsfmIfAttributeIsPresent` because these special attribute types are related to USFM output
@@ -310,7 +310,7 @@ The `usx.rng` file does not contain every single piece of information necessary 
 - There are some markers that need very special handling that is not represented perfectly in `usx.rng`. In `markers.json`, the special handling is explained in `parseUsfmInstructions` and `outputToUsfmInstructions`:
   - [`usfm`](https://docs.usfm.bible/usfm/3.1/doc/usfm.html) with marker type `para` and no default attribute. This marker is present in USFM but most of the time is translated into the `usx` marker in USX and the `USJ` marker in USJ
     - Note that `usfm` is a special `para` in that its text content is considered to be `version`, which gets translated to `usx` and `USJ` as an attribute.
-  - [`USJ`](https://docs.usfm.bible/usfm/3.1/doc/usfm.html) with marker type `USJ` and no default attribute. This marker is present in USJ but is translated into the `usx` marker in `USX` and the `usfm` marker in USFM.
+  - [`USJ`](https://docs.usfm.bible/usfm/3.1/doc/usfm.html) with marker type `USJ` and no default attribute. This marker is present in USJ but is translated into the `usx` marker in USX and the `usfm` marker in USFM.
   - [`cell`](https://docs.usfm.bible/usfm/3.1/char/tables/tc.html)-type markers encode the number of columns they span differently between USFM and USX/USJ
 
 Note: `fig` has an attribute that changes names: in USFM, it is `src`; in USX and USJ, it is `file`.
