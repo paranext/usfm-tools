@@ -149,7 +149,7 @@ Following is a simplified example of what you might see in a `markers.json` file
       ]
     },
     "ms": {
-      "hasClosingMarker": true,
+      "isCloseable": true,
       "isClosingMarkerEmpty": true
     },
     "para": {
@@ -234,7 +234,7 @@ The marker names and information about those markers are mostly derived from the
       - [Special case] `cell` has `usfm:ptag` but should not have a newline before it. TJ thinks is a bug in `usx.rng`.
       - [Special case] `periph` doesn't have `\n` in its `usfm:match` `beforeout`, but it should have a newline before it. TJ thinks is a bug in `usx.rng`.
       - [Special case] `usx` doesn't have `\n` in its `usfm:match` `beforeout`, but it should have a newline before it. TJ thinks this is a bug in `usx.rng`.
-  - (`markerType.hasClosingMarker`) the marker type has a normal closing marker if
+  - (`markerType.isCloseable`) the marker type has a normal closing marker if
     - One `usfm:endtag` is present somewhere in the element
       - If there are two that share the same attributes other than `matchref` and `before` being the same other than a `+` in one, can consider just the first one. This is for some `char` markers that have both `\nd` and `\+nd` listed
       - `usfm:endtag` is outside the `element` for `milestone` because its `element` has `<empty/>` in it

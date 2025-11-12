@@ -647,14 +647,14 @@ function mergeMarkerTypes(
     );
     process.exit(1);
   }
-  if (markerTypeA.hasClosingMarker !== markerTypeB.hasClosingMarker) {
+  if (markerTypeA.isCloseable !== markerTypeB.isCloseable) {
     logObjectMergeConflictError(
       OBJECT_TYPE_MARKER_TYPE,
       markerTypeName,
-      'hasClosingMarker',
+      'isCloseable',
       defineName,
-      markerTypeA.hasClosingMarker,
-      markerTypeB.hasClosingMarker
+      markerTypeA.isCloseable,
+      markerTypeB.isCloseable
     );
     process.exit(1);
   }
@@ -1096,7 +1096,7 @@ function processDefineElement(
     // Just modify the existing marker type if this marker just has information about skipping
     // it. These markers to skip don't have much information in them
     // Need the type assertion here because TypeScript gets ahead of itself otherwise and implies this
-    // must be a `NonCloseableMarkerTypeInfo` since `hasClosingMarker` is not present
+    // must be a `NonCloseableMarkerTypeInfo` since `isCloseable` is not present
     const markerTypeToAdd = (
       skipOutputMarkerToUsfm ? { ...markersMap.markerTypes[markerType] } : {}
     ) as MarkerTypeInfo;
@@ -1297,8 +1297,8 @@ function processDefineElement(
     // There's an end tag, so mark that on the marker type. Also check the `usfm:endtag` for
     // being empty
     if (usfmEndTagElement) {
-      markerTypeToAdd.hasClosingMarker = true;
-      if (markerTypeToAdd.hasClosingMarker && usfmEndTagElement.getAttribute('matchref') === "''") {
+      markerTypeToAdd.isCloseable = true;
+      if (markerTypeToAdd.isCloseable && usfmEndTagElement.getAttribute('matchref') === "''") {
         markerTypeToAdd.isClosingMarkerEmpty = true;
       }
     }
@@ -1405,7 +1405,7 @@ function processDefineElement(
       if (independentClosingMarkerNamesToAdd.length > 0) {
         // Check that we don't have both normal closing marker and independent closing markers because
         // we have not necessarily perfectly factored this possibility into the markers map
-        if (markerTypeToAdd.hasClosingMarker) {
+        if (markerTypeToAdd.isCloseable) {
           console.log(
             `Warn: Marker type "${
               markerType

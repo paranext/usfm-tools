@@ -3,7 +3,7 @@
   "schemaRepo": "https://github.com/ubsicap/usx.git",
   "schemaCommit": "6c490bb5675d281b0fa01876fe67f6e3fd50a4ce",
   "markersMapVersion": "1.0.0",
-  "usfmToolsCommit": "7f7d781a0da0001f61892d134a2c923496a310c9",
+  "usfmToolsCommit": "67c8ec557f1657916f04e87329d41aa79dcfde8a+",
   "markers": {
     "add": {
       "type": "char",
@@ -1084,20 +1084,20 @@
       ]
     },
     "char": {
-      "hasClosingMarker": true,
+      "isCloseable": true,
       "nestedPrefix": "+"
     },
     "figure": {
-      "hasClosingMarker": true,
+      "isCloseable": true,
       "outputToUsfmInstructions": "The USX/USJ file attribute needs its name changed to src in USFM",
       "parseUsfmInstructions": "The USFM src attribute needs its name changed to file in USX/USJ"
     },
     "ms": {
-      "hasClosingMarker": true,
+      "isCloseable": true,
       "isClosingMarkerEmpty": true
     },
     "note": {
-      "hasClosingMarker": true
+      "isCloseable": true
     },
     "optbreak": {
       "hasStyleAttribute": false
@@ -1113,7 +1113,7 @@
       "hasStyleAttribute": false
     },
     "ref": {
-      "hasClosingMarker": true,
+      "isCloseable": true,
       "hasStyleAttribute": false,
       "skipOutputMarkerToUsfmIfAttributeIsPresent": [
         "gen"
