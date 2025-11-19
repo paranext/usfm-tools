@@ -1,0 +1,6 @@
+node_modules
+
+# generated files
+package-lock.json
+src/test-data
+src/markers-3.1.json

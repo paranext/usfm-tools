@@ -1,0 +1,31 @@
+name: Test
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    # The branches below should be a subset of the branches above
+    branches: ['main']
+
+jobs:
+  test:
+    name: Build on ${{ matrix.os }}
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install packages
+        run: npm ci
+
+      - name: npm unit tests
+        run: npm test
+
+      - name: check JS/TS linting
+        run: npm run lint

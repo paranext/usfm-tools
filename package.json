@@ -1,0 +1,48 @@
+{
+  "name": "usfm-tools",
+  "version": "1.0.0",
+  "description": "Scripts and utilities for transforming and preparing US* schemas for use in Platform.Bible and Paratext",
+  "scripts": {
+    "format": "prettier --write .",
+    "generate-markers-map": "tsx src/generate-markers-map",
+    "lint": "eslint src/*.ts --cache .",
+    "bash-generate-3.0.7-map": "npm run generate-markers-map -- --schema src/test-data/usx-3.0.7.rng --version 3.0.7 --repo https://github.com/ubsicap/usx.git --commit 6c490bb5675d281b0fa01876fe67f6e3fd50a4ce --outJSON src/test-data/markers-3.0.7.json > src/test-data/stdout-3.0.7.txt",
+    "bash-generate-3.1-map": "npm run generate-markers-map -- --schema src/usx-3.1.rng --version 3.1 --repo https://github.com/usfm-bible/tcdocs.git --commit 50f2a6ac3fc1d867d906df28bc00fcff729a7b76 --outJSON src/markers-3.1.json > src/test-data/stdout-3.1.txt",
+    "bash-generate-test-maps": "npm run bash-generate-3.1-map && npm run bash-generate-3.0.7-map",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "^0.8.11",
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/xmldom": "^0.1.34",
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-erb": "^4.1.0",
+    "eslint-import-resolver-typescript": "^3.8.3",
+    "eslint-import-resolver-webpack": "^0.13.10",
+    "eslint-plugin-compat": "^4.2.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-no-null": "^1.0.2",
+    "eslint-plugin-no-type-assertion": "^1.3.0",
+    "eslint-plugin-promise": "^6.6.0",
+    "prettier": "^3.5.3",
+    "prettier-plugin-jsdoc": "^1.3.3",
+    "tsx": "^4.20.5",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.32.0",
+    "vitest": "^3.2.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paranext/usfm-tools.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/paranext/usfm-tools/issues"
+  },
+  "homepage": "https://github.com/paranext/usfm-tools#readme"
+}
