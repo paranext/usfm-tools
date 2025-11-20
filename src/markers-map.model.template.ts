@@ -267,7 +267,7 @@ export type NormalMarkerInfo = {
   independentClosingMarkers?: string[];
   /**
    * List of marker names for which this marker is an independent closing marker. See
-   * {@link NormalMarkerInfo.independentClosingMarker} for more information on independent closing
+   * {@link NormalMarkerInfo.independentClosingMarkers} for more information on independent closing
    * markers and their syntax.
    *
    * @example
@@ -278,7 +278,7 @@ export type NormalMarkerInfo = {
   isIndependentClosingMarkerFor?: string[];
   /**
    * List of RegExp patterns matching marker names for which this marker is an independent closing
-   * marker. See {@link NormalMarkerInfo.independentClosingMarker} for more information on
+   * marker. See {@link NormalMarkerInfo.independentClosingMarkers} for more information on
    * independent closing markers and their syntax.
    *
    * @example
